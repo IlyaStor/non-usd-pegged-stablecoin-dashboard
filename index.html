@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Non-USD Stablecoins — Polygon</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080A0D;color:#E5E7EB;font-family:'IBM Plex Mono',monospace;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#0D0F12}
+::-webkit-scrollbar-thumb{background:#2D3139;border-radius:2px}
+.wrap{max-width:1200px;margin:0 auto}
+.hdr{border-bottom:1px solid #1A1D22;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.dot{width:7px;height:7px;background:#10B981;border-radius:50%;box-shadow:0 0 8px #10B981}
+.hdr-t{font-size:14px;font-weight:600;color:#F9FAFB}
+.hdr-s{font-size:10px;color:#374151}
+.badge{font-size:9px;color:#374151;padding:3px 8px;border:1px solid #1A1D22}
+.body{padding:20px 24px}
+.kpis{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.kpi{background:#0D0F12;border:1px solid #1A1D22;padding:14px 20px;flex:1;min-width:170}
+.kpi-l{color:#4B5563;font-size:10px;text-transform:uppercase;letter-spacing:0.08em}
+.kpi-v{color:#E5E7EB;font-size:22px;font-weight:700;margin-top:4px}
+.kpi-s{color:#374151;font-size:10px;margin-top:2px}
+.ctrl{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.tabs{display:flex;gap:2px}
+.tab{background:transparent;color:#4B5563;border:1px solid transparent;padding:5px 14px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;text-transform:uppercase}
+.tab.on{background:#1A1D22;color:#F9FAFB;border-color:#2D3139}
+.chips{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid #1A1D22;color:#374151;padding:3px 9px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:500}
+.chip.on{border-color:var(--cc);color:var(--cc);background:color-mix(in srgb,var(--cc) 8%,transparent)}
+.chip-d{width:5px;height:5px;border-radius:50%;background:#2D3139}
+.chip.on .chip-d{background:var(--cc)}
+.panel{background:#0D0F12;border:1px solid #1A1D22;padding:16px}
+.panel-t{font-size:10px;color:#4B5563;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.06em}
+.chart-wrap{position:relative;height:360px}
+.cols{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap}
+.col-l{flex:2;min-width:360px}
+.col-r{flex:1;min-width:260px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:5px 0;font-size:10px;color:#4B5563;font-weight:500;border-bottom:1px solid #1A1D22}
+th.r{text-align:right}
+td{padding:7px 0;font-size:11px;border-bottom:1px solid #0F1114}
+td.r{text-align:right;color:#9CA3AF}
+.tk{display:inline-flex;align-items:center;gap:6px}
+.tk-d{width:5px;height:5px;border-radius:50%}
+.bar-w{width:50px;height:3px;background:#1A1D22;border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle}
+.bar-f{height:100%;border-radius:2px}
+.sh{font-size:10px;color:#4B5563;min-width:32px;display:inline-block;text-align:right;margin-left:6px}
+.pie-wrap{position:relative;height:200px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px}
+.leg-d{width:5px;height:5px;border-radius:50%}
+.leg-n{color:#6B7280}
+.leg-p{color:#2D3139}
+.ftr{padding:12px 24px;border-top:1px solid #1A1D22;display:flex;justify-content:space-between;font-size:9px;color:#1E2328}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-l"><div class="dot"></div><span class="hdr-t">NON-USD STABLECOINS</span><span class="hdr-s">POLYGON</span></div>
+    <span class="badge" id="rowBadge"></span>
+  </div>
+  <div class="body">
+    <div class="kpis" id="kpis"></div>
+    <div class="ctrl">
+      <div class="tabs">
+        <button class="tab on" data-m="volume" onclick="setMetric('volume')">VOLUME (USD)</button>
+        <button class="tab" data-m="count" onclick="setMetric('count')">TX COUNT</button>
+      </div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="panel">
+      <div class="panel-t" id="chartLabel">TRANSFER VOLUME (USD) — DAILY STACKED</div>
+      <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    </div>
+    <div class="cols">
+      <div class="col-l panel">
+        <div class="panel-t">TOKEN BREAKDOWN</div>
+        <table><thead><tr><th>TOKEN</th><th class="r">VOLUME</th><th class="r">TX</th><th class="r">SHARE</th></tr></thead><tbody id="tbl"></tbody></table>
+      </div>
+      <div class="col-r panel">
+        <div class="panel-t">BY FIAT CURRENCY</div>
+        <div class="pie-wrap"><canvas id="pieChart"></canvas></div>
+        <div class="legend" id="pieLeg"></div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>NON-USD STABLECOIN TRACKER v0.6</span><span>DATA: DUNE ANALYTICS</span></div>
+</div>
+<script>
+const R=`2025-11-20|BRLA|976|737253.41|BRL1|219|3342410.99|COPM|1305|16589962.10|IDRT|177|14836.31|XIDR|21|128.29|JPYC|83|1848.94|XSGD|1029|3187252.27
+2025-11-21|BRLA|1529|2628641.52|BRL1|317|9097902.91|COPM|1118|19295046.29|IDRT|87|23738.32|XIDR|6|59.69|JPYC|72|2015.85|PHPC|1|0.00|XSGD|1398|7778377.98
+2025-11-22|BRLA|529|300855.16|BRL1|130|2779272.00|COPM|69|8246.08|IDRT|36|2577.84|XIDR|3|40.87|JPYC|37|4630.73|XSGD|573|3223024.22
+2025-11-23|BRLA|479|468693.88|BRL1|111|2831121.63|COPM|31|151614.99|IDRT|63|6444.67|XIDR|3|30.54|JPYC|45|3940.00|XSGD|656|2877922.64
+2025-11-24|BRLA|975|1286234.52|BRL1|250|8045075.49|COPM|1432|28871487.93|IDRT|24|1589.17|XIDR|1|9.14|JPYC|134|901.93|XSGD|978|2022228.64
+2025-11-25|BRLA|1106|1200440.97|BRL1|172|3869723.95|COPM|1347|16539517.64|IDRT|35|4257.02|XIDR|2|0.05|JPYC|25|96.48|XSGD|679|3372275.96
+2025-11-26|BRLA|1033|1292978.93|BRL1|282|6243597.12|COPM|611|6203964.69|IDRT|43|2545.47|JPYC|83|3285.50|PHT|1|8.45|XSGD|690|5730228.49
+2025-11-27|BRLA|807|874995.29|BRL1|117|4226952.58|COPM|495|4002086.15|IDRT|61|11080.41|XIDR|1|7.99|JPYC|38|581.48|PHT|2|378.44|XSGD|494|2141223.58
+2025-11-28|BRLA|1154|2230268.57|BRL1|217|5034944.74|COPM|828|6299621.92|IDRT|34|1713.78|JPYC|154|378.96|PHT|2|561.15|XSGD|504|1705990.03
+2025-11-29|BRLA|519|524056.62|BRL1|30|522.21|COPM|49|18391.16|IDRT|22|342.79|XIDR|1|13.80|JPYC|65|560.85|PHPC|1|0.00|XSGD|248|576297.50
+2025-11-30|BRLA|311|230841.84|BRL1|103|1478176.20|COPM|46|3601.84|IDRT|12|266.16|XIDR|1|0.06|JPYC|339|14846.30|XSGD|387|754868.62
+2025-12-01|BRLA|1127|1795007.56|BRL1|210|2663080.46|COPM|797|10391783.04|IDRT|93|1099.73|XIDR|4|53.69|JPYC|123|5017.40|XSGD|822|3147847.86
+2025-12-02|BRLA|1179|1778031.83|BRL1|254|4382163.56|COPM|681|6678753.77|IDRT|46|1412.43|XIDR|7|38.52|JPYC|113|3825.76|PHT|9|4626.23|PHPC|2|0.00|XSGD|605|2883775.83
+2025-12-03|BRLA|991|1471936.22|BRL1|317|8276094.26|COPM|419|3650154.12|IDRT|163|2657.93|XIDR|18|155.17|JPYC|106|2375.23|PHT|4|1400.06|XSGD|731|1780081.03
+2025-12-04|BRLA|876|1188298.15|BRL1|102|1072305.29|COPM|436|1662298.96|IDRT|67|253.07|XIDR|1|13.94|JPYC|59|3126.12|XSGD|584|889569.18
+2025-12-05|BRLA|1226|3136626.22|BRL1|194|3897025.90|COPM|719|3229919.28|IDRT|65|172.88|XIDR|5|6.35|JPYC|60|2519.16|XSGD|661|1530011.03
+2025-12-06|BRLA|651|900651.41|BRL1|172|373879.20|COPM|11|12359.47|IDRT|33|376.94|XIDR|1|0.03|JPYC|46|768.50|XSGD|305|1150617.62
+2025-12-07|BRLA|527|1027463.17|BRL1|196|1014484.62|COPM|10|2398.02|IDRT|36|384.87|XIDR|1|0.03|JPYC|78|3115.42|PHT|1|0.03|XSGD|576|775754.63
+2025-12-08|BRLA|1000|2037958.02|BRL1|214|4221408.72|COPM|14|63479.10|IDRT|31|130.15|XIDR|1|0.06|JPYC|43|2343.11|XSGD|609|873044.90
+2025-12-09|BRLA|1035|2471707.52|BRL1|253|4430983.11|COPM|1069|8661580.08|IDRT|40|267.38|XIDR|2|4.77|JPYC|41|1930.31|PHT|2|14.72|XSGD|749|660128.71
+2025-12-10|BRLA|911|2688908.10|BRL1|314|6635212.05|COPM|734|6279368.58|IDRT|48|420.72|JPYC|44|2021.14|PHPC|1|0.00|XSGD|808|1151743.80
+2025-12-11|BRLA|953|2383502.70|BRL1|203|5203270.69|COPM|685|2754912.65|IDRT|21|61.09|XIDR|3|6.08|JPYC|248|9691.30|XSGD|808|1166875.74
+2025-12-12|BRLA|827|4084366.16|BRL1|150|640585.92|COPM|311|1935556.31|IDRT|44|1145.65|XIDR|17|4.10|JPYC|404|8084.81|PHT|1|1.90|PHPC|1|0.00|XSGD|627|618301.95
+2025-12-13|BRLA|439|497352.39|BRL1|42|120635.00|COPM|53|49471.51|IDRT|31|173.14|XIDR|2|0.10|JPYC|77|2803.41|XSGD|193|302550.15
+2025-12-14|BRLA|384|477496.17|BRL1|61|114534.23|COPM|22|3907.79|IDRT|52|519.85|XIDR|1|1.51|JPYC|64|1875.12|XSGD|438|758825.20
+2025-12-15|BRLA|879|2847950.43|BRL1|229|2325022.59|COPM|391|4287363.50|IDRT|51|251.41|XIDR|4|4.60|JPYC|110|3528.41|PHPC|1|0.00|XSGD|853|988573.59
+2025-12-16|BRLA|946|2580373.43|BRL1|185|910238.70|COPM|198|2073064.99|IDRT|19|142.40|JPYC|218|4253.59|PHT|2|1122.70|XSGD|867|1352048.92
+2025-12-17|BRLA|958|2022713.96|BRL1|119|635695.62|COPM|199|2467000.99|IDRT|81|879.63|XIDR|2|5.40|JPYC|99|2703.21|XSGD|705|1239857.38
+2025-12-18|BRLA|990|1502678.10|BRL1|87|1265452.04|COPM|253|4616514.04|IDRT|41|1182.25|XIDR|2|0.22|JPYC|55|904.13|XSGD|753|664622.17
+2025-12-19|BRLA|977|2316482.13|BRL1|73|1103982.68|COPM|147|1100761.89|IDRT|32|156.54|XIDR|1|0.05|JPYC|72|4712.44|PHT|4|224.39|XSGD|655|918451.37
+2025-12-20|BRLA|708|883066.21|BRL1|57|477390.63|COPM|49|18405.74|IDRT|8|8.10|JPYC|37|2673.78|PHT|10|3.38|XSGD|137|391424.57
+2025-12-21|BRLA|376|318827.11|BRL1|38|73237.08|COPM|28|1216.53|IDRT|10|233.26|XIDR|1|0.02|JPYC|40|1082.84|XSGD|236|410225.14
+2025-12-22|BRLA|906|3340197.83|BRL1|99|288540.91|COPM|224|1435362.18|IDRT|7|21.18|JPYC|27|399.09|PHT|2|67.13|PHPC|1|0.00|XSGD|507|1396481.58
+2025-12-23|BRLA|958|2281939.17|BRL1|81|2108921.71|COPM|205|1501876.50|IDRT|5|135657.65|JPYC|37|1831.21|PHT|1|242.67|XSGD|540|651502.81
+2025-12-24|BRLA|660|1656670.97|BRL1|55|1251444.66|COPM|138|688677.18|IDRT|6|25.33|JPYC|21|436.61|XSGD|512|858153.75
+2025-12-25|BRLA|382|632292.63|BRL1|12|360352.93|COPM|44|33608.67|IDRT|4|4.26|XIDR|1|0.12|JPYC|73|2367.95|XSGD|297|459200.88
+2025-12-26|BRLA|689|1949931.03|BRL1|107|3108798.77|COPM|122|1210521.76|IDRT|7|3.25|JPYC|119|7301.22|XSGD|482|832145.61
+2025-12-27|BRLA|518|717607.77|BRL1|60|130085.03|COPM|24|8169.26|IDRT|6|21.95|JPYC|38|2212.63|XSGD|154|242515.36
+2025-12-28|BRLA|463|597055.25|BRL1|27|2130.82|COPM|24|5539.18|IDRT|7|12.78|JPYC|52|2651.49|PHPC|1|0.00|XSGD|206|378315.97
+2025-12-29|BRLA|742|2654714.50|BRL1|76|280305.52|COPM|237|1259062.41|IDRT|31|927.18|XIDR|1|7.78|JPYC|33|1240.88|PHT|1|42.11|XSGD|433|1425168.46
+2025-12-30|BRLA|1089|2765666.39|BRL1|99|881231.79|COPM|282|1963608.36|IDRT|6|19.24|JPYC|19|384.39|PHT|2|40.36|XSGD|248|703794.37
+2025-12-31|BRLA|784|1112751.12|BRL1|59|2876767.45|COPM|69|122471.17|IDRT|19|316.39|JPYC|284|18233.24|PHT|1|89.83|XSGD|334|1262565.45
+2026-01-01|BRLA|406|674529.84|BRL1|41|475248.03|COPM|39|4902.55|IDRT|159|8888.81|XIDR|20|236.71|JPYC|54|729.19|XSGD|241|1258786.51
+2026-01-02|BRLA|826|2424304.21|BRL1|153|2268911.08|COPM|106|1189708.68|IDRT|27|248.65|JPYC|146|9413.36|XSGD|485|839920.12
+2026-01-03|BRLA|437|446402.24|BRL1|10|69.71|COPM|29|1300.93|IDRT|15|8.12|XIDR|2|0.18|JPYC|12|84.71|XSGD|213|960133.59
+2026-01-04|BRLA|363|299888.93|BRL1|25|79595.20|COPM|27|1318.02|IDRT|12|182.59|XIDR|2|0.14|JPYC|57|4629.54|XSGD|182|937838.90
+2026-01-05|BRLA|1099|2417940.29|BRL1|135|1623457.21|COPM|122|928059.09|IDRT|4|44.68|JPYC|69|3231.04|PHT|1|430.59|XSGD|315|1487806.63
+2026-01-06|BRLA|930|2295448.66|BRL1|91|958723.25|COPM|114|2052184.11|IDRT|20|284.20|JPYC|64|2689.84|XSGD|455|1425270.23
+2026-01-07|BRLA|821|1625551.77|BRL1|42|156925.35|COPM|107|1277593.65|IDRT|11|68.29|JPYC|142|8809.75|PHPC|1|0.00|XSGD|355|992402.55
+2026-01-08|BRLA|808|1851212.31|BRL1|25|286609.06|COPM|79|1593629.63|IDRT|6|77.24|JPYC|14|496.40|XSGD|404|1364394.97
+2026-01-09|BRLA|960|1678002.50|BRL1|37|160671.09|COPM|87|607360.14|IDRT|31|264.58|XIDR|4|0.57|JPYC|55|181.58|PHT|2|326.99|XSGD|430|1306288.80
+2026-01-10|BRLA|552|664587.25|BRL1|23|50410.29|COPM|19|12637.54|IDRT|39|2426.07|XIDR|1|0.20|JPYC|59|2229.72|PHT|1|3.05|XSGD|276|1263686.96
+2026-01-11|BRLA|462|529301.50|BRL1|37|250198.88|COPM|10|1073.50|IDRT|17|320.73|XIDR|1|0.63|JPYC|65|3442.90|XSGD|226|600896.10
+2026-01-12|BRLA|906|2780708.65|BRL1|39|378823.73|COPM|20|2982.25|IDRT|15|161.47|XIDR|5|14.90|JPYC|23|367.21|PHT|2|2.98|XSGD|364|1105040.71
+2026-01-13|BRLA|936|1652044.99|BRL1|68|626435.33|COPM|130|2420217.95|IDRT|25|115.14|JPYC|51|3850.72|PHT|59|15909.86|XSGD|329|997641.62
+2026-01-14|BRLA|902|1435416.71|BRL1|77|679240.68|COPM|87|260882.21|IDRT|8|55.09|JPYC|37|467.94|PHPC|1|0.00|XSGD|369|1656094.80
+2026-01-15|BRLA|897|1447963.30|BRL1|33|468972.00|COPM|273|1072414.37|IDRT|9|51.51|XIDR|2|1.28|JPYC|25|5614.01|PHPC|1|0.00|XSGD|416|907961.88
+2026-01-16|BRLA|854|2273973.83|BRL1|85|995367.45|COPM|232|1262732.91|IDRT|36|358.82|XIDR|2|15.80|JPYC|6|372.69|PHPC|2|0.00|XSGD|289|593958.18
+2026-01-17|BRLA|506|365615.13|BRL1|20|124591.88|COPM|42|3229.37|IDRT|22|259.18|JPYC|197|7508.56|XSGD|168|656723.67
+2026-01-18|BRLA|431|344968.99|BRL1|14|81978.86|COPM|50|4618.34|IDRT|20|82.43|JPYC|31|1209.60|XSGD|147|398443.09
+2026-01-19|BRLA|893|2708611.10|BRL1|58|618688.33|COPM|116|740664.59|IDRT|15|96.49|XIDR|1|0.05|JPYC|102|4864.98|PHT|1|93.26|XSGD|336|1164892.44
+2026-01-20|BRLA|1023|2725121.50|BRL1|98|1629616.75|COPM|174|1333414.63|IDRT|39|1354.94|XIDR|1|0.22|JPYC|79|4124.63|PHT|3|200.38|XSGD|458|1378195.25
+2026-01-21|BRLA|1074|2274258.25|BRL1|98|1083441.53|COPM|221|2240519.97|IDRT|35|532.62|XIDR|2|59.15|JPYC|95|8981.01|PHT|1|157.66|PHPC|2|0.00|XSGD|536|1169185.94
+2026-01-22|BRLA|1070|2869674.31|BRL1|83|995071.35|COPM|208|2030540.80|IDRT|16|227.83|XIDR|1|5.77|JPYC|180|13260.36|PHT|1|558.75|XSGD|355|701095.89
+2026-01-23|BRLA|894|2594608.54|BRL1|137|2621773.98|COPM|263|2500752.70|IDRT|20|900.96|JPYC|29|431.10|XSGD|571|1409339.01
+2026-01-24|BRLA|435|295631.71|BRL1|117|981393.04|COPM|33|108750.88|IDRT|55|7044.21|XIDR|2|0.42|JPYC|156|7282.21|XSGD|242|621145.58
+2026-01-25|BRLA|558|498760.19|BRL1|110|446862.56|COPM|19|510.18|IDRT|27|938.64|XIDR|3|6.43|JPYC|203|25935.00|XSGD|483|864754.21
+2026-01-26|BRLA|919|2535730.39|BRL1|189|1013656.86|COPM|373|10409903.85|IDRT|28|461.26|XIDR|2|0.13|JPYC|87|4857.51|XSGD|505|1404732.56
+2026-01-27|BRLA|1275|3202946.41|BRL1|174|532840.84|COPM|339|9311783.42|IDRT|38|217.74|JPYC|80|1554.36|PHT|1|873.99|XSGD|558|780519.61
+2026-01-28|BRLA|1127|5613670.31|BRL1|167|2794174.74|COPM|243|7738410.31|IDRT|33|1478.61|XIDR|1|18.18|JPYC|152|1009.83|XSGD|496|996826.60
+2026-01-29|BRLA|1132|2731983.26|BRL1|214|525253.10|COPM|182|6209901.14|IDRT|36|189.73|XIDR|4|6.32|JPYC|54|1079.16|PHT|2|434.69|XSGD|572|1443085.60
+2026-01-30|BRLA|941|3176563.65|BRL1|216|969532.47|COPM|213|6904880.12|IDRT|52|649.42|JPYC|32|3948.43|PHT|2|1641.79|XSGD|739|2386291.09|BRZ|16259|93931595.08
+2026-01-31|BRLA|911|1137420.07|BRL1|104|324403.39|COPM|55|1138.90|IDRT|26|730.34|JPYC|49|1042.94|XSGD|803|1977549.61|BRZ|1018|2590470.87
+2026-02-01|BRLA|810|837844.98|BRL1|161|39379.48|COPM|27|2225.31|IDRT|6|59.37|JPYC|33|3594.94|XSGD|673|3237761.93|BRZ|733|2331175.38
+2026-02-02|BRLA|1125|3065619.34|BRL1|140|1093199.06|COPM|199|3710951.81|IDRT|20|756.76|JPYC|69|3720.41|XSGD|496|2678073.12|BRZ|1105|2686020.95
+2026-02-03|BRLA|1568|2998869.84|BRL1|193|3122476.85|COPM|139|4489110.29|IDRT|25|398.96|JPYC|39|2956.28|PHT|2|531.83|XSGD|340|1597519.67|BRZ|1139|2683690.71
+2026-02-04|BRLA|1068|2008264.97|BRL1|295|3337998.24|COPM|194|7209471.08|IDRT|19|161.13|JPYC|41|1066.25|XSGD|364|1542196.90|BRZ|1027|2006652.57
+2026-02-05|BRLA|1592|2548517.94|BRL1|317|2308556.83|COPM|168|7415779.18|IDRT|66|1836.05|XIDR|2|0.57|JPYC|30|711.90|PHT|1|706.56|XSGD|551|4245502.03|BRZ|1837|3241338.16
+2026-02-06|BRLA|1484|3160059.03|BRL1|213|1612582.04|COPM|103|1496854.65|IDRT|73|864.92|JPYC|35|588.51|PHT|1|636.28|XSGD|616|4673903.57|BRZ|1593|3008832.72
+2026-02-07|BRLA|668|945729.22|BRL1|98|1000164.21|COPM|25|14984.77|IDRT|52|1021.34|XIDR|3|4.76|JPYC|11|2232.13|XSGD|170|858130.59|BRZ|800|1056585.44
+2026-02-08|BRLA|508|547100.99|BRL1|118|929193.00|COPM|22|3718.15|IDRT|14|205.74|JPYC|195|17416.81|PHPC|1|0.00|XSGD|149|317603.64|BRZ|675|709122.71
+2026-02-09|BRLA|1009|3352227.72|BRL1|172|1021137.13|COPM|110|6064944.48|IDRT|39|708.87|JPYC|48|1779.15|XSGD|555|1740426.39|BRZ|1036|1422707.45
+2026-02-10|BRLA|1089|2756383.87|BRL1|217|1471853.64|COPM|151|1788374.29|IDRT|32|401.65|XIDR|2|6.48|JPYC|88|9529.11|XSGD|310|1181435.44|BRZ|964|1087320.41
+2026-02-11|BRLA|1093|3278562.21|BRL1|230|1298919.84|COPM|105|1015229.82|IDRT|32|154.84|JPYC|28|626.05|PHT|1|714.66|XSGD|285|1109087.27|BRZ|1041|1665807.77
+2026-02-12|BRLA|880|2042439.76|BRL1|201|906255.97|COPM|75|86628.27|IDRT|28|730.58|XIDR|1|590.04|JPYC|11|133.48|PHT|11|21351.35|XSGD|226|811054.39|BRZ|937|1414846.12
+2026-02-13|BRLA|797|3078209.79|BRL1|140|939243.06|COPM|35|51016.20|IDRT|30|180.29|XIDR|1|1.01|JPYC|18|2891.19|XSGD|224|985312.21|BRZ|754|1240327.89
+2026-02-14|BRLA|539|524697.79|BRL1|28|11074.91|COPM|31|2268.59|IDRT|39|804.97|XIDR|3|213.11|JPYC|73|3014.78|XSGD|114|406933.63|BRZ|590|1092362.94
+2026-02-15|BRLA|408|447407.15|BRL1|37|504647.94|COPM|22|1465.60|IDRT|30|182.52|XIDR|5|73.93|JPYC|30|761.67|PHT|1|0.02|XSGD|126|639361.28|BRZ|536|1236441.22
+2026-02-16|BRLA|654|439240.51|BRL1|185|1048753.66|COPM|112|600347.25|IDRT|23|174.39|JPYC|13|1793.02|XSGD|148|1017212.92|BRZ|581|1032940.14
+2026-02-17|BRLA|648|415748.00|BRL1|97|642249.75|COPM|79|735984.41|IDRT|28|731.19|XIDR|1|0.68|JPYC|18|758.33|XSGD|111|246141.61|BRZ|502|990662.56
+2026-02-18|BRLA|4|6662.37|BRL1|1|8.51|BRZ|2|5719.93`;
+
+const TM={
+  BRLA:{cur:'BRL',c:'#26A69A'},BRZ:{cur:'BRL',c:'#00897B'},BRL1:{cur:'BRL',c:'#004D40'},
+  XSGD:{cur:'SGD',c:'#5C6BC0'},COPM:{cur:'COP',c:'#FFA726'},JPYC:{cur:'JPY',c:'#EF5350'},
+  IDRT:{cur:'IDR',c:'#78909C'},XIDR:{cur:'IDR',c:'#546E7A'},
+  PHT:{cur:'PHP',c:'#AB47BC'},PHPC:{cur:'PHP',c:'#8E24AA'}
+};
+const CC={BRL:'#26A69A',SGD:'#5C6BC0',COP:'#FFA726',JPY:'#EF5350',IDR:'#78909C',PHP:'#AB47BC'};
+
+function parse(){
+  const rows=[];
+  R.split('\n').forEach(l=>{const p=l.split('|');const d=p[0];for(let i=1;i+2<p.length;i+=3)rows.push({d,t:p[i],tx:parseInt(p[i+1]),v:parseFloat(p[i+2])});});
+  return rows;
+}
+
+const raw=parse();
+const fU=v=>v>=1e9?'$'+(v/1e9).toFixed(2)+'B':v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(1)+'K':'$'+v.toFixed(0);
+const fC=v=>v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':v.toLocaleString();
+const fD=d=>{const p=d.split('-');return['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]]+' '+parseInt(p[2])};
+
+const tokenMap={},curMap={},dateMap={};
+raw.forEach(r=>{
+  if(!tokenMap[r.t])tokenMap[r.t]={v:0,tx:0};tokenMap[r.t].v+=r.v;tokenMap[r.t].tx+=r.tx;
+  const cur=TM[r.t]?.cur||'Other';if(!curMap[cur])curMap[cur]={v:0,tx:0};curMap[cur].v+=r.v;curMap[cur].tx+=r.tx;
+  if(!dateMap[r.d])dateMap[r.d]={v:0,tx:0};dateMap[r.d].v+=r.v;dateMap[r.d].tx+=r.tx;
+});
+const tokensSorted=Object.entries(tokenMap).sort((a,b)=>b[1].v-a[1].v);
+const cursSorted=Object.entries(curMap).sort((a,b)=>b[1].v-a[1].v);
+const dates=Object.keys(dateMap).sort();
+const totalV=tokensSorted.reduce((s,[,v])=>s+v.v,0);
+const totalTx=tokensSorted.reduce((s,[,v])=>s+v.tx,0);
+
+let metric='volume';
+let selected=tokensSorted.slice(0,6).map(([k])=>k);
+
+function renderKPIs(){
+  document.getElementById('rowBadge').textContent=raw.length+' ROWS';
+  document.getElementById('kpis').innerHTML=[
+    {l:'TOTAL VOLUME (USD)',val:fU(totalV),s:fD(dates[0])+' — '+fD(dates[dates.length-1])},
+    {l:'TOTAL TRANSACTIONS',val:fC(totalTx),s:dates.length+' days'},
+    {l:'ACTIVE TOKENS',val:tokensSorted.length,s:cursSorted.length+' fiat pegs'},
+    {l:'AVG DAILY VOL',val:fU(totalV/dates.length),s:'per day'}
+  ].map(k=>`<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.val}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+}
+
+function renderChips(){
+  document.getElementById('chips').innerHTML=tokensSorted.map(([t])=>{
+    const on=selected.includes(t);const c=TM[t]?.c||'#455A64';
+    return `<button class="chip${on?' on':''}" style="--cc:${c}" onclick="toggleToken('${t}')"><span class="chip-d"></span>${t}</button>`;
+  }).join('');
+}
+
+function toggleToken(t){
+  if(selected.includes(t)){if(selected.length>1)selected=selected.filter(x=>x!==t);}
+  else selected.push(t);
+  renderChips();renderMainChart();
+}
+
+function setMetric(m){
+  metric=m;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  document.getElementById('chartLabel').textContent=(m==='volume'?'TRANSFER VOLUME (USD)':'TRANSACTION COUNT')+' — DAILY STACKED';
+  renderMainChart();
+}
+
+let mainChartInst=null;
+function renderMainChart(){
+  const ctx=document.getElementById('mainChart');
+  if(mainChartInst)mainChartInst.destroy();
+  const byDate={};
+  raw.forEach(r=>{if(!selected.includes(r.t))return;if(!byDate[r.d])byDate[r.d]={};byDate[r.d][r.t]=(byDate[r.d][r.t]||0)+(metric==='volume'?r.v:r.tx);});
+  const labels=dates.filter(d=>byDate[d]);
+  const datasets=selected.map(t=>{
+    const c=TM[t]?.c||'#455A64';
+    return{label:t,data:labels.map(d=>byDate[d]?.[t]||0),backgroundColor:c+'40',borderColor:c,borderWidth:1.5,fill:true,pointRadius:0,tension:0.3};
+  });
+  Chart.defaults.color='#4B5563';Chart.defaults.font.family="'IBM Plex Mono',monospace";Chart.defaults.font.size=10;
+  mainChartInst=new Chart(ctx,{type:'line',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    scales:{
+      x:{grid:{color:'#1A1D2233'},ticks:{maxTicksLimit:10,callback:function(v,i){const d=labels[i];return d?fD(d):''}}},
+      y:{stacked:true,grid:{color:'#1A1D2233'},ticks:{callback:v=>metric==='volume'?(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v):(v>=1e3?(v/1e3).toFixed(0)+'K':v)}}
+    },
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1,callbacks:{
+      title:items=>{if(!items[0])return'';const d=items[0].label;return fD(d)+', '+d.split('-')[0]},
+      label:item=>item.dataset.label+': '+(metric==='volume'?fU(item.raw):fC(item.raw))
+    }}}
+  }});
+}
+
+function renderTable(){
+  document.getElementById('tbl').innerHTML=tokensSorted.map(([t,d])=>{
+    const sh=(d.v/totalV*100).toFixed(1);const c=TM[t]?.c||'#455A64';
+    return `<tr><td><span class="tk"><span class="tk-d" style="background:${c}"></span>${t}</span></td><td class="r">${fU(d.v)}</td><td class="r">${fC(d.tx)}</td><td class="r"><span class="bar-w"><span class="bar-f" style="width:${Math.min(+sh,100)}%;background:${c}"></span></span><span class="sh">${sh}%</span></td></tr>`;
+  }).join('');
+}
+
+let pieInst=null;
+function renderPie(){
+  const ctx=document.getElementById('pieChart');
+  if(pieInst)pieInst.destroy();
+  const labels=cursSorted.map(([k])=>k);const data=cursSorted.map(([,v])=>v.v);const colors=labels.map(k=>CC[k]||'#455A64');
+  pieInst=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:'#080A0D',borderWidth:2}]},options:{
+    responsive:true,maintainAspectRatio:false,cutout:'55%',
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1,callbacks:{label:item=>item.label+': '+fU(item.raw)}}}
+  }});
+  document.getElementById('pieLeg').innerHTML=cursSorted.map(([k,v])=>{
+    const c=CC[k]||'#455A64';
+    return `<div class="leg"><span class="leg-d" style="background:${c}"></span><span class="leg-n">${k}</span><span class="leg-p">${(v.v/totalV*100).toFixed(1)}%</span></div>`;
+  }).join('');
+}
+
+renderKPIs();renderChips();renderMainChart();renderTable();renderPie();
+</script>
+</body>
+</html>
