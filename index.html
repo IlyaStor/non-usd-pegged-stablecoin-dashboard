@@ -198,13 +198,13 @@ data:`2025-12-14|AUD|8|977555.62|XSGD|438|758825.20|BRZ|385|566990.91|BRLA|384|4
 2026-03-13|AUD|265|13154664.43|BRL1|321|2827737.24|BRLA|1076|2739756.18|COPM|133|2142705.05|XSGD|279|1041443.74|BRZ|548|697991.33|EURe|175|157953.00|JPYC|88|5284.63|PHT|14|2754.55|IDRT|80|2001.27|CAD|2|214.25|EUROP|1|1.19
 2026-03-14|AUD|42|3520817.35|BRZ|73|192187.92|XSGD|56|155154.27|BRLA|124|69564.07|EURe|62|9181.09|BRL1|45|6209.71|COPM|52|3245.55|IDRT|23|297.91|PHT|2|88.72|JPYC|13|46.52|XIDR|1|0.24`,
 tm:{
-  BRLA:{cur:'BRL',c:'#26A69A'},BRZ:{cur:'BRL',c:'#00897B'},BRL1:{cur:'BRL',c:'#004D40'},
-  XSGD:{cur:'SGD',c:'#5C6BC0'},COPM:{cur:'COP',c:'#FFA726'},JPYC:{cur:'JPY',c:'#EF5350'},
-  IDRT:{cur:'IDR',c:'#78909C'},XIDR:{cur:'IDR',c:'#546E7A'},
-  PHT:{cur:'PHP',c:'#AB47BC'},PHPC:{cur:'PHP',c:'#8E24AA'},
-  AUD:{cur:'AUD',c:'#26C6DA'},CAD:{cur:'CAD',c:'#8D6E63'},
-  EURe:{cur:'EUR',c:'#42A5F5'},EURQ:{cur:'EUR',c:'#1E88E5'},EUROP:{cur:'EUR',c:'#1565C0'},
-  TRYB:{cur:'TRY',c:'#FF7043'},ZARP:{cur:'ZAR',c:'#FFCA28'}
+  BRLA:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRLA'},BRZ:{cur:'BRL',c:'#00897B',n:'Brazilian Real — BRZ'},BRL1:{cur:'BRL',c:'#004D40',n:'Brazilian Real — BRL1'},
+  XSGD:{cur:'SGD',c:'#5C6BC0',n:'Singapore Dollar — XSGD'},COPM:{cur:'COP',c:'#FFA726',n:'Colombian Peso — COPM'},JPYC:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — JPYC'},
+  IDRT:{cur:'IDR',c:'#78909C',n:'Indonesian Rupiah — IDRT'},XIDR:{cur:'IDR',c:'#546E7A',n:'Indonesian Rupiah — XIDR'},
+  PHT:{cur:'PHP',c:'#AB47BC',n:'Philippine Peso — PHT'},PHPC:{cur:'PHP',c:'#8E24AA',n:'Philippine Peso — PHPC'},
+  AUD:{cur:'AUD',c:'#26C6DA',n:'Australian Dollar — AUD'},CAD:{cur:'CAD',c:'#8D6E63',n:'Canadian Dollar — CAD'},
+  EURe:{cur:'EUR',c:'#42A5F5',n:'Euro — EURe'},EURQ:{cur:'EUR',c:'#1E88E5',n:'Euro — EURQ'},EUROP:{cur:'EUR',c:'#1565C0',n:'Euro — EUROP'},
+  TRYB:{cur:'TRY',c:'#FF7043',n:'Turkish Lira — TRYB'},ZARP:{cur:'ZAR',c:'#FFCA28',n:'South African Rand — ZARP'}
 },
 cc:{BRL:'#26A69A',SGD:'#5C6BC0',COP:'#FFA726',JPY:'#EF5350',IDR:'#78909C',PHP:'#AB47BC',AUD:'#26C6DA',CAD:'#8D6E63',EUR:'#42A5F5',TRY:'#FF7043',ZAR:'#FFCA28'}
 },
@@ -302,10 +302,10 @@ data:`2025-12-14|AUDD|284|613115.39|EURC|6729|76921.53|ARS|249|3630.86|NGNC|175|
 2026-03-13|EURC|4072|10496808.31|AUDD|452|1404069.49|ARS|350|3321.63|GYEN|232|47.33|PEN|161|19.06|NGNC|189|4.12|BRLT|11|0.03
 2026-03-14|EURC|596|156292.94|AUDD|43|11.73|ARS|29|7.83|GYEN|27|1.60|NGNC|21|0.17|PEN|10|0.11|BRLT|1|0.00`,
 tm:{
-  EURC:{cur:'EUR',c:'#42A5F5'},EURS:{cur:'EUR',c:'#1E88E5'},
-  AUDD:{cur:'AUD',c:'#26C6DA'},ARS:{cur:'ARS',c:'#7E57C2'},
-  GYEN:{cur:'JPY',c:'#EF5350'},NGNC:{cur:'NGN',c:'#66BB6A'},
-  BRLT:{cur:'BRL',c:'#26A69A'},PEN:{cur:'PEN',c:'#FFA726'}
+  EURC:{cur:'EUR',c:'#42A5F5',n:'Euro — EURC (Circle)'},EURS:{cur:'EUR',c:'#1E88E5',n:'Euro — EURS'},
+  AUDD:{cur:'AUD',c:'#26C6DA',n:'Australian Dollar — AUDD'},ARS:{cur:'ARS',c:'#7E57C2',n:'Argentine Peso — ARS'},
+  GYEN:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — GYEN'},NGNC:{cur:'NGN',c:'#66BB6A',n:'Nigerian Naira — NGNC'},
+  BRLT:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRLT'},PEN:{cur:'PEN',c:'#FFA726',n:'Peruvian Sol — PEN'}
 },
 cc:{EUR:'#42A5F5',AUD:'#26C6DA',ARS:'#7E57C2',JPY:'#EF5350',NGN:'#66BB6A',BRL:'#26A69A',PEN:'#FFA726'}
 },
@@ -402,9 +402,9 @@ data:`2025-12-14|EURC|12113|26589754.39|VCHF|592|169558.83|VEUR|197|38993.08|EUR
 2026-03-12|EURC|19540|18398592.76|VCHF|454|186122.44|BRZ|10|51422.19|VEUR|586|31077.77|EUROe|8|22.95
 2026-03-13|EURC|26019|31870455.54|VEUR|745|167597.02|VCHF|870|144112.14|EUROe|19|70.06|BRZ|6|38.66`,
 tm:{
-  EURC:{cur:'EUR',c:'#42A5F5'},EUROe:{cur:'EUR',c:'#1E88E5'},
-  VEUR:{cur:'EUR',c:'#7E57C2'},VCHF:{cur:'CHF',c:'#FFA726'},
-  BRZ:{cur:'BRL',c:'#26A69A'},GYEN:{cur:'JPY',c:'#EF5350'}
+  EURC:{cur:'EUR',c:'#42A5F5',n:'Euro — EURC (Circle)'},EUROe:{cur:'EUR',c:'#1E88E5',n:'Euro — EUROe'},
+  VEUR:{cur:'EUR',c:'#7E57C2',n:'Euro — VEUR (VNX)'},VCHF:{cur:'CHF',c:'#FFA726',n:'Swiss Franc — VCHF (VNX)'},
+  BRZ:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRZ'},GYEN:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — GYEN'}
 },
 cc:{EUR:'#42A5F5',CHF:'#FFA726',BRL:'#26A69A',JPY:'#EF5350'}
 }
@@ -510,7 +510,8 @@ function renderTable(){
   const tm=NETWORKS[curNet].tm;
   document.getElementById('tbl').innerHTML=tokensSorted.map(([t,d])=>{
     const sh=(d.v/totalV*100).toFixed(1);const c=tm[t]?.c||'#455A64';
-    return `<tr><td><span class="tk"><span class="tk-d" style="background:${c}"></span>${t}</span></td><td class="r">${fU(d.v)}</td><td class="r">${fC(d.tx)}</td><td class="r"><span class="bar-w"><span class="bar-f" style="width:${Math.min(+sh,100)}%;background:${c}"></span></span><span class="sh">${sh}%</span></td></tr>`;
+    const nm=tm[t]?.n||t;
+    return `<tr><td><span class="tk"><span class="tk-d" style="background:${c}"></span>${nm}</span></td><td class="r">${fU(d.v)}</td><td class="r">${fC(d.tx)}</td><td class="r"><span class="bar-w"><span class="bar-f" style="width:${Math.min(+sh,100)}%;background:${c}"></span></span><span class="sh">${sh}%</span></td></tr>`;
   }).join('');
 }
 
