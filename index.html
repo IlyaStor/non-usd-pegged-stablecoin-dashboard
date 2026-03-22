@@ -539,10 +539,10 @@ let mainChartInst=null;
 function renderMainChart(){
   if(curNet==='suspicious'){
     if(mainChartInst)mainChartInst.destroy();
-    document.getElementById('mainChart').style.display='none';
+    document.querySelector('.panel:has(#mainChart)').style.display='none';
     return;
   }
-  document.getElementById('mainChart').style.display='block';
+  document.querySelector('.panel:has(#mainChart)').style.display='block';
   const ctx=document.getElementById('mainChart');
   const tm=NETWORKS[curNet].tm;
   if(mainChartInst)mainChartInst.destroy();
