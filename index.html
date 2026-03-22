@@ -569,11 +569,23 @@ function renderMainChart(){
 
 function renderTable(){
   if(curNet==='suspicious'){
+    document.querySelector('.cols').style.display='none';
     const rows=NETWORKS.suspicious.rows||[];
-    document.getElementById('tbl').innerHTML=rows.map(r=>{
-      return `<tr><td><span class="tk"><span class="tk-d" style="background:#FF6B6B"></span><strong>${r.chain}: ${r.token}</strong></span></td><td colspan="3" style="color:#9CA3AF;font-size:10px;padding:7px 0">${r.reason}</td></tr>`;
+    const tblContainer=document.querySelector('[style*="col-l"]')?.parentElement;
+    if(!document.getElementById('suspiciousPanel')){
+      const panel=document.createElement('div');
+      panel.id='suspiciousPanel';
+      panel.className='panel';
+      panel.innerHTML=`<div class="panel-t">SUSPICIOUS TOKENS</div><table><thead><tr><th>CHAIN</th><th>TOKEN</th><th style="text-align:left">REASON</th></tr></thead><tbody id="suspiciousTbl"></tbody></table>`;
+      document.querySelector('.body').insertBefore(panel,document.querySelector('.cols'));
+    }
+    document.getElementById('suspiciousTbl').innerHTML=rows.map(r=>{
+      return `<tr><td style="color:#FF6B6B;font-weight:600">${r.chain}</td><td style="color:#FFD54F">${r.token}</td><td style="color:#9CA3AF;font-size:10px">${r.reason}</td></tr>`;
     }).join('');
   }else{
+    document.querySelector('.cols').style.display='flex';
+    const suspPanel=document.getElementById('suspiciousPanel');
+    if(suspPanel)suspPanel.remove();
     const tm=NETWORKS[curNet].tm;
     document.getElementById('tbl').innerHTML=tokensSorted.map(([t,d])=>{
       const sh=(d.v/totalV*100).toFixed(1);const c=tm[t]?.c||'#455A64';
