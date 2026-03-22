@@ -76,6 +76,7 @@ td.r{text-align:right;color:#9CA3AF}
       <button class="net-tab on" onclick="switchNetwork('polygon')">Polygon</button>
       <button class="net-tab" onclick="switchNetwork('stellar')">Stellar</button>
       <button class="net-tab" onclick="switchNetwork('solana')">Solana</button>
+      <button class="net-tab" onclick="switchNetwork('suspicious')">Suspicious</button>
     </div>
     <div class="kpis" id="kpis"></div>
     <div class="ctrl">
@@ -427,6 +428,19 @@ tm:{
   BRZ:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRZ'},GYEN:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — GYEN'}
 },
 cc:{EUR:'#42A5F5',CHF:'#FFA726',BRL:'#26A69A',JPY:'#EF5350'}
+},
+
+suspicious:{
+data:`CHAIN|TOKEN|REASON`,
+tm:{},cc:{},
+rows:[
+{chain:'Solana',token:'JPYSC (5 variants)',reason:'Null mint/freeze authorities. News-reactive impersonation of SBI JPYSC (announced Feb 27, 2026). ~1T supply. Scam marker: 100% predictive across 100+ tokens'},
+{chain:'Solana',token:'JPYC (2 variants)',reason:'Unauthorized JPYC on Solana. JPYC Inc. exists only on Ethereum/Polygon/Avalanche. Null authorities, ~1T supply'},
+{chain:'Solana',token:'JPYCI',reason:'Fabricated ticker with no known issuer. Null authorities, ~500B supply'},
+{chain:'Stellar',token:'IDRT',reason:'Unverified issuer on Stellar. Cross-chain mismatch: tracked on Polygon via Dune, appears on Stellar with inconsistent authority chain'},
+{chain:'Stellar',token:'XSGD',reason:'Unverified issuer on Stellar. Cross-chain mismatch: tracked on Polygon via Dune, appears on Stellar'},
+{chain:'Stellar',token:'RUBX, AUDX, INRX, CNYX, EURX (bot spam)',reason:'Suspected bot farm activity. ~70% of low-volume Stellar results are airdrop farms or spam accounts with 15K+ transactions from 13-15 senders'}
+]
 }
 };
 
@@ -447,44 +461,65 @@ function parse(dataStr){
 function loadNetwork(net){
   curNet=net;
   const cfg=NETWORKS[net];
-  raw=parse(cfg.data);
-  tokenMap={};curMap={};dateMap={};
-  raw.forEach(r=>{
-    if(!tokenMap[r.t])tokenMap[r.t]={v:0,tx:0};tokenMap[r.t].v+=r.v;tokenMap[r.t].tx+=r.tx;
-    const cur=cfg.tm[r.t]?.cur||'Other';if(!curMap[cur])curMap[cur]={v:0,tx:0};curMap[cur].v+=r.v;curMap[cur].tx+=r.tx;
-    if(!dateMap[r.d])dateMap[r.d]={v:0,tx:0};dateMap[r.d].v+=r.v;dateMap[r.d].tx+=r.tx;
-  });
-  tokensSorted=Object.entries(tokenMap).sort((a,b)=>b[1].v-a[1].v);
-  cursSorted=Object.entries(curMap).sort((a,b)=>b[1].v-a[1].v);
-  dates=Object.keys(dateMap).sort();
-  totalV=tokensSorted.reduce((s,[,v])=>s+v.v,0);
-  totalTx=tokensSorted.reduce((s,[,v])=>s+v.tx,0);
-  selected=tokensSorted.slice(0,6).map(([k])=>k);
+  if(net==='suspicious'){
+    raw=cfg.rows||[];
+    tokenMap={};curMap={};dateMap={};
+    tokensSorted=[];cursSorted=[];dates=[];totalV=0;totalTx=0;selected=[];
+  }else{
+    raw=parse(cfg.data);
+    tokenMap={};curMap={};dateMap={};
+    raw.forEach(r=>{
+      if(!tokenMap[r.t])tokenMap[r.t]={v:0,tx:0};tokenMap[r.t].v+=r.v;tokenMap[r.t].tx+=r.tx;
+      const cur=cfg.tm[r.t]?.cur||'Other';if(!curMap[cur])curMap[cur]={v:0,tx:0};curMap[cur].v+=r.v;curMap[cur].tx+=r.tx;
+      if(!dateMap[r.d])dateMap[r.d]={v:0,tx:0};dateMap[r.d].v+=r.v;dateMap[r.d].tx+=r.tx;
+    });
+    tokensSorted=Object.entries(tokenMap).sort((a,b)=>b[1].v-a[1].v);
+    cursSorted=Object.entries(curMap).sort((a,b)=>b[1].v-a[1].v);
+    dates=Object.keys(dateMap).sort();
+    totalV=tokensSorted.reduce((s,[,v])=>s+v.v,0);
+    totalTx=tokensSorted.reduce((s,[,v])=>s+v.tx,0);
+    selected=tokensSorted.slice(0,6).map(([k])=>k);
+  }
 }
 
 function switchNetwork(net){
   loadNetwork(net);
   document.querySelectorAll('.net-tab').forEach(b=>b.classList.toggle('on',b.textContent.toLowerCase()===net));
-  document.getElementById('netLabel').textContent=net.toUpperCase();
+  document.getElementById('netLabel').textContent=(net==='suspicious'?'SUSPICIOUS TOKENS':net.toUpperCase());
+  document.getElementById('chartLabel').textContent=(net==='suspicious'?'SUSPICIOUS TOKENS BY NETWORK':'TRANSFER VOLUME (USD) — DAILY STACKED');
+  document.querySelectorAll('.tabs').forEach(t=>t.style.display=net==='suspicious'?'none':'flex');
   renderAll();
 }
 
 function renderKPIs(){
   document.getElementById('rowBadge').textContent='';
-  document.getElementById('kpis').innerHTML=[
-    {l:'TOTAL VOLUME (USD)',val:fU(totalV),s:fD(dates[0])+' — '+fD(dates[dates.length-1])},
-    {l:'TOTAL TRANSACTIONS',val:fC(totalTx),s:dates.length+' days'},
-    {l:'ACTIVE TOKENS',val:tokensSorted.length,s:cursSorted.length+' fiat pegs'},
-    {l:'AVG DAILY VOL',val:fU(totalV/dates.length),s:'per day'}
-  ].map(k=>`<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.val}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+  if(curNet==='suspicious'){
+    const rows=NETWORKS.suspicious.rows||[];
+    document.getElementById('kpis').innerHTML=[
+      {l:'SUSPICIOUS TOKENS',val:rows.length,s:'detected across networks'},
+      {l:'DOMINANT NETWORK',val:'Solana',s:'scam ecosystem'},
+      {l:'PATTERN TYPE',val:'Null Auth',s:'100% predictive'}
+    ].map(k=>`<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.val}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+  }else{
+    document.getElementById('kpis').innerHTML=[
+      {l:'TOTAL VOLUME (USD)',val:fU(totalV),s:fD(dates[0])+' — '+fD(dates[dates.length-1])},
+      {l:'TOTAL TRANSACTIONS',val:fC(totalTx),s:dates.length+' days'},
+      {l:'ACTIVE TOKENS',val:tokensSorted.length,s:cursSorted.length+' fiat pegs'},
+      {l:'AVG DAILY VOL',val:fU(totalV/dates.length),s:'per day'}
+    ].map(k=>`<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.val}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+  }
 }
 
 function renderChips(){
-  const tm=NETWORKS[curNet].tm;
-  document.getElementById('chips').innerHTML=tokensSorted.map(([t])=>{
-    const on=selected.includes(t);const c=tm[t]?.c||'#455A64';
-    return `<button class="chip${on?' on':''}" style="--cc:${c}" onclick="toggleToken('${t}')"><span class="chip-d"></span>${t}</button>`;
-  }).join('');
+  if(curNet==='suspicious'){
+    document.getElementById('chips').innerHTML='';
+  }else{
+    const tm=NETWORKS[curNet].tm;
+    document.getElementById('chips').innerHTML=tokensSorted.map(([t])=>{
+      const on=selected.includes(t);const c=tm[t]?.c||'#455A64';
+      return `<button class="chip${on?' on':''}" style="--cc:${c}" onclick="toggleToken('${t}')"><span class="chip-d"></span>${t}</button>`;
+    }).join('');
+  }
 }
 
 function toggleToken(t){
@@ -502,6 +537,12 @@ function setMetric(m){
 
 let mainChartInst=null;
 function renderMainChart(){
+  if(curNet==='suspicious'){
+    if(mainChartInst)mainChartInst.destroy();
+    document.getElementById('mainChart').style.display='none';
+    return;
+  }
+  document.getElementById('mainChart').style.display='block';
   const ctx=document.getElementById('mainChart');
   const tm=NETWORKS[curNet].tm;
   if(mainChartInst)mainChartInst.destroy();
@@ -527,16 +568,30 @@ function renderMainChart(){
 }
 
 function renderTable(){
-  const tm=NETWORKS[curNet].tm;
-  document.getElementById('tbl').innerHTML=tokensSorted.map(([t,d])=>{
-    const sh=(d.v/totalV*100).toFixed(1);const c=tm[t]?.c||'#455A64';
-    const nm=tm[t]?.n||t;
-    return `<tr><td><span class="tk"><span class="tk-d" style="background:${c}"></span>${nm}</span></td><td class="r">${fU(d.v)}</td><td class="r">${fC(d.tx)}</td><td class="r"><span class="bar-w"><span class="bar-f" style="width:${Math.min(+sh,100)}%;background:${c}"></span></span><span class="sh">${sh}%</span></td></tr>`;
-  }).join('');
+  if(curNet==='suspicious'){
+    const rows=NETWORKS.suspicious.rows||[];
+    document.getElementById('tbl').innerHTML=rows.map(r=>{
+      return `<tr><td><span class="tk"><span class="tk-d" style="background:#FF6B6B"></span><strong>${r.chain}: ${r.token}</strong></span></td><td colspan="3" style="color:#9CA3AF;font-size:10px;padding:7px 0">${r.reason}</td></tr>`;
+    }).join('');
+  }else{
+    const tm=NETWORKS[curNet].tm;
+    document.getElementById('tbl').innerHTML=tokensSorted.map(([t,d])=>{
+      const sh=(d.v/totalV*100).toFixed(1);const c=tm[t]?.c||'#455A64';
+      const nm=tm[t]?.n||t;
+      return `<tr><td><span class="tk"><span class="tk-d" style="background:${c}"></span>${nm}</span></td><td class="r">${fU(d.v)}</td><td class="r">${fC(d.tx)}</td><td class="r"><span class="bar-w"><span class="bar-f" style="width:${Math.min(+sh,100)}%;background:${c}"></span></span><span class="sh">${sh}%</span></td></tr>`;
+    }).join('');
+  }
 }
 
 let pieInst=null;
 function renderPie(){
+  if(curNet==='suspicious'){
+    if(pieInst)pieInst.destroy();
+    document.getElementById('pieChart').style.display='none';
+    document.getElementById('pieLeg').innerHTML='';
+    return;
+  }
+  document.getElementById('pieChart').style.display='block';
   const ctx=document.getElementById('pieChart');
   const cc=NETWORKS[curNet].cc;
   if(pieInst)pieInst.destroy();
