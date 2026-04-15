@@ -19,6 +19,7 @@ body{background:#080A0D;color:#E5E7EB;font-family:'IBM Plex Mono',monospace;min-
 .hdr-t{font-size:14px;font-weight:600;color:#F9FAFB}
 .hdr-s{font-size:10px;color:#374151}
 .badge{font-size:9px;color:#374151;padding:3px 8px;border:1px solid #1A1D22}
+.loading{font-size:10px;color:#4B5563}
 .body{padding:20px 24px}
 .net-tabs{display:flex;gap:0;margin-bottom:16px}
 .net-tab{background:#0D0F12;color:#4B5563;border:1px solid #1A1D22;padding:8px 20px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;transition:all 0.15s}
@@ -26,6 +27,7 @@ body{background:#080A0D;color:#E5E7EB;font-family:'IBM Plex Mono',monospace;min-
 .net-tab:last-child{border-radius:0 4px 4px 0}
 .net-tab+.net-tab{border-left:none}
 .net-tab.on{background:#1A1D22;color:#F9FAFB;border-color:#2D3139}
+.net-tab:disabled{opacity:0.5;cursor:not-allowed}
 .kpis{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .kpi{background:#0D0F12;border:1px solid #1A1D22;padding:14px 20px;flex:1;min-width:170}
 .kpi-l{color:#4B5563;font-size:10px;text-transform:uppercase;letter-spacing:0.08em}
@@ -63,20 +65,22 @@ td.r{text-align:right;color:#9CA3AF}
 .leg-n{color:#6B7280}
 .leg-p{color:#2D3139}
 .ftr{padding:12px 24px;border-top:1px solid #1A1D22;display:flex;justify-content:space-between;font-size:9px;color:#1E2328}
+.error{color:#FF6B6B;background:#1A0000;border:1px solid #660000;padding:12px;margin-bottom:12px;border-radius:4px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hdr">
-    <div class="hdr-l"><div class="dot"></div><span class="hdr-t">NON-USD STABLECOINS</span><span class="hdr-s" id="netLabel">POLYGON</span></div>
-    <span class="badge" id="rowBadge"></span>
+    <div class="hdr-l"><div class="dot"></div><span class="hdr-t">NON-USD STABLECOINS</span><span class="hdr-s" id="netLabel">LOADING...</span></div>
+    <span class="loading" id="rowBadge">Fetching data...</span>
   </div>
-  <div class="body">
+  <div class="body" id="mainBody">
+    <div class="error" id="errorBox" style="display:none;"></div>
     <div class="net-tabs">
-      <button class="net-tab on" onclick="switchNetwork('polygon')">Polygon</button>
-      <button class="net-tab" onclick="switchNetwork('stellar')">Stellar</button>
-      <button class="net-tab" onclick="switchNetwork('solana')">Solana</button>
-      <button class="net-tab" onclick="switchNetwork('suspicious')">Suspicious</button>
+      <button class="net-tab on" onclick="switchNetwork('polygon')" id="btnPolygon">Polygon</button>
+      <button class="net-tab" onclick="switchNetwork('stellar')" id="btnStellar">Stellar</button>
+      <button class="net-tab" onclick="switchNetwork('solana')" id="btnSolana">Solana</button>
+      <button class="net-tab" onclick="switchNetwork('suspicious')" id="btnSuspicious">Suspicious</button>
     </div>
     <div class="kpis" id="kpis"></div>
     <div class="ctrl">
@@ -102,358 +106,281 @@ td.r{text-align:right;color:#9CA3AF}
       </div>
     </div>
   </div>
-  <div class="ftr"><span>NON-USD STABLECOIN TRACKER v0.7</span><span>DATA: DUNE ANALYTICS</span></div>
+  <div class="ftr"><span>NON-USD STABLECOIN TRACKER v1.0 (API)</span><span>DATA: DUNE ANALYTICS</span></div>
 </div>
 <script>
-const NETWORKS={
-polygon:{
-data:`2026-04-15|BRL1|50|558808.63|XSGD|121|346485.07|BRLA|193|95550.1|BRZ|154|48155.37|IDRT|58|583.9|COPM|8|315.44|JPYC|3|0.69
-2026-04-14|BRLA|1179|2109264.0|COPM|113|1473167.97|BRL1|198|1233497.4|XSGD|229|1079275.94|BRZ|968|850999.67|JPYC|39|2762.11|IDRT|175|1807.56
-2026-04-13|BRLA|1184|2785438.98|XSGD|236|1172565.65|COPM|106|985778.71|BRL1|199|937555.6|BRZ|969|930883.92|IDRT|163|1287.77|JPYC|39|321.63|PHT|1|0.34
-2026-04-12|XSGD|159|610460.67|BRLA|639|329327.21|BRZ|629|261731.98|BRL1|136|226264.89|JPYC|75|4030.07|IDRT|39|335.21|COPM|4|36.43
-2026-04-11|BRL1|126|537378.72|BRLA|758|425109.6|XSGD|157|414588.18|BRZ|720|350126.0|COPM|16|20775.49|JPYC|46|2514.5|IDRT|30|347.23|PHPC|6|0.0
-2026-04-10|BRLA|1446|2445134.82|COPM|128|2435563.16|BRZ|1349|1266946.53|XSGD|241|1018465.56|BRL1|237|843512.77|JPYC|159|7489.24|IDRT|106|1804.22|XIDR|2|0.23
-2026-04-09|COPM|131|2990293.63|BRLA|1296|2173342.31|BRZ|1139|1956581.61|BRL1|195|1576754.22|XSGD|281|906852.74|JPYC|27|1663.17|IDRT|93|739.82
-2026-04-08|BRZ|1527|2840596.61|BRLA|1485|2350904.55|COPM|147|1975555.57|BRL1|229|1805273.64|XSGD|337|1033240.83|JPYC|82|5304.13|IDRT|100|2708.82|PHT|3|92.92
-2026-04-07|COPM|165|6304795.91|BRLA|1115|3115779.26|BRL1|224|1722369.18|BRZ|2093|1479932.53|XSGD|272|699405.38|JPYC|83|5407.75|IDRT|122|2123.25|XIDR|2|0.22
-2026-04-06|COPM|140|3746900.59|BRLA|1012|1625716.2|BRZ|1027|1615349.57|BRL1|180|1397069.78|XSGD|236|1210235.79|IDRT|106|1754.49|JPYC|14|72.12|PHT|5|5.74
-2026-04-05|XSGD|168|1574211.49|BRL1|121|301769.84|BRLA|462|250571.3|BRZ|454|181320.59|IDRT|25|1385.34|JPYC|12|189.78
-2026-04-04|XSGD|149|636030.79|BRL1|159|396921.1|BRLA|459|180115.53|BRZ|585|172149.64|IDRT|36|1368.25|JPYC|10|243.13
-2026-04-03|XSGD|226|843744.33|BRLA|625|457795.91|BRZ|692|413518.94|BRL1|115|178738.03|IDRT|25|1448.24|JPYC|5|75.82|COPM|2|54.85|XIDR|1|0.03
-2026-04-02|BRL1|288|3028176.06|BRLA|1141|2434419.78|XSGD|284|1260285.18|BRZ|944|759897.04`,
-tm:{
-  BRLA:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRLA'},BRZ:{cur:'BRL',c:'#00897B',n:'Brazilian Real — BRZ'},BRL1:{cur:'BRL',c:'#004D40',n:'Brazilian Real — BRL1'},
-  XSGD:{cur:'SGD',c:'#5C6BC0',n:'Singapore Dollar — XSGD'},COPM:{cur:'COP',c:'#FFA726',n:'Colombian Peso — COPM'},JPYC:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — JPYC'},
-  IDRT:{cur:'IDR',c:'#78909C',n:'Indonesian Rupiah — IDRT'},XIDR:{cur:'IDR',c:'#546E7A',n:'Indonesian Rupiah — XIDR'},
-  PHT:{cur:'PHP',c:'#AB47BC',n:'Philippine Peso — PHT'},PHPC:{cur:'PHP',c:'#8E24AA',n:'Philippine Peso — PHPC'},
-  AUD:{cur:'AUD',c:'#26C6DA',n:'Australian Dollar — AUD'},CAD:{cur:'CAD',c:'#8D6E63',n:'Canadian Dollar — CAD'},
-  EURe:{cur:'EUR',c:'#42A5F5',n:'Euro — EURe'},EURQ:{cur:'EUR',c:'#1E88E5',n:'Euro — EURQ'},EUROP:{cur:'EUR',c:'#1565C0',n:'Euro — EUROP'},
-  TRYB:{cur:'TRY',c:'#FF7043',n:'Turkish Lira — TRYB'},ZARP:{cur:'ZAR',c:'#FFCA28',n:'South African Rand — ZARP'},
-  AUDX:{cur:'AUD',c:'#00BCD4',n:'Australian Dollar — AUDX'},IDRX:{cur:'IDR',c:'#607D8B',n:'Indonesian Rupiah — IDRX'},
-  EURS:{cur:'EUR',c:'#1565C0',n:'Euro — EURS (STASIS)'},XZAR:{cur:'ZAR',c:'#FFD54F',n:'South African Rand — XZAR'},
-  CADC:{cur:'CAD',c:'#A1887F',n:'Canadian Dollar — CADC'}
-},
-cc:{BRL:'#26A69A',SGD:'#5C6BC0',COP:'#FFA726',JPY:'#EF5350',IDR:'#78909C',PHP:'#AB47BC',AUD:'#26C6DA',CAD:'#8D6E63',EUR:'#42A5F5',TRY:'#FF7043',ZAR:'#FFCA28'}
-},
+// Global state
+let NETWORKS = {polygon:{data:'',tm:{},cc:{}},stellar:{data:'',tm:{},cc:{}},solana:{data:'',tm:{},cc:{}}};
+let curNet = 'polygon';
+let metric = 'volume';
+let selected = new Set();
+let mainChartInst = null, pieInst = null;
+let dataCache = {};
 
-stellar:{
-data:`2026-04-15|ARS|112|1.66|AUDD|255|262457.55|EURC (Circle)|846|9716.17|GYEN|67|15.74|NGNC|323|2.44|PEN|80|1.23
-2026-04-14|ARS|456|4558.86|AUDD|556|2119643.37|BRLT|11|0.36|EURC (Circle)|2506|11250754.78|GYEN|1060|70.86|NGNC|1115|217.8|PEN|528|21.14
-2026-04-13|ARS|428|1548.79|AUDD|597|638391.74|BRLT|3|0.07|EURC (Circle)|3276|8768593.73|GYEN|376|65.25|NGNC|223|15.79|PEN|263|3.42
-2026-04-12|ARS|278|210.68|AUDD|332|45.57|BRLT|9|0.06|EURC (Circle)|2113|402884.48|GYEN|171|4.58|NGNC|151|1.48|PEN|72|0.43
-2026-04-11|ARS|220|4409.3|AUDD|229|45.32|BRLT|6|0.05|EURC (Circle)|1505|795221.64|GYEN|122|3.89|NGNC|282|8.72|PEN|76|5.78
-2026-04-10|ARS|330|5570.4|AUDD|452|1345832.78|BRLT|9|0.06|EURC (Circle)|1894|5823427.01|GYEN|364|128.81|NGNC|196|0.7|PEN|50|0.69
-2026-04-09|ARS|321|4144.75|AUDD|411|3250.31|BRLT|10|0.08|EURC (Circle)|2522|6158321.3|GYEN|202|53.36|NGNC|228|2.87|PEN|165|44.45
-2026-04-08|ARS|190|11003.83|AUDD|245|1505293.45|BRLT|9|0.07|EURC (Circle)|1965|5968070.32|GYEN|139|33.7|NGNC|1047|225.33|PEN|54|5.3
-2026-04-07|ARS|376|5004.51|AUDD|549|41572.64|BRLT|23|0.16|EURC (Circle)|2302|15591422.32|GYEN|267|53.9|NGNC|152|65.23|PEN|63|5.42
-2026-04-06|ARS|413|8534.6|AUDD|400|400286.74|BRLT|6|0.08|EURC (Circle)|2152|6313713.63|GYEN|336|233.44|NGNC|261|6.51|PEN|74|3.06
-2026-04-05|ARS|225|1128.74|AUDD|248|64.18|BRLT|10|0.11|EURC (Circle)|1790|1101388.85|GYEN|189|9.7|NGNC|142|4.19|PEN|56|0.71
-2026-04-04|ARS|225|2538.7|AUDD|161|62939.2|BRLT|1|0.02|EURC (Circle)|1245|146400.76|GYEN|338|75.02|NGNC|501|19.65|PEN|266|24.43
-2026-04-03|ARS|147|7605.82|AUDD|182|114.46|BRLT|13|0.02|EURC (Circle)|1167|6671824.4|GYEN|483|150.7|NGNC|326|6.5|PEN|109|3.04
-2026-04-02|ARS|478|3210.57|AUDD|426|748591.16|BRLT|15|0.14|EURC (Circle)|2277|6276457.55|GYEN|401|200.41|NGNC|312|7.0|PEN|244|14.59
-2026-04-01|ARS|448|10147.94|AUDD|393|475516.99|BRLT|11|0.06`,
-tm:{
-  EURC:{cur:'EUR',c:'#42A5F5',n:'Euro — EURC (Circle)'},EURS:{cur:'EUR',c:'#1E88E5',n:'Euro — EURS'},
-  AUDD:{cur:'AUD',c:'#26C6DA',n:'Australian Dollar — AUDD'},ARS:{cur:'ARS',c:'#7E57C2',n:'Argentine Peso — ARS'},
-  GYEN:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — GYEN'},NGNC:{cur:'NGN',c:'#66BB6A',n:'Nigerian Naira — NGNC'},
-  BRLT:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRLT'},PEN:{cur:'PEN',c:'#FFA726',n:'Peruvian Sol — PEN'},
-  ZARZ:{cur:'ZAR',c:'#FFCA28',n:'South African Rand — ZARZ (Zeam)'},EURMTL:{cur:'EUR',c:'#1565C0',n:'Euro — EURMTL (Montelibero)'}
-},
-cc:{EUR:'#42A5F5',AUD:'#26C6DA',ARS:'#7E57C2',JPY:'#EF5350',NGN:'#66BB6A',BRL:'#26A69A',PEN:'#FFA726',ZAR:'#FFCA28'}
-},
-
-solana:{
-data:`2026-04-15|EURC|2992|1300363.62|EUROe|3|7.83|VEUR|27|579.33|VCHF|35|12590.48
-2026-04-14|EURC|20964|51221147.12|EUROe|14|27.83|VEUR|363|17486.11|VCHF|260|43100.56
-2026-04-13|BRZ|1|55.03|EURC|22099|31045331.39|EUROe|9|10.89|VEUR|425|21655.72|VCHF|275|251358.27
-2026-04-12|EURC|15896|7160663.88|EUROe|7|8.63|VEUR|250|12312.11|VCHF|115|7432.69
-2026-04-11|EURC|13009|4240415.51|EUROe|6|2.78|VEUR|211|27928.65|VCHF|131|23546.22
-2026-04-10|EURC|20743|28711150.25|EUROe|1|0.55|VEUR|378|71163.61|VCHF|181|20644.85
-2026-04-09|BRZ|1|6.0|EURC|22356|10577747.77|EUROe|7|7.43|VEUR|465|20680.94|VCHF|225|24812.97
-2026-04-08|BRZ|1|0.01|EURC|28358|17564859.82|EUROe|15|44.0|VEUR|428|121449.91|VCHF|300|109368.74
-2026-04-07|BRZ|2|47.14|EURC|27882|29741559.53|EUROe|12|4.8|VEUR|621|107643.05|VCHF|278|98221.57
-2026-04-06|EURC|21777|19633251.01|EUROe|28|59.88|VEUR|366|17718.39|VCHF|189|66803.28
-2026-04-05|BRZ|4|146.43|EURC|14580|3460762.6|EUROe|9|19.16|VEUR|250|15636.26|VCHF|167|83676.68
-2026-04-04|BRZ|2|396.78|EURC|12332|4036551.68|EUROe|2|3.07|VEUR|103|78679.0|VCHF|98|56923.11
-2026-04-03|EURC|15703|9516340.01|EUROe|7|12.49|VEUR|231|75077.02|VCHF|117|40127.22
-2026-04-02|BRZ|1|606.86|EURC|26981|27699030.21|EUROe|3|48.15|VEUR|510|25396.98|VCHF|311|116321.54
-2026-04-01|BRZ|2|336.16|EURC|29360|20165240.96|EUROe|7|21.41|VEUR|550|68102.67|VCHF|504|242655.37
-2026-03-31|BRZ|2|124.54|EURC|24496|18723830.7|EUROe|2|3.13|VEUR|645|76547.19|VCHF|272|49100.82
-2026-03-30|EURC|19431|18079612.85|EUROe|3|7.2|VEUR|437|33200.57|VCHF|277|106624.31
-2026-03-29|EURC|12040|2893749.62|EUROe|3|4.08|VEUR|251|14330.99|VCHF|123|5185.7
-2026-03-28|EURC|12376|5998852.52|EUROe|2|3.15|VEUR|178|32849.27|VCHF|102|6315.15
-2026-03-27|BRZ|3|187.97|EURC|19928|173257023.14|EUROe|12|387.41|VEUR|358|62387.73|VCHF|251|39887.46
-2026-03-26|BRZ|1|4.64|EURC|22515|23437770.6|EUROe|7|13.86|VEUR|254|17704.37|VCHF|320|109975.54
-2026-03-25|BRZ|15|1590.15|EURC|23206|27959917.19|EUROe|8|20.54|VEUR|312|40890.32|VCHF|509|29634.54
-2026-03-24|BRZ|8|23.69|EURC|24349|19388850.77|EUROe|9|130.6|VEUR|439|65297.22|VCHF|634|79539.93
-2026-03-23|EURC|31716|25695134.11|EUROe|10|24.36|VEUR|778|54086.41|VCHF|1010|165216.12
-2026-03-22|EURC|11863|4618426.6|EUROe|1|1.88|VEUR|362|9844.16|VCHF|167|166456.87
-2026-03-21|EURC|9414|2098860.87|EUROe|1|1.37|VEUR|176|51574.93|VCHF|218|19697.6
-2026-03-20|BRZ|2|8.14|EURC|19559|23416270.68|EUROe|7|22.73|VEUR|413|69889.79|VCHF|523|48527.73
-2026-03-19|EURC|24205|23259048.42|EUROe|4|10.88|VEUR|497|95583.01|VCHF|581|163776.56
-2026-03-18|BRZ|2|58.72|EURC|24099|21789174.11|EUROe|25|109.7|VEUR|523|351545.59|VCHF|755|451646.1
-2026-03-17|BRZ|4|35.92|EURC|22748|42705827.51|EUROe|8|26.41|VEUR|610|64553.58|VCHF|822|24907.4
-2026-03-16|BRZ|4|6.49|EURC|25811|131393794.69|EUROe|27|222.27|VEUR|720|25852.61|VCHF|1202|128264.44
-2026-03-15|EURC|13347|5576208.31|EUROe|7|11.74|VEUR|284|12445.91|VCHF|372|19719.42
-2026-03-14|BRZ|4|957.99|EURC|9540|4409506.18|EUROe|4|9.56|VEUR|140|3007.81|VCHF|364|22336.47
-2026-03-13|BRZ|6|211.46|EURC|26019|27846619.08|EUROe|19|61.21|VEUR|745|146436.89|VCHF|870|114520.14
-2026-03-12|BRZ|10|281303.02|EURC|19540|16075659.91|EUROe|8|20.05|VEUR|586|27154.01|VCHF|454|147904.04
-2026-03-11|EURC|18479|18639243.43|EUROe|5|11.4|VEUR|685|90249.05|VCHF|261|50943.76
-2026-03-10|BRZ|3|192.0|EURC|24364|27290332.85|EUROe|2|6.09|VEUR|749|33040.53|VCHF|540|76086.48
-2026-03-09|BRZ|2|103.01|EURC|28298|26558302.49|EUROe|4|22.58|VEUR|958|63907.8|VCHF|411|59268.26
-2026-03-08|BRZ|1|22.98|EURC|14658|7418351.46|VEUR|551|18964.65|VCHF|330|16971.93
-2026-03-07|BRZ|3|233.06|EURC|10022|7260826.62|EUROe|5|12.86|VEUR|170|4339.66|VCHF|185|82911.61
-2026-03-06|BRZ|1|1.5|EURC|22645|37946196.5|EUROe|6|13.25|VEUR|530|15661.09|VCHF|424|109787.13
-2026-03-05|EURC|28485|21845311.92|EUROe|7|15.62|VEUR|703|19619.86|VCHF|890|70868.85
-2026-03-04|BRZ|1|1.15|EURC|28497|17364979.53|EUROe|10|149.28|VEUR|1007|44394.11|VCHF|1145|240240.42
-2026-03-03|EURC|26327|36882664.57|EUROe|5|10.72|VEUR|1002|106585.06|VCHF|402|104289.14
-2026-03-02|BRZ|1|25.0|EURC|28968|27356432.43|EUROe|9|21.3|VEUR|894|83996.14|VCHF|680|289501.58
-2026-03-01|EURC|18495|12282283.91|EUROe|18|71.83|VEUR|710|29815.58|VCHF|644|263152.26
-2026-02-28|EURC|16031|25622946.68|EUROe|17|35.94|VEUR|706|30695.69|VCHF|500|139158.73
-2026-02-27|EURC|19048|23802307.79|EUROe|8|14.99|VEUR|600|65298.6|VCHF|506|188737.03
-2026-02-26|BRZ|1|58.17|EURC|18747|16458653.31|EUROe|6|14.06|VEUR|497|18115.64|VCHF|304|28910.31
-2026-02-25|EURC|18675|22882005.35|EUROe|21|139.11|VEUR|660|30433.69|VCHF|869|418927.97
-2026-02-24|EURC|16772|14127612.63|EUROe|14|25.53|VEUR|593|78935.0|VCHF|333|83630.65
-2026-02-23|EURC|17909|20965711.64|EUROe|9|134.26|VEUR|781|32927.75|VCHF|542|130896.75
-2026-02-22|BRZ|5|228.76|EURC|9478|3593733.53|EUROe|6|16.38|VEUR|161|17853.26|VCHF|133|17681.86
-2026-02-21|EURC|8962|4280948.3|EUROe|4|19.5|VEUR|317|220299.42|VCHF|101|12389.65
-2026-02-20|EURC|19896|20457793.61|EUROe|7|15.08|VEUR|599|238665.95|VCHF|253|40066.44
-2026-02-19|BRZ|9|10000.52|EURC|16019|20178540.06|EUROe|6|12.86|VEUR|471|66375.07|VCHF|262|70594.37
-2026-02-18|BRZ|1|40.0|EURC|17227|28134749.08|EUROe|5|14.14|VEUR|753|564194.1|VCHF|298|114750.36
-2026-02-17|EURC|17560|19624762.11|EUROe|7|19.45|VEUR|714|245585.7|VCHF|255|25486.14
-2026-02-16|BRZ|2|2.31|EURC|15818|25927828.32|EUROe|9|22.09|VEUR|512|20681.37|VCHF|274|76702.44
-2026-02-15|EURC|16612|14305371.66|EUROe|19|66.74|VEUR|663|35802.59|VCHF|343|63106.97
-2026-02-14|BRZ|2|9.76|EURC|15216|22746154.99|EUROe|25|94.86|VEUR|411|207280.36|VCHF|271|136253.86
-2026-02-13|EURC|19352|27963389.74|EUROe|11|26.32|VEUR|805|315475.9|VCHF|378|56080.56
-2026-02-12|BRZ|1|29.5|EURC|19291|22169087.03|EUROe|13|27.96|VEUR|894|56956.89|VCHF|358|64184.45
-2026-02-11|EURC|23973|33537541.97|EUROe|20|42.36|VEUR|1094|224382.18|VCHF|454|92824.55
-2026-02-10|BRZ|2|1092.29|EURC|22537|61432835.75|EUROe|4|5.87|VEUR|660|82250.12|VCHF|359|87567.44
-2026-02-09|BRZ|1|1091.78|EURC|27469|16935855.55|EUROe|5|10.34|VEUR|1069|104067.34|VCHF|498|181966.02
-2026-02-08|BRZ|11|1510.69|EURC|17961|6750582.34|EUROe|6|10.76|VEUR|559|19247.78|VCHF|426|154763.5
-2026-02-07|EURC|22155|9030618.56|EUROe|11|22.89|VEUR|900|134105.86|VCHF|401|166227.52
-2026-02-06|EURC|38991|27944417.96|EUROe|29|77.78|VEUR|1738|85772.77|VCHF|955|279615.03
-2026-02-05|BRZ|4|50381.21|EURC|47451|51454131.22|EUROe|14|41.74|VEUR|2416|167678.27|VCHF|1955|546600.22
-2026-02-04|BRZ|1|0.51|EURC|29492|29649259.28|EUROe|10|1125.95|VEUR|1285|99629.82|VCHF|1982|242816.43
-2026-02-03|BRZ|3|41.73|EURC|30140|27529096.92|EUROe|6|35.5|VEUR|970|188399.98|VCHF|1720|259077.15
-2026-02-02|EURC|33985|19164288.98|EUROe|13|24.27|VEUR|1072|93496.82|VCHF|1961|277512.98
-2026-02-01|EURC|25838|14218261.83|EUROe|6|18.68|VEUR|1206|140291.9|VCHF|1814|154950.27
-2026-01-31|BRZ|3|188.06|EURC|28804|20320984.57|EUROe|15|23.85|VEUR|1062|149734.25|VCHF|2084|308462.71
-2026-01-30|EURC|32979|25731039.44|EUROe|6|14.57|VEUR|832|163361.04|VCHF|1505|294537.35
-2026-01-29|EURC|26462|24477373.38|EUROe|15|32.17|VEUR|606|154965.22|VCHF|1243|240976.65
-2026-01-28|EURC|21712|26543902.03|EUROe|2|6.65|VEUR|252|43642.81|VCHF|945|405623.14
-2026-01-27|BRZ|8|523.74|EURC|20138|27117199.93|EUROe|8|10.56|VEUR|432|208362.22|VCHF|1351|791767.29
-2026-01-26|EURC|17687|35480085.43|EUROe|5|9.68|VEUR|446|84290.26|VCHF|981|354863.82
-2026-01-25|EURC|25634|24441280.93|EUROe|8|16.13|VEUR|219|27631.75|VCHF|1065|262855.64
-2026-01-24|EURC|10293|3542840.83|EUROe|2|5.96|VEUR|134|42747.11|VCHF|692|190667.87
-2026-01-23|EURC|15881|7660843.86|EUROe|9|23.09|VEUR|441|54738.03|VCHF|1338|231893.62
-2026-01-22|EURC|18044|17291941.32|EUROe|10|18.79|VEUR|293|11903.36|VCHF|574|68334.7
-2026-01-21|EURC|21893|15032314.69|EUROe|15|33.75|VEUR|562|31062.02|VCHF|1160|133315.04
-2026-01-20|EURC|22539|17689466.36|EUROe|16|39.7|VEUR|469|153406.78|VCHF|1038|292331.15
-2026-01-19|EURC|18409|16263992.63|EUROe|10|30.79|VEUR|303|455708.83|VCHF|804|224312.93
-2026-01-18|EURC|11421|9129422.32|EUROe|6|18.53|VEUR|212|465758.42|VCHF|542|134641.2
-2026-01-17|EURC|9900|14030759.86|EUROe|6|15.33|VEUR|273|959694.37|VCHF|280|32149.31
-2026-01-16|BRZ|1|2.36|EURC|14578|17094057.54|EUROe|20|60.4|VEUR|569|1241406.54|VCHF|815|439187.65
-2026-01-15|EURC|15508|16489217.63|EUROe|10|20.98|VEUR|673|1315797.05|VCHF|980|282819.49`,
-tm:{
-  EURC:{cur:'EUR',c:'#42A5F5',n:'Euro — EURC (Circle)'},EUROe:{cur:'EUR',c:'#1E88E5',n:'Euro — EUROe'},
-  VEUR:{cur:'EUR',c:'#7E57C2',n:'Euro — VEUR (VNX)'},VCHF:{cur:'CHF',c:'#FFA726',n:'Swiss Franc — VCHF (VNX)'},
-  BRZ:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRZ'},GYEN:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — GYEN'}
-},
-cc:{EUR:'#42A5F5',CHF:'#FFA726',BRL:'#26A69A',JPY:'#EF5350'}
-},
-
-suspicious:{
-data:`CHAIN|TOKEN|REASON`,
-tm:{},cc:{},
-rows:[
-{chain:'Solana',token:'JPYSC (5 variants)',reason:'Null mint/freeze authorities. News-reactive impersonation of SBI JPYSC (announced Feb 27, 2026). ~1T supply. Scam marker: 100% predictive across 100+ tokens'},
-{chain:'Solana',token:'JPYC (2 variants)',reason:'Unauthorized JPYC on Solana. JPYC Inc. exists only on Ethereum/Polygon/Avalanche. Null authorities, ~1T supply'},
-{chain:'Solana',token:'JPYCI',reason:'Fabricated ticker with no known issuer. Null authorities, ~500B supply'},
-{chain:'Stellar',token:'IDRT',reason:'Unverified issuer on Stellar. Cross-chain mismatch: tracked on Polygon via Dune, appears on Stellar with inconsistent authority chain'},
-{chain:'Stellar',token:'XSGD',reason:'Unverified issuer on Stellar. Cross-chain mismatch: tracked on Polygon via Dune, appears on Stellar'},
-{chain:'Stellar',token:'RUBX, AUDX, INRX, CNYX, EURX (bot spam)',reason:'Suspected bot farm activity. ~70% of low-volume Stellar results are airdrop farms or spam accounts with 15K+ transactions from 13-15 senders'}
-]
-}
+// Token metadata mapping
+const TOKEN_METADATA = {
+  // Polygon tokens
+  BRLA:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRLA'},
+  BRZ:{cur:'BRL',c:'#00897B',n:'Brazilian Real — BRZ'},
+  BRL1:{cur:'BRL',c:'#004D40',n:'Brazilian Real — BRL1'},
+  XSGD:{cur:'SGD',c:'#5C6BC0',n:'Singapore Dollar — XSGD'},
+  COPM:{cur:'COP',c:'#FFA726',n:'Colombian Peso — COPM'},
+  JPYC:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — JPYC'},
+  IDRT:{cur:'IDR',c:'#78909C',n:'Indonesian Rupiah — IDRT'},
+  XIDR:{cur:'IDR',c:'#546E7A',n:'Indonesian Rupiah — XIDR'},
+  PHT:{cur:'PHP',c:'#AB47BC',n:'Philippine Peso — PHT'},
+  PHPC:{cur:'PHP',c:'#8E24AA',n:'Philippine Peso — PHPC'},
+  AUD:{cur:'AUD',c:'#26C6DA',n:'Australian Dollar — AUD'},
+  CAD:{cur:'CAD',c:'#8D6E63',n:'Canadian Dollar — CAD'},
+  EURe:{cur:'EUR',c:'#42A5F5',n:'Euro — EURe'},
+  EURQ:{cur:'EUR',c:'#1E88E5',n:'Euro — EURQ'},
+  EUROP:{cur:'EUR',c:'#1565C0',n:'Euro — EUROP'},
+  TRYB:{cur:'TRY',c:'#FF7043',n:'Turkish Lira — TRYB'},
+  ZARP:{cur:'ZAR',c:'#FFCA28',n:'South African Rand — ZARP'},
+  AUDX:{cur:'AUD',c:'#00BCD4',n:'Australian Dollar — AUDX'},
+  IDRX:{cur:'IDR',c:'#607D8B',n:'Indonesian Rupiah — IDRX'},
+  EURS:{cur:'EUR',c:'#1565C0',n:'Euro — EURS (STASIS)'},
+  XZAR:{cur:'ZAR',c:'#FFD54F',n:'South African Rand — XZAR'},
+  CADC:{cur:'CAD',c:'#A1887F',n:'Canadian Dollar — CADC'},
+  // Stellar tokens
+  'EURC (Circle)':{cur:'EUR',c:'#42A5F5',n:'Euro — EURC'},
+  AUDD:{cur:'AUD',c:'#26C6DA',n:'Australian Dollar — AUDD'},
+  ARS:{cur:'ARS',c:'#9CCC65',n:'Argentine Peso — ARS'},
+  GYEN:{cur:'JPY',c:'#EF5350',n:'Japanese Yen — GYEN'},
+  NGNC:{cur:'NGN',c:'#29B6F6',n:'Nigerian Naira — NGNC'},
+  PEN:{cur:'PEN',c:'#FF7043',n:'Peruvian Peso — PEN'},
+  BRLT:{cur:'BRL',c:'#26A69A',n:'Brazilian Real — BRLT'},
+  EURS:{cur:'EUR',c:'#1565C0',n:'Euro — EURS'},
+  // Solana tokens
+  EURC:{cur:'EUR',c:'#42A5F5',n:'Euro — EURC'},
+  EUROe:{cur:'EUR',c:'#1565C0',n:'Euro — EUROe'},
+  VEUR:{cur:'EUR',c:'#1E88E5',n:'Euro — VEUR'},
+  VCHF:{cur:'CHF',c:'#FF6D00',n:'Swiss Franc — VCHF'},
 };
 
-let curNet='polygon';
-let metric='volume';
-let raw,tokenMap,curMap,dateMap,tokensSorted,cursSorted,dates,totalV,totalTx,selected;
+// Currency colors
+const CURRENCY_COLORS = {
+  BRL:'#26A69A',SGD:'#5C6BC0',COP:'#FFA726',JPY:'#EF5350',IDR:'#78909C',
+  PHP:'#AB47BC',AUD:'#26C6DA',CAD:'#8D6E63',EUR:'#42A5F5',TRY:'#FF7043',
+  ZAR:'#FFCA28',ARS:'#9CCC65',NGN:'#29B6F6',PEN:'#FF7043',CHF:'#FF6D00',
+};
 
-const fU=v=>v>=1e9?'$'+(v/1e9).toFixed(2)+'B':v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(1)+'K':'$'+v.toFixed(0);
-const fC=v=>v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':v.toLocaleString();
-const fD=d=>{const p=d.split('-');return['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]]+' '+parseInt(p[2])};
+/**
+ * Fetch dashboard data from API
+ */
+async function loadDashboardData() {
+  try {
+    document.getElementById('rowBadge').textContent = 'Fetching data...';
+    const res = await fetch('/api/dashboard-data');
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Unknown error');
 
-function parse(dataStr){
-  const rows=[];
-  dataStr.split('\n').forEach(l=>{const p=l.split('|');const d=p[0];for(let i=1;i+2<p.length;i+=3)rows.push({d,t:p[i],tx:parseInt(p[i+1]),v:parseFloat(p[i+2])});});
-  return rows;
-}
-
-function loadNetwork(net){
-  curNet=net;
-  const cfg=NETWORKS[net];
-  if(net==='suspicious'){
-    raw=cfg.rows||[];
-    tokenMap={};curMap={};dateMap={};
-    tokensSorted=[];cursSorted=[];dates=[];totalV=0;totalTx=0;selected=[];
-  }else{
-    raw=parse(cfg.data);
-    tokenMap={};curMap={};dateMap={};
-    raw.forEach(r=>{
-      if(!tokenMap[r.t])tokenMap[r.t]={v:0,tx:0};tokenMap[r.t].v+=r.v;tokenMap[r.t].tx+=r.tx;
-      const cur=cfg.tm[r.t]?.cur||'Other';if(!curMap[cur])curMap[cur]={v:0,tx:0};curMap[cur].v+=r.v;curMap[cur].tx+=r.tx;
-      if(!dateMap[r.d])dateMap[r.d]={v:0,tx:0};dateMap[r.d].v+=r.v;dateMap[r.d].tx+=r.tx;
+    // Build NETWORKS objects
+    ['polygon','stellar','solana'].forEach(net => {
+      const data = json.data[net];
+      NETWORKS[net].data = data;
+      NETWORKS[net].tm = buildTokenMetadata(TOKEN_METADATA, net);
+      NETWORKS[net].cc = CURRENCY_COLORS;
     });
-    tokensSorted=Object.entries(tokenMap).sort((a,b)=>b[1].v-a[1].v);
-    cursSorted=Object.entries(curMap).sort((a,b)=>b[1].v-a[1].v);
-    dates=Object.keys(dateMap).sort();
-    totalV=tokensSorted.reduce((s,[,v])=>s+v.v,0);
-    totalTx=tokensSorted.reduce((s,[,v])=>s+v.tx,0);
-    selected=tokensSorted.slice(0,6).map(([k])=>k);
+
+    document.getElementById('rowBadge').textContent = `Updated: ${new Date(json.timestamp).toLocaleTimeString()}`;
+    loadNetwork('polygon');
+    renderAll();
+  } catch (error) {
+    console.error('Error loading data:', error);
+    document.getElementById('errorBox').style.display = 'block';
+    document.getElementById('errorBox').textContent = '❌ Failed to load data: ' + error.message;
   }
 }
 
-function switchNetwork(net){
-  loadNetwork(net);
-  document.querySelectorAll('.net-tab').forEach(b=>b.classList.toggle('on',b.textContent.toLowerCase()===net));
-  document.getElementById('netLabel').textContent=(net==='suspicious'?'SUSPICIOUS TOKENS':net.toUpperCase());
-  document.getElementById('chartLabel').textContent=(net==='suspicious'?'SUSPICIOUS TOKENS BY NETWORK':'TRANSFER VOLUME (USD) — DAILY STACKED');
-  document.querySelectorAll('.tabs').forEach(t=>t.style.display=net==='suspicious'?'none':'flex');
+function buildTokenMetadata(meta, network) {
+  const tm = {};
+  Object.entries(meta).forEach(([code, obj]) => {
+    tm[code] = obj;
+  });
+  return tm;
+}
+
+function parse(data) {
+  const lines = data.trim().split('\n');
+  return lines.map(line => {
+    const parts = line.split('|');
+    const d = parts[0];
+    const items = [];
+    for(let i=1;i<parts.length;i+=3) {
+      items.push({t:parts[i],tx:parseInt(parts[i+1]),v:parseFloat(parts[i+2])});
+    }
+    return {d,items};
+  });
+}
+
+let tokensSorted, cursSorted, totalV = 0;
+
+function loadNetwork(net) {
+  curNet = net;
+  document.querySelectorAll('.net-tab').forEach((b,i) => {
+    b.classList.toggle('on', ['polygon','stellar','solana','suspicious'][i] === net);
+  });
+  document.getElementById('netLabel').textContent = net.toUpperCase();
+
+  if(net==='suspicious') {
+    selected.clear();
+    renderAll();
+    return;
+  }
+
+  const {data,tm,cc} = NETWORKS[net];
+  const rows = parse(data);
+
+  const tokenData = {}, currencyData = {};
+  totalV = 0;
+
+  rows.forEach(({items}) => {
+    items.forEach(({t,tx,v}) => {
+      if(!tokenData[t]) tokenData[t] = {v:0,tx:0};
+      tokenData[t].v += v;
+      tokenData[t].tx += tx;
+      totalV += v;
+
+      const cur = tm[t]?.cur || 'OTHER';
+      if(!currencyData[cur]) currencyData[cur] = {v:0,tx:0};
+      currencyData[cur].v += v;
+      currencyData[cur].tx += tx;
+    });
+  });
+
+  tokensSorted = Object.entries(tokenData).sort((a,b) => b[1].v - a[1].v);
+  cursSorted = Object.entries(currencyData).sort((a,b) => b[1].v - a[1].v);
+
   renderAll();
 }
 
+function switchNetwork(net) {loadNetwork(net);}
+function setMetric(m) {metric=m;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.m===m));renderMainChart();}
+
 function renderKPIs(){
-  document.getElementById('rowBadge').textContent='';
-  if(curNet==='suspicious'){
-    const rows=NETWORKS.suspicious.rows||[];
-    document.getElementById('kpis').innerHTML=[
-      {l:'SUSPICIOUS TOKENS',val:rows.length,s:'detected across networks'},
-      {l:'DOMINANT NETWORK',val:'Solana',s:'scam ecosystem'},
-      {l:'PATTERN TYPE',val:'Null Auth',s:'100% predictive'}
-    ].map(k=>`<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.val}</div><div class="kpi-s">${k.s}</div></div>`).join('');
-  }else{
-    document.getElementById('kpis').innerHTML=[
-      {l:'TOTAL VOLUME (USD)',val:fU(totalV),s:fD(dates[0])+' — '+fD(dates[dates.length-1])},
-      {l:'TOTAL TRANSACTIONS',val:fC(totalTx),s:dates.length+' days'},
-      {l:'ACTIVE TOKENS',val:tokensSorted.length,s:cursSorted.length+' fiat pegs'},
-      {l:'AVG DAILY VOL',val:fU(totalV/dates.length),s:'per day'}
-    ].map(k=>`<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.val}</div><div class="kpi-s">${k.s}</div></div>`).join('');
-  }
+  const kpis = document.getElementById('kpis');
+  const topTokens = tokensSorted.slice(0, Math.min(4, tokensSorted.length));
+  kpis.innerHTML = topTokens.map(([t, d]) => {
+    const val = metric==='volume' ? `$${(d.v/1e6).toFixed(1)}M` : fC(d.tx);
+    return `<div class="kpi"><div class="kpi-l">${t}</div><div class="kpi-v">${val}</div><div class="kpi-s">${metric==='volume' ? 'Volume (7d)' : 'Transactions'}</div></div>`;
+  }).join('');
 }
+
+function fU(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:0}).format(n);}
+function fC(n){return new Intl.NumberFormat('en-US').format(n);}
 
 function renderChips(){
-  if(curNet==='suspicious'){
-    document.getElementById('chips').innerHTML='';
-  }else{
-    const tm=NETWORKS[curNet].tm;
-    document.getElementById('chips').innerHTML=tokensSorted.map(([t])=>{
-      const on=selected.includes(t);const c=tm[t]?.c||'#455A64';
-      return `<button class="chip${on?' on':''}" style="--cc:${c}" onclick="toggleToken('${t}')"><span class="chip-d"></span>${t}</button>`;
-    }).join('');
-  }
+  const chips = document.getElementById('chips');
+  chips.innerHTML = tokensSorted.map(([t]) => {
+    const tm = NETWORKS[curNet].tm;
+    const c = tm[t]?.c || '#455A64';
+    const isOn = selected.has(t) || selected.size === 0;
+    return `<button class="chip ${isOn?'on':''}" style="--cc:${c}" onclick="toggleToken('${t}')" title="${tm[t]?.n||t}"><span class="chip-d"></span>${t}</button>`;
+  }).join('');
 }
 
-function toggleToken(t){
-  if(selected.includes(t)){if(selected.length>1)selected=selected.filter(x=>x!==t);}
-  else selected.push(t);
-  renderChips();renderMainChart();
-}
-
-function setMetric(m){
-  metric=m;
-  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
-  document.getElementById('chartLabel').textContent=(m==='volume'?'TRANSFER VOLUME (USD)':'TRANSACTION COUNT')+' — DAILY STACKED';
+function toggleToken(t) {
+  if(selected.has(t)) selected.delete(t);
+  else selected.add(t);
+  if(selected.size === tokensSorted.length) selected.clear();
+  renderChips();
   renderMainChart();
+  renderTable();
 }
 
-let mainChartInst=null;
+let mainChartInstance = null;
 function renderMainChart(){
-  if(curNet==='suspicious'){
-    if(mainChartInst)mainChartInst.destroy();
-    document.querySelector('.panel:has(#mainChart)').style.display='none';
-    return;
-  }
-  document.querySelector('.panel:has(#mainChart)').style.display='block';
-  const ctx=document.getElementById('mainChart');
-  const tm=NETWORKS[curNet].tm;
-  if(mainChartInst)mainChartInst.destroy();
-  const byDate={};
-  raw.forEach(r=>{if(!selected.includes(r.t))return;if(!byDate[r.d])byDate[r.d]={};byDate[r.d][r.t]=(byDate[r.d][r.t]||0)+(metric==='volume'?r.v:r.tx);});
-  const labels=dates.filter(d=>byDate[d]);
-  const datasets=selected.map(t=>{
-    const c=tm[t]?.c||'#455A64';
-    return{label:t,data:labels.map(d=>byDate[d]?.[t]||0),backgroundColor:c+'40',borderColor:c,borderWidth:1.5,fill:true,pointRadius:0,tension:0.3};
+  const {data,tm} = NETWORKS[curNet];
+  const rows = parse(data);
+  const filter = selected.size===0 ? tokensSorted.map(([t])=>t) : Array.from(selected);
+
+  const dates = rows.map(r=>r.d);
+  const datasets = filter.map(token => {
+    const values = rows.map(({items}) => {
+      const item = items.find(i=>i.t===token);
+      return metric==='volume' ? (item?.v||0) : (item?.tx||0);
+    });
+    return {
+      label:token,
+      data:values,
+      borderColor:tm[token]?.c||'#455A64',
+      backgroundColor:tm[token]?.c||'#455A64',
+      fill:true,
+      borderWidth:1,
+      tension:0.3,
+    };
   });
-  Chart.defaults.color='#4B5563';Chart.defaults.font.family="'IBM Plex Mono',monospace";Chart.defaults.font.size=10;
-  mainChartInst=new Chart(ctx,{type:'line',data:{labels,datasets},options:{
-    responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-    scales:{
-      x:{grid:{color:'#1A1D2233'},ticks:{maxTicksLimit:10,callback:function(v,i){const d=labels[i];return d?fD(d):''}}},
-      y:{stacked:true,grid:{color:'#1A1D2233'},ticks:{callback:v=>metric==='volume'?(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v):(v>=1e3?(v/1e3).toFixed(0)+'K':v)}}
-    },
-    plugins:{legend:{display:false},tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1,callbacks:{
-      title:items=>{if(!items[0])return'';const d=items[0].label;return fD(d)+', '+d.split('-')[0]},
-      label:item=>item.dataset.label+': '+(metric==='volume'?fU(item.raw):fC(item.raw))
-    }}}
-  }});
+
+  const ctx = document.getElementById('mainChart');
+  if(mainChartInstance) mainChartInstance.destroy();
+  mainChartInstance = new Chart(ctx, {
+    type:'line',
+    data:{labels:dates,datasets},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        x:{display:true,ticks:{font:{size:8}}},
+        y:{stacked:true,ticks:{font:{size:8}}}
+      },
+      plugins:{legend:{display:true,labels:{font:{size:9}}},tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1}}
+    }
+  });
 }
 
 function renderTable(){
-  if(curNet==='suspicious'){
+  if(curNet==='suspicious') {
     document.querySelector('.cols').style.display='none';
-    const rows=NETWORKS.suspicious.rows||[];
-    const tblContainer=document.querySelector('[style*="col-l"]')?.parentElement;
-    if(!document.getElementById('suspiciousPanel')){
-      const panel=document.createElement('div');
-      panel.id='suspiciousPanel';
-      panel.className='panel';
-      panel.innerHTML=`<div class="panel-t">SUSPICIOUS TOKENS</div><table><thead><tr><th>CHAIN</th><th>TOKEN</th><th style="text-align:left">REASON</th></tr></thead><tbody id="suspiciousTbl"></tbody></table>`;
-      document.querySelector('.body').insertBefore(panel,document.querySelector('.cols'));
-    }
-    document.getElementById('suspiciousTbl').innerHTML=rows.map(r=>{
-      return `<tr><td style="color:#FF6B6B;font-weight:600">${r.chain}</td><td style="color:#FFD54F">${r.token}</td><td style="color:#9CA3AF;font-size:10px">${r.reason}</td></tr>`;
-    }).join('');
-  }else{
-    document.querySelector('.cols').style.display='flex';
-    const suspPanel=document.getElementById('suspiciousPanel');
-    if(suspPanel)suspPanel.remove();
-    const tm=NETWORKS[curNet].tm;
-    document.getElementById('tbl').innerHTML=tokensSorted.map(([t,d])=>{
-      const sh=(d.v/totalV*100).toFixed(1);const c=tm[t]?.c||'#455A64';
-      const nm=tm[t]?.n||t;
-      return `<tr><td><span class="tk"><span class="tk-d" style="background:${c}"></span>${nm}</span></td><td class="r">${fU(d.v)}</td><td class="r">${fC(d.tx)}</td><td class="r"><span class="bar-w"><span class="bar-f" style="width:${Math.min(+sh,100)}%;background:${c}"></span></span><span class="sh">${sh}%</span></td></tr>`;
-    }).join('');
+    return;
   }
+  document.querySelector('.cols').style.display='flex';
+  const tm = NETWORKS[curNet].tm;
+  document.getElementById('tbl').innerHTML = tokensSorted.map(([t,d]) => {
+    const sh = (d.v/totalV*100).toFixed(1);
+    const c = tm[t]?.c || '#455A64';
+    const nm = tm[t]?.n || t;
+    return `<tr><td><span class="tk"><span class="tk-d" style="background:${c}"></span>${nm}</span></td><td class="r">${metric==='volume'?fU(d.v):fC(d.tx)}</td><td class="r">${fC(d.tx)}</td><td class="r"><span class="bar-w"><span class="bar-f" style="width:${Math.min(+sh,100)}%;background:${c}"></span></span><span class="sh">${sh}%</span></td></tr>`;
+  }).join('');
 }
 
-let pieInst=null;
 function renderPie(){
-  if(curNet==='suspicious'){
-    if(pieInst)pieInst.destroy();
+  if(curNet==='suspicious') {
+    if(pieInst) pieInst.destroy();
     document.getElementById('pieChart').style.display='none';
     document.getElementById('pieLeg').innerHTML='';
     return;
   }
   document.getElementById('pieChart').style.display='block';
-  const ctx=document.getElementById('pieChart');
-  const cc=NETWORKS[curNet].cc;
-  if(pieInst)pieInst.destroy();
-  const labels=cursSorted.map(([k])=>k);const data=cursSorted.map(([,v])=>v.v);const colors=labels.map(k=>cc[k]||'#455A64');
-  pieInst=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:'#080A0D',borderWidth:2}]},options:{
-    responsive:true,maintainAspectRatio:false,cutout:'55%',
-    plugins:{legend:{display:false},tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1,callbacks:{label:item=>item.label+': '+fU(item.raw)}}}
-  }});
-  document.getElementById('pieLeg').innerHTML=cursSorted.map(([k,v])=>{
-    const c=cc[k]||'#455A64';
+  const cc = NETWORKS[curNet].cc;
+  if(pieInst) pieInst.destroy();
+  const labels = cursSorted.map(([k]) => k);
+  const data = cursSorted.map(([,v]) => v.v);
+  const colors = labels.map(k => cc[k] || '#455A64');
+  pieInst = new Chart(document.getElementById('pieChart'), {
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderColor:'#080A0D',borderWidth:2}]},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      cutout:'55%',
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1}
+      }
+    }
+  });
+  document.getElementById('pieLeg').innerHTML = cursSorted.map(([k,v]) => {
+    const c = cc[k] || '#455A64';
     return `<div class="leg"><span class="leg-d" style="background:${c}"></span><span class="leg-n">${k}</span><span class="leg-p">${(v.v/totalV*100).toFixed(1)}%</span></div>`;
   }).join('');
 }
 
 function renderAll(){renderKPIs();renderChips();renderMainChart();renderTable();renderPie();}
 
-loadNetwork('polygon');
-renderAll();
+// Initialize on page load
+loadDashboardData();
 </script>
 </body>
 </html>
