@@ -1,0 +1,8 @@
+{
+  "env": {
+    "DUNE_API_KEY": {
+      "description": "Dune Analytics API key for dashboard data",
+      "required": true
+    }
+  }
+}
