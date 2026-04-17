@@ -5,7 +5,9 @@
  * Returns cached data updated by cron job
  */
 
-const { kv } = require('@vercel/kv');
+const redis = require('@vercel/kv').createClient({
+  url: process.env.REDIS_URL,
+});
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,12 +16,12 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
   try {
-    // Fetch all three datasets from KV in parallel
+    // Fetch all three datasets from Redis in parallel
     const [polygon, stellar, solana, updated] = await Promise.all([
-      kv.get('dashboard:polygon'),
-      kv.get('dashboard:stellar'),
-      kv.get('dashboard:solana'),
-      kv.get('dashboard:updated'),
+      redis.get('dashboard:polygon'),
+      redis.get('dashboard:stellar'),
+      redis.get('dashboard:solana'),
+      redis.get('dashboard:updated'),
     ]);
 
     // Check if data exists
