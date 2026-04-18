@@ -1,14 +1,4 @@
 {
-  "env": {
-    "DUNE_API_KEY": {
-      "description": "Dune Analytics API key for dashboard data refresh",
-      "required": true
-    },
-    "CRON_SECRET": {
-      "description": "Secret token for cron job authorization",
-      "required": true
-    }
-  },
   "crons": [
     {
       "path": "/api/crons/refresh-data",
