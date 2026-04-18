@@ -3,6 +3,7 @@
  * GET /api/dashboard-data
  *
  * Returns cached data updated by cron job
+ * Version 2 - Fresh deployment
  */
 
 import { kv } from '@vercel/kv';
@@ -14,6 +15,8 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
   try {
+    console.log(`[${new Date().toISOString()}] GET /api/dashboard-data — fetching from Redis...`);
+
     // Fetch all three datasets from Redis in parallel
     const [polygon, stellar, solana, updated] = await Promise.all([
       kv.get('dashboard:polygon'),
@@ -21,6 +24,8 @@ export default async function handler(req, res) {
       kv.get('dashboard:solana'),
       kv.get('dashboard:updated'),
     ]);
+
+    console.log(`[${new Date().toISOString()}] Retrieved: polygon=${polygon ? polygon.length : 0} chars, stellar=${stellar ? stellar.length : 0} chars, solana=${solana ? solana.length : 0} chars`);
 
     // Check if data exists
     if (!polygon || !stellar || !solana) {
@@ -40,7 +45,7 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    console.error('Error fetching from KV:', error);
+    console.error(`[${new Date().toISOString()}] Error fetching from KV:`, error);
     res.status(500).json({
       success: false,
       error: error.message,
