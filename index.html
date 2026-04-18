@@ -16,7 +16,7 @@ body{background:#080A0D;color:#E5E7EB;font-family:'IBM Plex Mono',monospace;min-
 .hdr{border-bottom:1px solid #1A1D22;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
 .hdr-l{display:flex;align-items:center;gap:10px;flex:1}
 .dot{width:7px;height:7px;background:#10B981;border-radius:50%;box-shadow:0 0 8px #10B981}
-.hdr-t{font-size:14px;font-weight:600;color:#F9FAFB}
+.hdr-t{font-size:14px;font-weight:600;color:#FFFFFF}
 .hdr-s{font-size:11px;color:#374151;line-height:1.4}
 .badge{font-size:9px;color:#374151;padding:3px 8px;border:1px solid #1A1D22}
 .loading{font-size:11px;color:#4B5563}
@@ -64,10 +64,74 @@ td.r{text-align:right;color:#9CA3AF}
 .leg-d{width:5px;height:5px;border-radius:50%}
 .leg-n{color:#6B7280}
 .leg-p{color:#2D3139}
-.ftr{padding:12px 24px;border-top:1px solid #1A1D22;display:flex;justify-content:space-between;font-size:11px;color:#1E2328}
+.ftr{padding:12px 24px;border-top:1px solid #1A1D22;display:flex;justify-content:space-between;font-size:11px;color:#9CA3AF}
 .ftr a{color:#9CA3AF;text-decoration:none}
 .ftr a:hover{text-decoration:underline}
 .error{color:#FF6B6B;background:#1A0000;border:1px solid #660000;padding:12px;margin-bottom:12px;border-radius:4px}
+.theme-toggle{background:#1A1D22;border:1px solid #2D3139;color:#E5E7EB;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;border-radius:3px;margin-left:10px}
+.theme-toggle:hover{background:#2D3139}
+
+@media (prefers-color-scheme: light) {
+  body{background:#FFFFFF;color:#1F2937}
+  ::-webkit-scrollbar-track{background:#F3F4F6}
+  ::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:2px}
+  .hdr{border-bottom:1px solid #E5E7EB;background:#F9FAFB}
+  .hdr-t{color:#111827}
+  .hdr-s{color:#6B7280}
+  .loading{color:#9CA3AF}
+  .body{background:#FFFFFF}
+  .net-tab{background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB}
+  .net-tab.on{background:#E5E7EB;color:#111827;border-color:#D1D5DB}
+  .kpi{background:#F9FAFB;border:1px solid #E5E7EB}
+  .kpi-l{color:#6B7280}
+  .kpi-v{color:#111827}
+  .kpi-s{color:#9CA3AF}
+  .tab{color:#6B7280}
+  .tab.on{background:#E5E7EB;color:#111827}
+  .chip{border:1px solid #E5E7EB;color:#6B7280}
+  .chip.on{border-color:var(--cc);background:color-mix(in srgb,var(--cc) 12%,#FFFFFF)}
+  .panel{background:#F9FAFB;border:1px solid #E5E7EB}
+  .panel-t{color:#6B7280}
+  table th{border-bottom:1px solid #E5E7EB;color:#6B7280}
+  table td{border-bottom:1px solid #F3F4F6;color:#111827}
+  table td.r{color:#6B7280}
+  .ftr{border-top:1px solid #E5E7EB;color:#6B7280;background:#F9FAFB}
+  .ftr a{color:#6B7280}
+  .theme-toggle{background:#E5E7EB;border:1px solid #D1D5DB;color:#111827}
+  .theme-toggle:hover{background:#D1D5DB}
+}
+
+body.light-mode {
+  background:#FFFFFF;
+  color:#1F2937;
+}
+body.light-mode ::-webkit-scrollbar-track{background:#F3F4F6}
+body.light-mode ::-webkit-scrollbar-thumb{background:#D1D5DB}
+body.light-mode .hdr{border-bottom:1px solid #E5E7EB;background:#F9FAFB}
+body.light-mode .hdr-t{color:#111827}
+body.light-mode .hdr-s{color:#6B7280}
+body.light-mode .loading{color:#9CA3AF}
+body.light-mode .body{background:#FFFFFF}
+body.light-mode .net-tab{background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB}
+body.light-mode .net-tab.on{background:#E5E7EB;color:#111827;border-color:#D1D5DB}
+body.light-mode .kpi{background:#F9FAFB;border:1px solid #E5E7EB}
+body.light-mode .kpi-l{color:#6B7280}
+body.light-mode .kpi-v{color:#111827}
+body.light-mode .kpi-s{color:#9CA3AF}
+body.light-mode .tab{color:#6B7280}
+body.light-mode .tab.on{background:#E5E7EB;color:#111827}
+body.light-mode .chip{border:1px solid #E5E7EB;color:#6B7280}
+body.light-mode .chip.on{border-color:var(--cc);background:color-mix(in srgb,var(--cc) 12%,#FFFFFF)}
+body.light-mode .panel{background:#F9FAFB;border:1px solid #E5E7EB}
+body.light-mode .panel-t{color:#6B7280}
+body.light-mode table th{border-bottom:1px solid #E5E7EB;color:#6B7280}
+body.light-mode table td{border-bottom:1px solid #F3F4F6;color:#111827}
+body.light-mode table td.r{color:#6B7280}
+body.light-mode .ftr{border-top:1px solid #E5E7EB;color:#6B7280;background:#F9FAFB}
+body.light-mode .ftr a{color:#6B7280}
+body.light-mode .theme-toggle{background:#E5E7EB;border:1px solid #D1D5DB;color:#111827}
+body.light-mode .theme-toggle:hover{background:#D1D5DB}
+
 </style>
 </head>
 <body>
@@ -75,6 +139,7 @@ td.r{text-align:right;color:#9CA3AF}
   <div class="hdr">
     <div class="hdr-l"><div class="dot"></div><div><span class="hdr-t">NON-USD STABLECOINS</span><br><span class="hdr-s">On-chain tracker • 33 tokens • 15 fiat pegs</span></div><span class="hdr-s" id="netLabel" style="margin-left:auto;padding-left:20px;text-align:right;">LOADING...</span></div>
     <div style="display:flex;gap:20px;align-items:center;justify-content:flex-end;flex:1;padding-right:20px;">
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
       <span class="loading" id="rowBadge">Fetching data...</span>
     </div>
   </div>
@@ -113,7 +178,7 @@ td.r{text-align:right;color:#9CA3AF}
       </div>
     </div>
   </div>
-  <div class="ftr"><span>NON-USD STABLECOIN TRACKER • Built by <a href="https://t.me/solosolver" target="_blank" style="color:#9CA3AF;text-decoration:underline;">@solosolver</a></span><span>Data from <a href="https://dune.com" target="_blank" style="color:#9CA3AF;text-decoration:underline;">Dune Analytics</a> • Updated hourly</span></div>
+  <div class="ftr"><span>NON-USD STABLECOIN TRACKER • Built by <a href="https://t.me/solosolver" target="_blank" style="color:#9CA3AF;text-decoration:underline;">@solosolver</a></span><span>Data from <a href="https://dune.com" target="_blank" style="color:#9CA3AF;text-decoration:underline;">Dune Analytics</a> • Updated daily</span></div>
 </div>
 <script>
 // Global state
@@ -446,8 +511,28 @@ function copyLink() {
   alert('Link copied to clipboard!');
 }
 
-// Initialize on page load
-loadDashboardData();
+function toggleTheme() {
+  const isDark = document.body.classList.contains('light-mode');
+  if(isDark) {
+    document.body.classList.remove('light-mode');
+    localStorage.setItem('theme', 'dark');
+    document.getElementById('themeBtn').textContent = '☀️ Light';
+  } else {
+    document.body.classList.add('light-mode');
+    localStorage.setItem('theme', 'light');
+    document.getElementById('themeBtn').textContent = '🌙 Dark';
+  }
+}
+
+// Load saved theme on page load
+window.addEventListener('load', () => {
+  const savedTheme = localStorage.getItem('theme');
+  if(savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById('themeBtn').textContent = '🌙 Dark';
+  }
+  loadDashboardData();
+});
 </script>
 </body>
 </html>
