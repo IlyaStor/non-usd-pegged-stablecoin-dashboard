@@ -432,9 +432,11 @@ function renderMainChart(){
 
   const ctx = document.getElementById('mainChart');
   if(mainChartInstance) mainChartInstance.destroy();
+  // Reverse datasets for left-to-right stacking
+  const reversedDatasets = [...datasets].reverse();
   mainChartInstance = new Chart(ctx, {
     type:'line',
-    data:{labels:dates,datasets},
+    data:{labels:dates,datasets:reversedDatasets},
     options:{
       responsive:true,
       maintainAspectRatio:false,
@@ -442,7 +444,7 @@ function renderMainChart(){
         x:{display:true,ticks:{font:{size:8}}},
         y:{stacked:true,ticks:{font:{size:8}}}
       },
-      plugins:{legend:{display:true,labels:{font:{size:9}}},tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1}}
+      plugins:{legend:{display:true,labels:{font:{size:9}},reverse:true},tooltip:{backgroundColor:'#0C0E11',borderColor:'#1E2328',borderWidth:1}}
     }
   });
 }
@@ -525,14 +527,14 @@ function toggleTheme() {
 }
 
 // Load saved theme on page load
-window.addEventListener('load', () => {
-  const savedTheme = localStorage.getItem('theme');
-  if(savedTheme === 'light') {
-    document.body.classList.add('light-mode');
-    document.getElementById('themeBtn').textContent = '🌙 Dark';
-  }
-  loadDashboardData();
-});
+const savedTheme = localStorage.getItem('theme');
+if(savedTheme === 'light') {
+  document.body.classList.add('light-mode');
+  document.getElementById('themeBtn').textContent = '🌙 Dark';
+}
+
+// Initialize on page load
+loadDashboardData();
 </script>
 </body>
 </html>
