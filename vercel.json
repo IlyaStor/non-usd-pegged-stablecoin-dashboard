@@ -1,8 +1,8 @@
 {
-  "crons": [
+  "rewrites": [
     {
-      "path": "/api/crons/refresh-data",
-      "schedule": "0 * * * *"
+      "source": "/data.json",
+      "destination": "/data.json"
     }
   ]
 }
