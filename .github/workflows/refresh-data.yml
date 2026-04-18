@@ -9,10 +9,59 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger refresh endpoint
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install redis client
+        run: npm install redis
+
+      - name: Fetch data from Redis and update data.json
+        env:
+          REDIS_URL: ${{ secrets.REDIS_URL }}
         run: |
-          curl -X POST "https://analytics.solosolver.xyz/api/crons/refresh-data" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --fail \
-            --show-error
+          node << 'EOF'
+          import { createClient } from 'redis';
+          import fs from 'fs';
+
+          const client = createClient({ url: process.env.REDIS_URL });
+          await client.connect();
+
+          const [polygon, stellar, solana, updated] = await Promise.all([
+            client.get('dashboard:polygon'),
+            client.get('dashboard:stellar'),
+            client.get('dashboard:solana'),
+            client.get('dashboard:updated'),
+          ]);
+
+          await client.quit();
+
+          const data = {
+            success: true,
+            timestamp: updated || new Date().toISOString(),
+            data: {
+              polygon: polygon || '',
+              stellar: stellar || '',
+              solana: solana || '',
+            },
+          };
+
+          fs.writeFileSync('data.json', JSON.stringify(data));
+          console.log(`✓ Updated data.json at ${new Date().toISOString()}`);
+          EOF
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add data.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update dashboard data [skip ci]"
+            git push
+          else
+            echo "No changes to commit"
+          fi

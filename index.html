@@ -171,8 +171,8 @@ const CURRENCY_COLORS = {
 async function loadDashboardData() {
   try {
     document.getElementById('rowBadge').textContent = 'Fetching data...';
-    const res = await fetch('/api/dashboard-data');
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    const res = await fetch('/data.json');
+    if (!res.ok) throw new Error(`Failed to load data: ${res.status}`);
     const json = await res.json();
     if (!json.success) throw new Error(json.error || 'Unknown error');
 
