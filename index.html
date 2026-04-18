@@ -17,9 +17,9 @@ body{background:#080A0D;color:#E5E7EB;font-family:'IBM Plex Mono',monospace;min-
 .hdr-l{display:flex;align-items:center;gap:10px;flex:1}
 .dot{width:7px;height:7px;background:#10B981;border-radius:50%;box-shadow:0 0 8px #10B981}
 .hdr-t{font-size:14px;font-weight:600;color:#F9FAFB}
-.hdr-s{font-size:10px;color:#374151;line-height:1.4}
+.hdr-s{font-size:11px;color:#374151;line-height:1.4}
 .badge{font-size:9px;color:#374151;padding:3px 8px;border:1px solid #1A1D22}
-.loading{font-size:10px;color:#4B5563}
+.loading{font-size:11px;color:#4B5563}
 .body{padding:20px 24px}
 .net-tabs{display:flex;gap:0;margin-bottom:16px}
 .net-tab{background:#0D0F12;color:#4B5563;border:1px solid #1A1D22;padding:8px 20px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;transition:all 0.15s}
@@ -64,7 +64,7 @@ td.r{text-align:right;color:#9CA3AF}
 .leg-d{width:5px;height:5px;border-radius:50%}
 .leg-n{color:#6B7280}
 .leg-p{color:#2D3139}
-.ftr{padding:12px 24px;border-top:1px solid #1A1D22;display:flex;justify-content:space-between;font-size:9px;color:#1E2328}
+.ftr{padding:12px 24px;border-top:1px solid #1A1D22;display:flex;justify-content:space-between;font-size:11px;color:#1E2328}
 .ftr a{color:#9CA3AF;text-decoration:none}
 .ftr a:hover{text-decoration:underline}
 .error{color:#FF6B6B;background:#1A0000;border:1px solid #660000;padding:12px;margin-bottom:12px;border-radius:4px}
@@ -74,7 +74,9 @@ td.r{text-align:right;color:#9CA3AF}
 <div class="wrap">
   <div class="hdr">
     <div class="hdr-l"><div class="dot"></div><div><span class="hdr-t">NON-USD STABLECOINS</span><br><span class="hdr-s">On-chain tracker • 33 tokens • 15 fiat pegs</span></div><span class="hdr-s" id="netLabel" style="margin-left:auto;padding-left:20px;text-align:right;">LOADING...</span></div>
-    <span class="loading" id="rowBadge">Fetching data...</span>
+    <div style="display:flex;gap:20px;align-items:center;justify-content:flex-end;flex:1;padding-right:20px;">
+      <span class="loading" id="rowBadge">Fetching data...</span>
+    </div>
   </div>
   <div class="body" id="mainBody">
     <div class="error" id="errorBox" style="display:none;"></div>
@@ -203,7 +205,8 @@ async function loadDashboardData() {
       NETWORKS[net].cc = CURRENCY_COLORS;
     });
 
-    document.getElementById('rowBadge').textContent = `Updated: ${new Date(json.timestamp).toLocaleTimeString()}`;
+    const utcTime = new Date(json.timestamp).toUTCString().split(' ').slice(4, 5).join(' ');
+    document.getElementById('rowBadge').textContent = `Updated: ${utcTime} UTC`;
     loadNetwork('polygon');
     renderAll();
   } catch (error) {
