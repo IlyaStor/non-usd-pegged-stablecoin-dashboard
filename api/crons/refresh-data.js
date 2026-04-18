@@ -6,9 +6,7 @@
  * "crons": [{"path": "/api/crons/refresh-data", "schedule": "0 * * * *"}]
  */
 
-const redis = require('@vercel/kv').createClient({
-  url: process.env.REDIS_URL,
-});
+import { kv } from '@vercel/kv';
 
 const DUNE_API_KEY = process.env.DUNE_API_KEY;
 const DUNE_BASE = 'https://api.dune.com/api/v1';
@@ -114,10 +112,10 @@ export default async function handler(req, res) {
     // Save to Redis with 24h TTL
     const ttl = 86400; // 24 hours
     await Promise.all([
-      redis.setex('dashboard:polygon', ttl, polygon),
-      redis.setex('dashboard:stellar', ttl, stellar),
-      redis.setex('dashboard:solana', ttl, solana),
-      redis.setex('dashboard:updated', ttl, new Date().toISOString()),
+      kv.setex('dashboard:polygon', ttl, polygon),
+      kv.setex('dashboard:stellar', ttl, stellar),
+      kv.setex('dashboard:solana', ttl, solana),
+      kv.setex('dashboard:updated', ttl, new Date().toISOString()),
     ]);
 
     console.log(`[${new Date().toISOString()}] ✓ Data refresh complete`);
