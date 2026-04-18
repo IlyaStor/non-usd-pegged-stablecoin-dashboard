@@ -73,7 +73,7 @@ td.r{text-align:right;color:#9CA3AF}
 <body>
 <div class="wrap">
   <div class="hdr">
-    <div class="hdr-l"><div class="dot"></div><div><span class="hdr-t">NON-USD STABLECOINS</span><span class="hdr-s">On-chain tracker • 33 tokens • 15 fiat pegs</span></div><span class="hdr-s" id="netLabel" style="margin-left:auto;padding-left:20px;text-align:right;">LOADING...</span></div>
+    <div class="hdr-l"><div class="dot"></div><div><span class="hdr-t">NON-USD STABLECOINS</span><br><span class="hdr-s">On-chain tracker • 33 tokens • 15 fiat pegs</span></div><span class="hdr-s" id="netLabel" style="margin-left:auto;padding-left:20px;text-align:right;">LOADING...</span></div>
     <span class="loading" id="rowBadge">Fetching data...</span>
   </div>
   <div class="body" id="mainBody">
@@ -91,7 +91,6 @@ td.r{text-align:right;color:#9CA3AF}
         <button class="tab" data-m="count" onclick="setMetric('count')">TX COUNT</button>
       </div>
       <div style="display:flex;gap:8px;font-size:11px;">
-        <button onclick="shareOnTwitter()" style="background:#1DA1F2;color:white;border:none;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:inherit;">Tweet</button>
         <button onclick="copyLink()" style="background:#0D0F12;color:#E5E7EB;border:1px solid #1A1D22;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:inherit;">Share</button>
       </div>
     </div>
@@ -334,11 +333,14 @@ function toggleToken(t) {
 let mainChartInstance = null;
 function renderMainChart(){
   const chart = document.getElementById('mainChart');
+  const chartLabel = document.getElementById('chartLabel');
   if(curNet==='suspicious') {
     chart.style.display='none';
+    chartLabel.style.display='none';
     return;
   }
   chart.style.display='block';
+  chartLabel.style.display='block';
   const {data,tm} = NETWORKS[curNet];
   const rows = parse(data);
   const filter = selected.size===0 ? tokensSorted.map(([t])=>t) : Array.from(selected);
