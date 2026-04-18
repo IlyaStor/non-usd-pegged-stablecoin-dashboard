@@ -14,10 +14,10 @@ body{background:#080A0D;color:#E5E7EB;font-family:'IBM Plex Mono',monospace;min-
 ::-webkit-scrollbar-thumb{background:#2D3139;border-radius:2px}
 .wrap{max-width:1200px;margin:0 auto}
 .hdr{border-bottom:1px solid #1A1D22;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-l{display:flex;align-items:center;gap:10px;flex:1}
 .dot{width:7px;height:7px;background:#10B981;border-radius:50%;box-shadow:0 0 8px #10B981}
 .hdr-t{font-size:14px;font-weight:600;color:#F9FAFB}
-.hdr-s{font-size:10px;color:#374151}
+.hdr-s{font-size:10px;color:#374151;line-height:1.4}
 .badge{font-size:9px;color:#374151;padding:3px 8px;border:1px solid #1A1D22}
 .loading{font-size:10px;color:#4B5563}
 .body{padding:20px 24px}
@@ -65,13 +65,15 @@ td.r{text-align:right;color:#9CA3AF}
 .leg-n{color:#6B7280}
 .leg-p{color:#2D3139}
 .ftr{padding:12px 24px;border-top:1px solid #1A1D22;display:flex;justify-content:space-between;font-size:9px;color:#1E2328}
+.ftr a{color:#9CA3AF;text-decoration:none}
+.ftr a:hover{text-decoration:underline}
 .error{color:#FF6B6B;background:#1A0000;border:1px solid #660000;padding:12px;margin-bottom:12px;border-radius:4px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hdr">
-    <div class="hdr-l"><div class="dot"></div><span class="hdr-t">NON-USD STABLECOINS</span><span class="hdr-s" id="netLabel">LOADING...</span></div>
+    <div class="hdr-l"><div class="dot"></div><div><span class="hdr-t">NON-USD STABLECOINS</span><span class="hdr-s">On-chain tracker • 33 tokens • 15 fiat pegs</span></div><span class="hdr-s" id="netLabel" style="margin-left:auto;padding-left:20px;text-align:right;">LOADING...</span></div>
     <span class="loading" id="rowBadge">Fetching data...</span>
   </div>
   <div class="body" id="mainBody">
@@ -87,6 +89,10 @@ td.r{text-align:right;color:#9CA3AF}
       <div class="tabs">
         <button class="tab on" data-m="volume" onclick="setMetric('volume')">VOLUME (USD)</button>
         <button class="tab" data-m="count" onclick="setMetric('count')">TX COUNT</button>
+      </div>
+      <div style="display:flex;gap:8px;font-size:11px;">
+        <button onclick="shareOnTwitter()" style="background:#1DA1F2;color:white;border:none;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:inherit;">Tweet</button>
+        <button onclick="copyLink()" style="background:#0D0F12;color:#E5E7EB;border:1px solid #1A1D22;padding:6px 12px;border-radius:3px;cursor:pointer;font-family:inherit;">Share</button>
       </div>
     </div>
     <div class="chips" id="chips"></div>
@@ -106,11 +112,25 @@ td.r{text-align:right;color:#9CA3AF}
       </div>
     </div>
   </div>
-  <div class="ftr"><span>NON-USD STABLECOIN TRACKER v1.0 (API)</span><span>DATA: DUNE ANALYTICS</span></div>
+  <div class="ftr"><span>NON-USD STABLECOIN TRACKER • Built by <a href="https://t.me/solosolver" target="_blank" style="color:#9CA3AF;text-decoration:underline;">@solosolver</a></span><span>Data from <a href="https://dune.com" target="_blank" style="color:#9CA3AF;text-decoration:underline;">Dune Analytics</a> • Updated hourly</span></div>
 </div>
 <script>
 // Global state
-let NETWORKS = {polygon:{data:'',tm:{},cc:{}},stellar:{data:'',tm:{},cc:{}},solana:{data:'',tm:{},cc:{}}};
+let NETWORKS = {
+  polygon:{data:'',tm:{},cc:{}},
+  stellar:{data:'',tm:{},cc:{}},
+  solana:{data:'',tm:{},cc:{}},
+  suspicious:{
+    rows:[
+      {chain:'Solana',token:'JPYSC (5 variants)',reason:'Null mint/freeze authorities. News-reactive impersonation of SBI JPYSC (Feb 27, 2026). ~1T supply. 100% predictive scam marker'},
+      {chain:'Solana',token:'JPYC (2 variants)',reason:'Unauthorized JPYC on Solana. JPYC Inc. exists only on Ethereum/Polygon/Avalanche. Null authorities, ~1T supply'},
+      {chain:'Solana',token:'JPYCI',reason:'Fabricated ticker, no known issuer. Null authorities, ~500B supply'},
+      {chain:'Stellar',token:'IDRT',reason:'Unverified issuer on Stellar. Cross-chain mismatch: tracked on Polygon via Dune, appears on Stellar with inconsistent authority'},
+      {chain:'Stellar',token:'XSGD',reason:'Unverified issuer on Stellar. Cross-chain mismatch with Polygon data'},
+      {chain:'Stellar',token:'RUBX, AUDX, INRX, CNYX, EURX',reason:'Bot spam farm activity. ~70% of low-volume Stellar from 13-15 senders with 15K+ transactions each'}
+    ]
+  }
+};
 let curNet = 'polygon';
 let metric = 'volume';
 let selected = new Set();
@@ -261,11 +281,26 @@ function setMetric(m) {metric=m;document.querySelectorAll('.tab').forEach(t=>t.c
 
 function renderKPIs(){
   const kpis = document.getElementById('kpis');
-  const topTokens = tokensSorted.slice(0, Math.min(4, tokensSorted.length));
-  kpis.innerHTML = topTokens.map(([t, d]) => {
-    const val = metric==='volume' ? `$${(d.v/1e6).toFixed(1)}M` : fC(d.tx);
-    return `<div class="kpi"><div class="kpi-l">${t}</div><div class="kpi-v">${val}</div><div class="kpi-s">${metric==='volume' ? 'Volume (7d)' : 'Transactions'}</div></div>`;
-  }).join('');
+  if(curNet==='suspicious') {
+    const rows = NETWORKS.suspicious.rows || [];
+    const byChain = {};
+    rows.forEach(r => {
+      if(!byChain[r.chain]) byChain[r.chain] = 0;
+      byChain[r.chain]++;
+    });
+    const chains = Object.entries(byChain).sort((a,b) => b[1] - a[1]);
+    kpis.innerHTML = [
+      {l:'SUSPICIOUS TOKENS',v:rows.length,s:'detected'},
+      {l:'PRIMARY CHAIN',v:chains[0]?chains[0][0]:'—',s:'most affected'},
+      {l:'DETECTION METHOD',v:'Null Auth',s:'100% predictive'},
+    ].map(k => `<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.v}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+  } else {
+    const topTokens = tokensSorted.slice(0, Math.min(4, tokensSorted.length));
+    kpis.innerHTML = topTokens.map(([t, d]) => {
+      const val = metric==='volume' ? `$${(d.v/1e6).toFixed(1)}M` : fC(d.tx);
+      return `<div class="kpi"><div class="kpi-l">${t}</div><div class="kpi-v">${val}</div><div class="kpi-s">${metric==='volume' ? 'Volume (7d)' : 'Transactions'}</div></div>`;
+    }).join('');
+  }
 }
 
 function fU(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:0}).format(n);}
@@ -273,6 +308,12 @@ function fC(n){return new Intl.NumberFormat('en-US').format(n);}
 
 function renderChips(){
   const chips = document.getElementById('chips');
+  if(curNet==='suspicious') {
+    chips.innerHTML = '';
+    document.querySelector('.ctrl').style.display = 'none';
+    return;
+  }
+  document.querySelector('.ctrl').style.display = 'flex';
   chips.innerHTML = tokensSorted.map(([t]) => {
     const tm = NETWORKS[curNet].tm;
     const c = tm[t]?.c || '#455A64';
@@ -292,6 +333,12 @@ function toggleToken(t) {
 
 let mainChartInstance = null;
 function renderMainChart(){
+  const chart = document.getElementById('mainChart');
+  if(curNet==='suspicious') {
+    chart.style.display='none';
+    return;
+  }
+  chart.style.display='block';
   const {data,tm} = NETWORKS[curNet];
   const rows = parse(data);
   const filter = selected.size===0 ? tokensSorted.map(([t])=>t) : Array.from(selected);
@@ -331,11 +378,14 @@ function renderMainChart(){
 }
 
 function renderTable(){
+  document.querySelector('.cols').style.display='flex';
   if(curNet==='suspicious') {
-    document.querySelector('.cols').style.display='none';
+    const rows = NETWORKS.suspicious.rows || [];
+    document.getElementById('tbl').innerHTML = rows.map(r => {
+      return `<tr><td><span class="tk"><span class="tk-d" style="background:#FF6B6B"></span><strong>${r.chain}: ${r.token}</strong></span></td><td colspan="3" style="color:#9CA3AF;font-size:10px;padding:7px 0">${r.reason}</td></tr>`;
+    }).join('');
     return;
   }
-  document.querySelector('.cols').style.display='flex';
   const tm = NETWORKS[curNet].tm;
   document.getElementById('tbl').innerHTML = tokensSorted.map(([t,d]) => {
     const sh = (d.v/totalV*100).toFixed(1);
@@ -378,6 +428,18 @@ function renderPie(){
 }
 
 function renderAll(){renderKPIs();renderChips();renderMainChart();renderTable();renderPie();}
+
+// Share functions
+function shareOnTwitter() {
+  const net = curNet.toUpperCase();
+  const text = `I just checked non-USD stablecoin activity. Track ${net} on-chain volumes across 33 tokens, 15 fiat pegs: https://analytics.solosolver.xyz`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function copyLink() {
+  navigator.clipboard.writeText('https://analytics.solosolver.xyz');
+  alert('Link copied to clipboard!');
+}
 
 // Initialize on page load
 loadDashboardData();
