@@ -17,8 +17,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install redis client
-        run: npm install redis
+      - name: Install dependencies
+        run: npm install redis requests
+
+      - name: Refresh Redis cache from Dune API
+        env:
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
+        run: node fetch-dune-data.js
 
       - name: Fetch data from Redis and update data.json
         env:
