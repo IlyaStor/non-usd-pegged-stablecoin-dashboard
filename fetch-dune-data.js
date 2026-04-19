@@ -25,10 +25,22 @@ if (!REDIS_URL) {
 console.log('✓ REDIS_URL present');
 
 const QUERIES = {
-  polygon: [6621899, 6602635, 6580019],
+  polygon: [6614895, 6621899],  // Part 1 + Part 2 (both have transfer_volume_usd)
   stellar: [6712377],
   solana: [6689171],
   tron: [6695880],
+};
+
+// FX rates for native → USD conversion (Solana & TRON tokens not in USD)
+const FX_RATES = {
+  // Solana tokens (native currency → USD)
+  EURC: 1.14, EUROe: 1.14, VEUR: 1.14, EURCV: 1.14,
+  VCHF: 1.26, BRZ: 0.18, GYEN: 0.0066,
+  // TRON tokens
+  A7A5: 0.012,       // RUB
+  EURT: 1.14,        // EUR
+  USDD: 1.0,         // USD-pegged but listed in non-USD context
+  LIRA: 0.029,       // TRY
 };
 
 /**
@@ -38,7 +50,7 @@ async function fetchQueryResults(queryId) {
   console.log(`  Fetching query ${queryId}...`);
 
   const res = await fetch(`${DUNE_BASE}/query/${queryId}/results`, {
-    headers: { Authorization: `Bearer ${DUNE_API_KEY}` },
+    headers: { 'X-Dune-Api-Key': DUNE_API_KEY },
   });
 
   if (!res.ok) {
@@ -58,7 +70,7 @@ async function fetchQueryResults(queryId) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const pollRes = await fetch(`${DUNE_BASE}/query/${queryId}/results`, {
-      headers: { Authorization: `Bearer ${DUNE_API_KEY}` },
+      headers: { 'X-Dune-Api-Key': DUNE_API_KEY },
     });
     if (!pollRes.ok) {
       throw new Error(`Poll error for query ${queryId}: ${pollRes.status} ${pollRes.statusText}`);
@@ -103,24 +115,28 @@ function rowsToFormat(rows, network) {
   const byDate = {};
 
   rows.forEach(row => {
+    // Date: trim " 00:00:00.000 UTC" suffix if present
     const dateStr = typeof row.date === 'string' ? row.date.split(' ')[0] : row.date;
-    const tokenCode = row.token.includes(' - ')
-      ? row.token.split(' - ').pop()
-      : row.token;
 
-    const txCount = parseInt(row.daily_transactions, 10);
+    // Token: extract short code from "Brazilian rial - BRLA" format
+    const tokenCode = row.token.includes(' - ')
+      ? row.token.split(' - ').pop().trim()
+      : row.token.trim();
+
+    const txCount = parseInt(row.daily_transactions, 10) || 0;
     let volumeUsd;
 
-    if (network === 'solana') {
-      volumeUsd = parseFloat(row.transfer_volume || 0);
-    } else if (network === 'stellar') {
+    if (network === 'polygon' || network === 'stellar') {
+      // These queries return transfer_volume_usd directly
       volumeUsd = parseFloat(row.transfer_volume_usd || 0);
-    } else if (network === 'polygon') {
-      volumeUsd = parseFloat(row.transfer_volume_usd || 0);
-    } else if (network === 'tron') {
-      volumeUsd = parseFloat(row.transfer_volume_usd || row.transfer_volume || 0);
     } else {
-      volumeUsd = parseFloat(row.transfer_volume_usd || row.transfer_volume || 0);
+      // Solana & TRON return native currency volumes — convert via FX rates
+      const nativeVol = parseFloat(row.transfer_volume || 0);
+      const fx = FX_RATES[tokenCode] || 1.0;
+      volumeUsd = nativeVol * fx;
+      if (!FX_RATES[tokenCode] && nativeVol > 0) {
+        console.warn(`  ⚠ No FX rate for ${tokenCode} on ${network}, using 1.0`);
+      }
     }
 
     if (!byDate[dateStr]) byDate[dateStr] = [];
