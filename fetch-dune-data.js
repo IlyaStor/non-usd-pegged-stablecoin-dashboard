@@ -12,6 +12,18 @@ const DUNE_API_KEY = process.env.DUNE_API_KEY;
 const REDIS_URL = process.env.REDIS_URL;
 const DUNE_BASE = 'https://api.dune.com/api/v1';
 
+// Debug: Check if API key is present
+if (!DUNE_API_KEY) {
+  console.error('❌ ERROR: DUNE_API_KEY environment variable is not set');
+  process.exit(1);
+}
+console.log(`✓ DUNE_API_KEY present (${DUNE_API_KEY.substring(0, 10)}...)`);
+if (!REDIS_URL) {
+  console.error('❌ ERROR: REDIS_URL environment variable is not set');
+  process.exit(1);
+}
+console.log('✓ REDIS_URL present');
+
 const QUERIES = {
   polygon: [6621899, 6602635, 6580019],
   stellar: [6712377],
