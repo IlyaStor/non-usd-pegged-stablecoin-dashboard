@@ -61,7 +61,7 @@ jobs:
           git add data.json
           if ! git diff --cached --quiet; then
             git commit -m "chore: update dashboard data [skip ci]"
-            git push
+            git push https://${{ secrets.GITHUB_TOKEN_PAT }}@github.com/${{ github.repository }}.git HEAD:main
           else
             echo "No changes to commit"
           fi
