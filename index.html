@@ -455,7 +455,30 @@ function renderMainChart(){
         x:{display:true,ticks:{font:{size:8},color:tickColor},grid:{color:gridColor}},
         y:{stacked:true,ticks:{font:{size:8},color:tickColor},grid:{color:gridColor}}
       },
-      plugins:{legend:{display:true,labels:{font:{size:9},color:tickColor},reverse:true},tooltip:{backgroundColor:tooltipBg,borderColor:tooltipBorder,borderWidth:1}}
+      plugins:{
+        legend:{display:true,labels:{font:{size:9},color:tickColor},reverse:true},
+        tooltip:{
+          backgroundColor:tooltipBg,
+          borderColor:tooltipBorder,
+          borderWidth:1,
+          titleColor:tickColor,
+          bodyColor:tickColor,
+          padding:10,
+          displayColors:true,
+          callbacks:{
+            title:ctx=>ctx[0].label,
+            label:ctx=>{
+              const value = ctx.parsed.y || 0;
+              const label = ctx.dataset.label;
+              if(metric==='volume') {
+                return `${label}: $${(value/1e6).toFixed(2)}M`;
+              } else {
+                return `${label}: ${fC(Math.round(value))}`;
+              }
+            }
+          }
+        }
+      }
     }
   });
 }
