@@ -461,8 +461,12 @@ function renderMainChart(){
 }
 
 function renderTable(){
+  const colsElem = document.querySelector('.cols');
   if(curNet==='suspicious') {
-    document.querySelector('.cols').style.display='none';
+    colsElem.style.display='none';
+    colsElem.style.visibility='hidden';
+    colsElem.style.height='0';
+    colsElem.style.margin='0';
     const rows = NETWORKS.suspicious.rows || [];
     let suspiciousList = document.getElementById('suspiciousList');
     if(!suspiciousList) {
@@ -473,13 +477,17 @@ function renderTable(){
       document.querySelector('.body').appendChild(suspiciousList);
     }
     suspiciousList.style.display='block';
+    suspiciousList.style.visibility='visible';
     const isLight = document.body.classList.contains('light-mode');
     const borderColor = isLight ? '#E5E7EB' : '#0F1114';
     const textColor = isLight ? '#6B7280' : '#9CA3AF';
     suspiciousList.innerHTML = `<div class="panel-t">SUSPICIOUS TOKENS</div><div>${rows.map(r => `<div style="padding:10px 0;border-bottom:1px solid ${borderColor};"><div style="font-weight:600;margin-bottom:4px;"><span style="color:#FF6B6B">●</span> <strong>${r.chain}: ${r.token}</strong></div><div style="font-size:10px;color:${textColor};line-height:1.5;">${r.reason}</div></div>`).join('')}</div>`;
     return;
   }
-  document.querySelector('.cols').style.display='flex';
+  colsElem.style.display='flex';
+  colsElem.style.visibility='visible';
+  colsElem.style.height='auto';
+  colsElem.style.margin='';
   const suspiciousList = document.getElementById('suspiciousList');
   if(suspiciousList) suspiciousList.style.display='none';
   const tm = NETWORKS[curNet].tm;
