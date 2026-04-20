@@ -407,11 +407,12 @@ let mainChartInstance = null;
 function renderMainChart(){
   const chart = document.getElementById('mainChart');
   const chartLabel = document.getElementById('chartLabel');
+  const chartPanel = document.querySelector('.panel');
   if(curNet==='suspicious') {
-    chart.style.display='none';
-    chartLabel.style.display='none';
+    chartPanel.style.display='none';
     return;
   }
+  chartPanel.style.display='block';
   chart.style.display='block';
   chartLabel.style.display='block';
   const {data,tm} = NETWORKS[curNet];
@@ -472,8 +473,9 @@ function renderTable(){
       document.querySelector('.body').appendChild(suspiciousList);
     }
     suspiciousList.style.display='block';
-    const borderColor = document.body.classList.contains('light-mode') ? '#E5E7EB' : '#0F1114';
-    const textColor = document.body.classList.contains('light-mode') ? '#6B7280' : '#9CA3AF';
+    const isLight = document.body.classList.contains('light-mode');
+    const borderColor = isLight ? '#E5E7EB' : '#0F1114';
+    const textColor = isLight ? '#6B7280' : '#9CA3AF';
     suspiciousList.innerHTML = `<div class="panel-t">SUSPICIOUS TOKENS</div><div>${rows.map(r => `<div style="padding:10px 0;border-bottom:1px solid ${borderColor};"><div style="font-weight:600;margin-bottom:4px;"><span style="color:#FF6B6B">●</span> <strong>${r.chain}: ${r.token}</strong></div><div style="font-size:10px;color:${textColor};line-height:1.5;">${r.reason}</div></div>`).join('')}</div>`;
     return;
   }
