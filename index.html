@@ -150,6 +150,7 @@ body.light-mode .theme-toggle:hover{background:#D1D5DB}
       <button class="net-tab" onclick="switchNetwork('stellar')" id="btnStellar">Stellar</button>
       <button class="net-tab" onclick="switchNetwork('solana')" id="btnSolana">Solana</button>
       <button class="net-tab" onclick="switchNetwork('suspicious')" id="btnSuspicious">Suspicious</button>
+      <button class="net-tab" onclick="switchNetwork('geography')" id="btnGeography">Geography</button>
     </div>
     <div class="kpis" id="kpis"></div>
     <div class="ctrl">
@@ -251,6 +252,25 @@ const CURRENCY_COLORS = {
   ZAR:'#FFCA28',ARS:'#9CCC65',NGN:'#29B6F6',PEN:'#FF7043',CHF:'#FF6D00',
 };
 
+// Geography mapping: currency → country/flag
+const GEO_MAP = {
+  BRL:{country:'Brazil',flag:'🇧🇷',region:'Americas'},
+  TRY:{country:'Turkey',flag:'🇹🇷',region:'Europe/Asia'},
+  ARS:{country:'Argentina',flag:'🇦🇷',region:'Americas'},
+  IDR:{country:'Indonesia',flag:'🇮🇩',region:'Asia'},
+  PHP:{country:'Philippines',flag:'🇵🇭',region:'Asia'},
+  JPY:{country:'Japan',flag:'🇯🇵',region:'Asia'},
+  SGD:{country:'Singapore',flag:'🇸🇬',region:'Asia'},
+  EUR:{country:'Europe',flag:'🇪🇺',region:'Europe'},
+  CHF:{country:'Switzerland',flag:'🇨🇭',region:'Europe'},
+  CAD:{country:'Canada',flag:'🇨🇦',region:'Americas'},
+  AUD:{country:'Australia',flag:'🇦🇺',region:'Oceania'},
+  ZAR:{country:'South Africa',flag:'🇿🇦',region:'Africa'},
+  COP:{country:'Colombia',flag:'🇨🇴',region:'Americas'},
+  PEN:{country:'Peru',flag:'🇵🇪',region:'Americas'},
+  NGN:{country:'Nigeria',flag:'🇳🇬',region:'Africa'},
+};
+
 /**
  * Fetch dashboard data from API
  */
@@ -312,11 +332,17 @@ let tokensSorted, cursSorted, totalV = 0;
 function loadNetwork(net) {
   curNet = net;
   document.querySelectorAll('.net-tab').forEach((b,i) => {
-    b.classList.toggle('on', ['polygon','stellar','solana','suspicious'][i] === net);
+    b.classList.toggle('on', ['polygon','stellar','solana','suspicious','geography'][i] === net);
   });
   document.getElementById('netLabel').textContent = net.toUpperCase();
 
   if(net==='suspicious') {
+    selected.clear();
+    renderAll();
+    return;
+  }
+
+  if(net==='geography') {
     selected.clear();
     renderAll();
     return;
@@ -366,6 +392,28 @@ function renderKPIs(){
       {l:'PRIMARY CHAIN',v:chains[0]?chains[0][0]:'—',s:'most affected'},
       {l:'DETECTION METHOD',v:'Null Auth',s:'100% predictive'},
     ].map(k => `<div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.v}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+  } else if(curNet==='geography') {
+    // Collect geo data for KPIs
+    let geoData = {};
+    ['polygon','stellar','solana'].forEach(net => {
+      const {data,tm} = NETWORKS[net];
+      const rows = parse(data);
+      rows.forEach(({items}) => {
+        items.forEach(({t,tx,v}) => {
+          const cur = tm[t]?.cur || 'OTHER';
+          if(cur !== 'OTHER' && GEO_MAP[cur]) {
+            if(!geoData[cur]) geoData[cur] = {v:0,tx:0,cur};
+            geoData[cur].v += v;
+            geoData[cur].tx += tx;
+          }
+        });
+      });
+    });
+    const geoSorted = Object.values(geoData).sort((a,b) => b.v - a.v).slice(0,4);
+    kpis.innerHTML = geoSorted.map(({cur,v}) => {
+      const geo = GEO_MAP[cur];
+      return `<div class="kpi"><div class="kpi-l">${geo.flag} ${cur}</div><div class="kpi-v">$${(v/1e6).toFixed(1)}M</div><div class="kpi-s">${geo.country}</div></div>`;
+    }).join('');
   } else {
     const topTokens = tokensSorted.slice(0, Math.min(4, tokensSorted.length));
     kpis.innerHTML = topTokens.map(([t, d]) => {
@@ -380,7 +428,7 @@ function fC(n){return new Intl.NumberFormat('en-US').format(n);}
 
 function renderChips(){
   const chips = document.getElementById('chips');
-  if(curNet==='suspicious') {
+  if(curNet==='suspicious' || curNet==='geography') {
     chips.innerHTML = '';
     document.querySelector('.ctrl').style.display = 'none';
     return;
@@ -408,7 +456,7 @@ function renderMainChart(){
   const chart = document.getElementById('mainChart');
   const chartLabel = document.getElementById('chartLabel');
   const chartPanel = document.querySelector('.panel');
-  if(curNet==='suspicious') {
+  if(curNet==='suspicious' || curNet==='geography') {
     chartPanel.style.display='none';
     return;
   }
@@ -527,7 +575,7 @@ function renderTable(){
 }
 
 function renderPie(){
-  if(curNet==='suspicious') {
+  if(curNet==='suspicious' || curNet==='geography') {
     if(pieInst) pieInst.destroy();
     document.getElementById('pieChart').style.display='none';
     document.getElementById('pieLeg').innerHTML='';
@@ -562,7 +610,73 @@ function renderPie(){
   }).join('');
 }
 
-function renderAll(){renderKPIs();renderChips();renderMainChart();renderTable();renderPie();}
+function renderGeo(){
+  if(curNet!=='geography') {
+    const geoPanel = document.getElementById('geoPanel');
+    if(geoPanel) geoPanel.style.display='none';
+    return;
+  }
+
+  // Collect all data from all networks
+  let geoData = {};
+  ['polygon','stellar','solana'].forEach(net => {
+    const {data,tm} = NETWORKS[net];
+    const rows = parse(data);
+    rows.forEach(({items}) => {
+      items.forEach(({t,tx,v}) => {
+        const cur = tm[t]?.cur || 'OTHER';
+        if(cur !== 'OTHER' && GEO_MAP[cur]) {
+          if(!geoData[cur]) geoData[cur] = {v:0,tx:0,cur};
+          geoData[cur].v += v;
+          geoData[cur].tx += tx;
+        }
+      });
+    });
+  });
+
+  const geoSorted = Object.values(geoData).sort((a,b) => b.v - a.v);
+
+  let geoPanel = document.getElementById('geoPanel');
+  if(!geoPanel) {
+    geoPanel = document.createElement('div');
+    geoPanel.id = 'geoPanel';
+    geoPanel.className = 'panel';
+    geoPanel.style.marginTop = '16px';
+    document.querySelector('.body').appendChild(geoPanel);
+  }
+
+  const isLight = document.body.classList.contains('light-mode');
+  const borderColor = isLight ? '#E5E7EB' : '#0F1114';
+  const textColor = isLight ? '#6B7280' : '#9CA3AF';
+  const headerColor = isLight ? '#111827' : '#E5E7EB';
+
+  geoPanel.style.display='block';
+  geoPanel.innerHTML = `
+    <div class="panel-t">STABLECOIN ACTIVITY BY COUNTRY</div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="border-bottom:1px solid ${borderColor};">
+          <th style="text-align:left;padding:8px 0;font-size:10px;color:${textColor};font-weight:500;">COUNTRY</th>
+          <th style="text-align:right;padding:8px 0;font-size:10px;color:${textColor};font-weight:500;">VOLUME</th>
+          <th style="text-align:right;padding:8px 0;font-size:10px;color:${textColor};font-weight:500;">TX</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${geoSorted.map(({cur,v,tx}) => {
+          const geo = GEO_MAP[cur];
+          const pct = (v/totalV*100).toFixed(1);
+          return `<tr style="border-bottom:1px solid ${borderColor};">
+            <td style="padding:8px 0;font-size:11px;color:${headerColor};">${geo.flag} ${geo.country}</td>
+            <td style="text-align:right;padding:8px 0;font-size:11px;color:${headerColor};">$${(v/1e6).toFixed(1)}M <span style="font-size:9px;color:${textColor};">(${pct}%)</span></td>
+            <td style="text-align:right;padding:8px 0;font-size:11px;color:${textColor};">${(tx/1e3).toFixed(0)}K</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderAll(){renderKPIs();renderChips();renderMainChart();renderTable();renderPie();renderGeo();}
 
 // Share functions
 function shareOnTwitter() {
