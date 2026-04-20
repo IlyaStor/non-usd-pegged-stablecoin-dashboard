@@ -458,6 +458,7 @@ function renderMainChart(){
       plugins:{
         legend:{display:true,labels:{font:{size:9},color:tickColor},reverse:true},
         tooltip:{
+          enabled:true,
           backgroundColor:tooltipBg,
           borderColor:tooltipBorder,
           borderWidth:1,
@@ -466,14 +467,17 @@ function renderMainChart(){
           padding:10,
           displayColors:true,
           callbacks:{
-            title:ctx=>ctx[0].label,
-            label:ctx=>{
-              const value = ctx.parsed.y || 0;
-              const label = ctx.dataset.label;
+            title:context=>{
+              return context[0].label;
+            },
+            label:context=>{
+              const value = context.parsed.y;
+              const label = context.dataset.label;
               if(metric==='volume') {
-                return `${label}: $${(value/1e6).toFixed(2)}M`;
+                const formatted = value >= 1e6 ? (value/1e6).toFixed(2) + 'M' : (value/1e3).toFixed(1) + 'K';
+                return `${label}: $${formatted}`;
               } else {
-                return `${label}: ${fC(Math.round(value))}`;
+                return `${label}: ${Math.round(value).toLocaleString()}`;
               }
             }
           }
