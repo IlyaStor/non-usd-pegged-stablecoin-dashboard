@@ -4,6 +4,10 @@
  * Fetch dashboard data from Dune Analytics API and store in Redis.
  * Usage: DUNE_API_KEY="..." REDIS_URL="redis://..." node fetch-dune-data.js
  * Designed for GitHub Actions scheduled runs.
+ *
+ * NOTE: this script reads the LAST execution result of each Dune query.
+ * It does NOT execute queries — that is done manually by the maintainer
+ * on Dune (see: https://dune.com/queries/<id> → Run).
  */
 
 import { createClient } from 'redis';
@@ -25,22 +29,23 @@ if (!REDIS_URL) {
 console.log('✓ REDIS_URL present');
 
 const QUERIES = {
-  polygon: [6614895, 6621899],  // Part 1 + Part 2 (both have transfer_volume_usd)
+  polygon: [6614895, 6621899],  // Part 1 (CAD/AUD/EUR/TRY/ZAR/NGN) + Part 2 (BRL/COP/JPY/SGD/IDR/PHP)
   stellar: [6712377],
-  solana: [6689171],
-  tron: [6695880],
+  solana:  [6689171],
+  tron:    [6695880],
+  plasma:  [6663259],            // Plasma volume query; 6665855 (count) is redundant — daily_transactions = transfer_count
 };
 
-// FX rates for native → USD conversion (Solana & TRON tokens not in USD)
-const FX_RATES = {
-  // Solana tokens (native currency → USD)
+// Fallback FX rates used ONLY when the Dune query did not return transfer_volume_usd
+// (e.g. someone edits the SQL and forgets to keep the column). Safety net, not primary path.
+const FX_FALLBACK = {
+  // Solana
   EURC: 1.14, EUROe: 1.14, VEUR: 1.14, EURCV: 1.14,
-  VCHF: 1.26, BRZ: 0.18, GYEN: 0.0066,
-  // TRON tokens
-  A7A5: 0.012,       // RUB
-  EURT: 1.14,        // EUR
-  USDD: 1.0,         // USD-pegged but listed in non-USD context
-  LIRA: 0.029,       // TRY
+  VCHF: 1.10, BRZ: 0.18, GYEN: 0.0066,
+  // Tron
+  A7A5: 0.011, PHT: 0.017,
+  // Plasma
+  EUROP: 1.14, TRYB: 0.029,
 };
 
 /**
@@ -109,7 +114,8 @@ async function fetchNetwork(network, queryIds) {
 
 /**
  * Convert rows to pipe-delimited format, grouped by date, sorted descending.
- * Matches the format used by load-cache.js and the dashboard.
+ * All networks now return transfer_volume_usd from SQL — use it directly.
+ * Fallback to native * FX_FALLBACK only if USD column is missing/zero.
  */
 function rowsToFormat(rows, network) {
   const byDate = {};
@@ -124,18 +130,17 @@ function rowsToFormat(rows, network) {
       : row.token.trim();
 
     const txCount = parseInt(row.daily_transactions, 10) || 0;
-    let volumeUsd;
 
-    if (network === 'polygon' || network === 'stellar') {
-      // These queries return transfer_volume_usd directly
-      volumeUsd = parseFloat(row.transfer_volume_usd || 0);
-    } else {
-      // Solana & TRON return native currency volumes — convert via FX rates
-      const nativeVol = parseFloat(row.transfer_volume || 0);
-      const fx = FX_RATES[tokenCode] || 1.0;
-      volumeUsd = nativeVol * fx;
-      if (!FX_RATES[tokenCode] && nativeVol > 0) {
-        console.warn(`  ⚠ No FX rate for ${tokenCode} on ${network}, using 1.0`);
+    // Primary: use SQL-side transfer_volume_usd
+    let volumeUsd = parseFloat(row.transfer_volume_usd || 0);
+
+    // Safety fallback: if USD column missing or zero but native volume present
+    if (!volumeUsd) {
+      const nativeVol = parseFloat(row.transfer_volume || row.transfer_volume_native || 0);
+      const fx = FX_FALLBACK[tokenCode];
+      if (fx && nativeVol > 0) {
+        volumeUsd = nativeVol * fx;
+        console.warn(`  ⚠ ${network}/${tokenCode}: USD column empty, using fallback FX=${fx}`);
       }
     }
 
@@ -157,16 +162,6 @@ function rowsToFormat(rows, network) {
 }
 
 async function main() {
-  if (!DUNE_API_KEY) {
-    console.error('ERROR: DUNE_API_KEY env var not set');
-    process.exit(1);
-  }
-
-  if (!REDIS_URL) {
-    console.error('ERROR: REDIS_URL env var not set');
-    process.exit(1);
-  }
-
   const client = createClient({ url: REDIS_URL });
 
   try {
@@ -179,14 +174,16 @@ async function main() {
     // Fetch all networks
     const polygonRows = await fetchNetwork('polygon', QUERIES.polygon);
     const stellarRows = await fetchNetwork('stellar', QUERIES.stellar);
-    const solanaRows = await fetchNetwork('solana', QUERIES.solana);
-    const tronRows = await fetchNetwork('tron', QUERIES.tron);
+    const solanaRows  = await fetchNetwork('solana',  QUERIES.solana);
+    const tronRows    = await fetchNetwork('tron',    QUERIES.tron);
+    const plasmaRows  = await fetchNetwork('plasma',  QUERIES.plasma);
 
     // Format to pipe-delimited
     const polygonData = rowsToFormat(polygonRows, 'polygon');
     const stellarData = rowsToFormat(stellarRows, 'stellar');
-    const solanaData = rowsToFormat(solanaRows, 'solana');
-    const tronData = rowsToFormat(tronRows, 'tron');
+    const solanaData  = rowsToFormat(solanaRows,  'solana');
+    const tronData    = rowsToFormat(tronRows,    'tron');
+    const plasmaData  = rowsToFormat(plasmaRows,  'plasma');
 
     // Store in Redis with 24h TTL
     console.log('\nSaving to Redis...');
@@ -202,6 +199,9 @@ async function main() {
 
     await client.setEx('dashboard:tron', 86400, tronData);
     console.log(`✓ dashboard:tron (${tronData.length} chars)`);
+
+    await client.setEx('dashboard:plasma', 86400, plasmaData);
+    console.log(`✓ dashboard:plasma (${plasmaData.length} chars)`);
 
     const timestamp = new Date().toISOString();
     await client.setEx('dashboard:updated', 86400, timestamp);
