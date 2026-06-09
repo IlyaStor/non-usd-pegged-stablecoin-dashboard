@@ -295,6 +295,33 @@ td.first{color:var(--text)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://analytics.solosolver.xyz/#dataset",
+  "name": "Non-USD Pegged Stablecoin On-Chain Tracker",
+  "description": "Hourly-updated on-chain tracking of non-USD pegged stablecoins across 5 blockchains (Polygon, Stellar, Solana, Tron, Plasma). Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 90-day window. All underlying SQL queries are public.",
+  "url": "https://analytics.solosolver.xyz",
+  "sameAs": "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard",
+  "keywords": ["non-USD stablecoins","stablecoin analytics","A7A5 ruble stablecoin","EURC","on-chain transfer volume","Tron","Solana","Polygon","Stellar","Plasma"],
+  "creator": {
+    "@type": "Organization",
+    "name": "solosolver",
+    "url": "https://solosolver.xyz",
+    "sameAs": ["https://t.me/solosolver","https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard"]
+  },
+  "isAccessibleForFree": true,
+  "spatialCoverage": "Global",
+  "creativeWorkStatus": "Published",
+  "variableMeasured": ["daily transfer count","daily transfer volume (USD)","fiat peg","blockchain network"],
+  "distribution": [{
+    "@type": "DataDownload",
+    "encodingFormat": "application/json",
+    "contentUrl": "https://analytics.solosolver.xyz/data.json"
+  }]
+}
+</script>
 </head>
 <body>
 <div class="wrap">
