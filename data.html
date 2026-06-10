@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data &amp; API — Non-USD Stablecoin Dashboard | solosolver</title>
+  <meta name="description" content="Public JSON data for non-USD pegged stablecoins across 5 blockchains (A7A5, EURC, AUD, TRYB, ARS), updated hourly. Free to use with attribution. Open SQL on GitHub.">
+  <link rel="canonical" href="https://analytics.solosolver.xyz/data">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://solosolver.xyz/#org",
+        "name": "solosolver",
+        "url": "https://solosolver.xyz",
+        "sameAs": ["https://t.me/solosolver", "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard"]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://solosolver.xyz/#website",
+        "url": "https://solosolver.xyz",
+        "name": "solosolver",
+        "publisher": {"@id": "https://solosolver.xyz/#org"}
+      },
+      {
+        "@type": "Dataset",
+        "@id": "https://analytics.solosolver.xyz/#dataset",
+        "name": "Non-USD Pegged Stablecoin On-Chain Tracker",
+        "description": "Hourly-updated on-chain tracking of non-USD pegged stablecoins across 5 blockchains (Polygon, Stellar, Solana, Tron, Plasma). Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 90-day window. All underlying SQL queries are public.",
+        "url": "https://analytics.solosolver.xyz",
+        "sameAs": "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard",
+        "keywords": ["non-USD stablecoins", "stablecoin analytics", "A7A5 ruble stablecoin", "EURC", "on-chain transfer volume", "Tron", "Solana", "Polygon", "Stellar", "Plasma"],
+        "creator": {"@id": "https://solosolver.xyz/#org"},
+        "isAccessibleForFree": true,
+        "spatialCoverage": "Global",
+        "creativeWorkStatus": "Published",
+        "variableMeasured": ["daily transfer count", "daily transfer volume (USD)", "fiat peg", "blockchain network"],
+        "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": "https://analytics.solosolver.xyz/data.json"}]
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root{--bg:#0A0B0F;--fg:#F3F4F6;--muted:#9CA3AF;--accent:#10B981;--line:#1F232D;--card:#11141B;
+      --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;}
+    @media (prefers-color-scheme: light){:root{--bg:#fff;--fg:#15201a;--muted:#5a6b5e;--accent:#0a8f53;--line:#e5e7eb;--card:#f9fafb;}}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);line-height:1.6}
+    .wrap{max-width:780px;margin:0 auto;padding:48px 20px 80px}
+    a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+    h1{font-size:1.6rem;margin:0 0 6px}
+    h2{font-size:1.1rem;margin:40px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+    .meta{color:var(--muted);font-size:.85rem;margin-bottom:24px}
+    pre{background:var(--card);border:1px solid var(--line);padding:14px;overflow:auto;font-size:.85rem;border-radius:4px}
+    table{width:100%;border-collapse:collapse;font-size:.9rem;margin:12px 0}
+    th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+    th{color:var(--muted)}
+    code{background:var(--card);padding:1px 5px;border:1px solid var(--line);border-radius:3px}
+    nav.top{font-size:.85rem;margin-bottom:24px}
+    nav.top a{margin-right:18px}
+    footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <nav class="top"><a href="https://analytics.solosolver.xyz">← dashboard</a><a href="https://analytics.solosolver.xyz/case">case study</a></nav>
+
+  <h1>Data &amp; API</h1>
+  <div class="meta">Non-USD pegged stablecoins · 5 tokens · 5 chains · updated hourly</div>
+
+  <p>
+    The full dataset behind the <a href="https://analytics.solosolver.xyz">solosolver dashboard</a> is public.
+    No key, no signup. Free to use with attribution. If you are a journalist, researcher or developer, this page is for you.
+  </p>
+
+  <h2>Endpoint</h2>
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr><td>JSON data</td><td><a href="https://analytics.solosolver.xyz/data.json"><code>analytics.solosolver.xyz/data.json</code></a></td></tr>
+    <tr><td>Update frequency</td><td>Hourly (GitHub Actions + Dune Analytics)</td></tr>
+    <tr><td>Source SQL</td><td><a href="https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard">github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard</a></td></tr>
+    <tr><td>Format</td><td>application/json</td></tr>
+  </table>
+
+  <h2>Coverage</h2>
+  <ul>
+    <li><b>Networks:</b> Polygon, Stellar, Solana, Tron, Plasma</li>
+    <li><b>Current tokens:</b> A7A5 (RUB), EURC (EUR), AUD, TRYB (TRY), ARS</li>
+    <li><b>Metrics:</b> daily transfer count, daily transfer volume (USD)</li>
+    <li><b>Window:</b> rolling 90 days, refreshed hourly</li>
+  </ul>
+
+  <h2>Schema</h2>
+  <p><code>data.json</code> is keyed by network. Each network holds newline-separated daily rows; each row is pipe-delimited: <code>date|token|transfer_count|volume_usd</code>.</p>
+  <pre>{
+  "success": true,
+  "timestamp": "2026-06-09T16:07:34.654Z",
+  "data": {
+    "tron":    "2026-06-03|A7A5|107|49542559.23\n...",
+    "solana":  "2026-06-03|EURC|...|...\n...",
+    "polygon": "2026-06-03|AUD|...|...\n...",
+    "plasma":  "2026-06-03|TRYB|...|...\n...",
+    "stellar": "2026-06-03|ARS|...|...\n..."
+  }
+}</pre>
+
+  <h2>Quick start</h2>
+  <pre>import requests
+
+raw = requests.get("https://analytics.solosolver.xyz/data.json").json()
+rows = []
+for network, block in raw["data"].items():
+    for line in block.strip().splitlines():
+        date, token, count, volume = line.split("|")
+        rows.append((network, date, token, int(count), float(volume)))
+
+# total 90-day volume for the ruble token A7A5
+a7a5 = sum(v for _, _, t, _, v in rows if t == "A7A5")
+print(f"A7A5 90d volume: ${a7a5:,.0f}")</pre>
+
+  <h2>License &amp; attribution</h2>
+  <p>
+    Free to reuse with attribution and a link back to <a href="https://solosolver.xyz">solosolver.xyz</a>.
+    If you publish a chart or figure from this data, a citation is appreciated and helps others verify it.
+  </p>
+
+  <footer>
+    Dashboard: <a href="https://analytics.solosolver.xyz">analytics.solosolver.xyz</a> ·
+    Code: <a href="https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard">GitHub</a> ·
+    Channel: <a href="https://t.me/solosolver">t.me/solosolver</a>
+  </footer>
+</main>
+</body>
+</html>
