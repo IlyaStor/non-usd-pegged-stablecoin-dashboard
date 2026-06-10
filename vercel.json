@@ -5,5 +5,12 @@
       "source": "/data.json",
       "destination": "/data.json"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/case",
+      "destination": "https://solosolver.xyz/non-usd-stablecoins",
+      "permanent": true
+    }
   ]
 }
