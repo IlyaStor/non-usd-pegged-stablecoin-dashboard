@@ -301,7 +301,7 @@ td.first{color:var(--text)}
   "@type": "Dataset",
   "@id": "https://analytics.solosolver.xyz/#dataset",
   "name": "Non-USD Pegged Stablecoin On-Chain Tracker",
-  "description": "Hourly-updated on-chain tracking of non-USD pegged stablecoins across 5 blockchains (Polygon, Stellar, Solana, Tron, Plasma). Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 90-day window. All underlying SQL queries are public.",
+  "description": "Hourly-updated on-chain tracking of non-USD pegged stablecoins across 5 blockchains (Polygon, Stellar, Solana, Tron, Plasma). Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 365-day window. All underlying SQL queries are public.",
   "url": "https://analytics.solosolver.xyz",
   "sameAs": "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard",
   "keywords": ["non-USD stablecoins","stablecoin analytics","A7A5 ruble stablecoin","EURC","on-chain transfer volume","Tron","Solana","Polygon","Stellar","Plasma"],
@@ -337,7 +337,7 @@ td.first{color:var(--text)}
     </div>
     <div class="hero-stats">
       <div class="hero-stat">
-        <span class="hero-stat-l">90d Total Volume</span>
+        <span class="hero-stat-l">365d Total Volume</span>
         <span class="hero-stat-v" id="heroTotal">—</span>
         <span class="hero-stat-d" id="heroDelta"></span>
       </div>
@@ -578,7 +578,7 @@ async function loadDashboardData(){
 }
 
 function updateHeroStats(){
-  // 90d total across all chain networks + week-over-week delta
+  // 365d total across all chain networks + week-over-week delta
   let total=0, prev=0, recent=0;
   CHAIN_NETS.forEach(net=>{
     const rows=parse(NETWORKS[net].data);
@@ -759,8 +759,8 @@ function renderKPIs(){
   const topToken=tokensSorted[0];
   const topShare=topToken && totalV>0?(topToken[1].v/totalV*100).toFixed(1):'—';
   const items=[
-    {l:'90d Total Volume',v:fmtMoneyL(totalV),s:`${tokensSorted.length} active tokens`,c:accent},
-    {l:'90d Transactions',v:fmtCompactCount(totalTx),s:'aggregated daily tx',c:accent},
+    {l:'365d Total Volume',v:fmtMoneyL(totalV),s:`${tokensSorted.length} active tokens`,c:accent},
+    {l:'365d Transactions',v:fmtCompactCount(totalTx),s:'aggregated daily tx',c:accent},
     {l:'Top token',v:topToken?topToken[0]:'—',s:topToken?`${topShare}% of network`:'no data',c:topToken?TOKEN_METADATA[topToken[0]]?.c||accent:accent},
     {l:'Avg ticket',v:totalTx>0?fmtMoneyL(totalV/totalTx):'—',s:'volume ÷ tx',c:accent},
   ];
