@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Non-USD Stablecoins · On-chain tracker</title>
-<meta name="description" content="Live on-chain analytics for non-USD pegged stablecoins across Polygon, Stellar, Solana, Tron and Plasma.">
+<meta name="description" content="Live on-chain analytics for non-USD pegged stablecoins across Polygon, Stellar, Solana, Tron, Plasma and BSC.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,6 +26,7 @@
   --net-solana:#14F195;
   --net-tron:#FF3232;
   --net-plasma:#00D2FF;
+  --net-bsc:#F0B90B;
   --net-suspicious:#F87171;
   --net-geography:#60A5FA;
   --grid:#1A1D25;
@@ -359,6 +360,7 @@ td.first{color:var(--text)}
       <button class="net-tab" data-net="solana" onclick="switchNetwork('solana')">Solana</button>
       <button class="net-tab" data-net="tron" onclick="switchNetwork('tron')">Tron</button>
       <button class="net-tab" data-net="plasma" onclick="switchNetwork('plasma')">Plasma</button>
+      <button class="net-tab" data-net="bsc" onclick="switchNetwork('bsc')">BSC</button>
       <button class="net-tab" data-net="suspicious" onclick="switchNetwork('suspicious')">Suspicious</button>
       <button class="net-tab" data-net="geography" onclick="switchNetwork('geography')">Geography</button>
     </nav>
@@ -412,8 +414,8 @@ td.first{color:var(--text)}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-const NET_ORDER = ['polygon','stellar','solana','tron','plasma','suspicious','geography'];
-const CHAIN_NETS = ['polygon','stellar','solana','tron','plasma'];
+const NET_ORDER = ['polygon','stellar','solana','tron','plasma','bsc','suspicious','geography'];
+const CHAIN_NETS = ['polygon','stellar','solana','tron','plasma','bsc'];
 
 const NET_COLOR = {
   polygon:'#8247E5',
@@ -421,6 +423,7 @@ const NET_COLOR = {
   solana:'#14F195',
   tron:'#FF3232',
   plasma:'#00D2FF',
+  bsc:'#F0B90B',
   suspicious:'#F87171',
   geography:'#60A5FA',
 };
@@ -432,6 +435,7 @@ let NETWORKS = {
   solana: {data:'',tm:{},cc:{}},
   tron:   {data:'',tm:{},cc:{}},
   plasma: {data:'',tm:{},cc:{}},
+  bsc:    {data:'',tm:{},cc:{}},
   suspicious:{
     rows:[
       {chain:'Solana',token:'JPYSC (5 variants)',reason:'Null mint/freeze authorities. News-reactive impersonation of SBI JPYSC (Feb 27, 2026). ~1T supply. 100% predictive scam marker.'},
@@ -487,13 +491,15 @@ const TOKEN_METADATA = {
   EURCV:{cur:'EUR',c:'#1976D2',n:'Euro — EURCV (SG Forge)'},
   // Tron
   A7A5:{cur:'RUB',c:'#FF5252',n:'Russian Ruble — A7A5'},
+  // BSC
+  KGST:{cur:'KGS',c:'#F0B90B',n:'Kyrgyz Som — KGST'},
 };
 
 const CURRENCY_COLORS = {
   BRL:'#26A69A',SGD:'#5C6BC0',COP:'#FFA726',JPY:'#EF5350',IDR:'#78909C',
   PHP:'#AB47BC',AUD:'#26C6DA',CAD:'#8D6E63',EUR:'#42A5F5',TRY:'#FF7043',
   ZAR:'#FFCA28',ARS:'#9CCC65',NGN:'#29B6F6',PEN:'#FF7043',CHF:'#FF6D00',
-  RUB:'#FF5252',MXN:'#66BB6A',
+  RUB:'#FF5252',MXN:'#66BB6A',KGS:'#F0B90B',
 };
 
 const GEO_MAP = {
@@ -514,6 +520,7 @@ const GEO_MAP = {
   NGN:{country:'Nigeria',flag:'🇳🇬',region:'Africa'},
   RUB:{country:'Russia',flag:'🇷🇺',region:'Europe/Asia'},
   MXN:{country:'Mexico',flag:'🇲🇽',region:'Americas'},
+  KGS:{country:'Kyrgyzstan',flag:'🇰🇬',region:'Europe/Asia'},
 };
 
 // ── FORMATTERS ────────────────────────────────────────────
