@@ -34,7 +34,6 @@ const QUERIES = {
   solana:  [6689171],
   tron:    [6695880],
   plasma:  [6663259],            // Plasma volume query; 6665855 (count) is redundant — daily_transactions = transfer_count
-  bsc:     [8748306],            // KGST (Kyrgyz som), filtered version
 };
 
 // Fallback FX rates used ONLY when the Dune query did not return transfer_volume_usd
@@ -47,8 +46,6 @@ const FX_FALLBACK = {
   A7A5: 0.011, PHT: 0.017,
   // Plasma
   EUROP: 1.14, TRYB: 0.029,
-  // BSC
-  KGST: 0.0114,
 };
 
 /**
@@ -180,7 +177,6 @@ async function main() {
     const solanaRows  = await fetchNetwork('solana',  QUERIES.solana);
     const tronRows    = await fetchNetwork('tron',    QUERIES.tron);
     const plasmaRows  = await fetchNetwork('plasma',  QUERIES.plasma);
-    const bscRows     = await fetchNetwork('bsc',     QUERIES.bsc);
 
     // Format to pipe-delimited
     const polygonData = rowsToFormat(polygonRows, 'polygon');
@@ -188,7 +184,6 @@ async function main() {
     const solanaData  = rowsToFormat(solanaRows,  'solana');
     const tronData    = rowsToFormat(tronRows,    'tron');
     const plasmaData  = rowsToFormat(plasmaRows,  'plasma');
-    const bscData     = rowsToFormat(bscRows,     'bsc');
 
     // Store in Redis with 24h TTL
     console.log('\nSaving to Redis...');
@@ -207,9 +202,6 @@ async function main() {
 
     await client.setEx('dashboard:plasma', 86400, plasmaData);
     console.log(`✓ dashboard:plasma (${plasmaData.length} chars)`);
-
-    await client.setEx('dashboard:bsc', 86400, bscData);
-    console.log(`✓ dashboard:bsc (${bscData.length} chars)`);
 
     const timestamp = new Date().toISOString();
     await client.setEx('dashboard:updated', 86400, timestamp);
