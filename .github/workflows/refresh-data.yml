@@ -1,13 +1,13 @@
 name: Refresh Dashboard Data
-
+ 
 on:
   schedule:
     - cron: '0 0 */2 * *'  # Every 2 days at 00:00 UTC
   workflow_dispatch:     # Manual trigger from Actions tab
-
+ 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
+ 
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -16,21 +16,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-
+ 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-
+ 
       - name: Install dependencies
         run: npm install
-
+ 
       - name: Refresh Redis cache from Dune API
         env:
           REDIS_URL: ${{ secrets.REDIS_URL }}
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
         run: node fetch-dune-data.js
-
+ 
       - name: Fetch data from Redis and update data.json
         env:
           REDIS_URL: ${{ secrets.REDIS_URL }}
@@ -38,21 +38,22 @@ jobs:
           node << 'EOF'
           import { createClient } from 'redis';
           import fs from 'fs';
-
+ 
           const client = createClient({ url: process.env.REDIS_URL });
           await client.connect();
-
-          const [polygon, stellar, solana, tron, plasma, updated] = await Promise.all([
+ 
+          const [polygon, stellar, solana, tron, plasma, bsc, updated] = await Promise.all([
             client.get('dashboard:polygon'),
             client.get('dashboard:stellar'),
             client.get('dashboard:solana'),
             client.get('dashboard:tron'),
             client.get('dashboard:plasma'),
+            client.get('dashboard:bsc'),
             client.get('dashboard:updated'),
           ]);
-
+ 
           await client.quit();
-
+ 
           const data = {
             success: true,
             timestamp: updated || new Date().toISOString(),
@@ -62,13 +63,14 @@ jobs:
               solana:  solana  || '',
               tron:    tron    || '',
               plasma:  plasma  || '',
+              bsc:     bsc     || '',
             },
           };
-
+ 
           fs.writeFileSync('data.json', JSON.stringify(data));
           console.log(`Updated data.json at ${new Date().toISOString()}`);
           EOF
-
+ 
       - name: Commit and push if changed
         run: |
           git config --global user.email "action@github.com"
@@ -82,3 +84,4 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
