@@ -1,18 +1,17 @@
--- Arc mainnet: non-USD stablecoin transfer volume (StableFX roster)
--- Dune engine: DuneSQL. Source table: arc.logs (raw; Dune has no curated transfers/prices for Arc).
+-- Arc mainnet: non-USD stablecoin transfer volume (StableFX roster) — v2, "clean" volume
+-- Source: arc.logs (raw). Token list: Circle StableFX docs, checked 2026-10-10.
+-- Decimals: Arc Blockscout API, 2026-10-10.
+-- USD: native amount x ECB reference rate of 2026-10-09 (USD per unit).
 --
--- Token list: Circle docs, "StableFX supported currencies" (developers.circle.com/stablefx/references/supported-currencies),
---   checked 2026-10-10. USDC excluded (dashboard tracks non-USD only).
--- Decimals: Arc Blockscout API (/api/v2/tokens/<address>), checked 2026-10-10.
---   JPYC: the address in Circle docs resolves to an uninitialised ERC1967 proxy on the explorer (no token metadata).
---   Decimals 18 assumed from JPYC's other deployments; expect zero rows until the contract is live.
--- FX: no price feed for these tokens on Arc in Dune. USD = native amount x ECB reference rate of 2026-10-09
---   (USD per unit = EURUSD / EURXXX). Approximation; update the fx column when re-basing.
---
--- Volume standard (same as Polygon/Plasma/Tron queries): exclude mint (from = 0x0), burn (to = 0x0 / 0xdead),
--- self-transfers (from = to). daily_transactions = COUNT(DISTINCT tx_hash).
--- Output columns match fetch-dune-data.js: date, token ("Currency - SYMBOL"), daily_transactions,
--- transfer_volume, transfer_volume_usd.
+-- Rules (verified on Arc data, 2026-10-10):
+--   1. Window starts 2026-09-16 (public mainnet). Chain genesis was 2026-05-15; May–Sep was a
+--      permissioned private mainnet with test activity only.
+--   2. Excludes mint (from 0x0), burn (to 0x0 / 0xdead), self-transfers.
+--   3. Excludes transfers inside transactions that add/remove DEX liquidity (pool Mint, Burn or
+--      Collect events, Uniswap-v3 signatures, used by Arc's CL pools). One automated manager
+--      re-deposits its positions ~hourly; this was 57% of EURC and ~98% of GBPA raw volume.
+--   4. StableFX settlement (FxEscrowProxy 0xe2e5...dfe6): each trade moves tokens into escrow and
+--      back out. Only the inbound leg is counted, so each trade's notional is counted once.
 
 WITH tokens (token, contract_address, decimals, fx_usd) AS (
     VALUES
@@ -33,6 +32,17 @@ WITH tokens (token, contract_address, decimals, fx_usd) AS (
         ('Japanese yen - JPYC',          0xe7c3d8c9a439fede00d2600032d5db0be71c3c29, 18, 0.00631894)
 ),
 
+lp_txs AS (
+    SELECT DISTINCT tx_hash
+    FROM arc.logs
+    WHERE block_date >= DATE '2026-09-16'
+      AND topic0 IN (
+          0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde,  -- pool Mint
+          0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c,  -- pool Burn
+          0x70935338e69775456a85ddef226c395fb668b63fa0115f5f20610b388e6ca9c0   -- pool Collect
+      )
+),
+
 transfers AS (
     SELECT
         l.block_date                                                    AS date,
@@ -48,7 +58,7 @@ transfers AS (
       ON l.contract_address = t.contract_address
     WHERE l.topic0 = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
       AND l.topic2 IS NOT NULL
-      AND l.block_date >= CURRENT_DATE - INTERVAL '365' DAY
+      AND l.block_date >= DATE '2026-09-16'
 )
 
 SELECT
@@ -62,5 +72,7 @@ WHERE from_addr <> 0x0000000000000000000000000000000000000000
   AND to_addr NOT IN (0x0000000000000000000000000000000000000000,
                       0x000000000000000000000000000000000000dead)
   AND from_addr <> to_addr
+  AND from_addr <> 0xe2e5f173576b513d994073ccbdacbe027d43dfe6
+  AND tx_hash NOT IN (SELECT tx_hash FROM lp_txs)
 GROUP BY 1, 2
 ORDER BY 1 DESC, 2
