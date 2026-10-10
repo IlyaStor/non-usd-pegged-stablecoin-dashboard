@@ -5,7 +5,7 @@
 Set the following environment variable on your Vercel project:
 
 ```
-DUNE_API_KEY=vFSpHIY6RZ7Y4l5fw0PhMBufmwoKCsP6
+DUNE_API_KEY=<your Dune API key>
 ```
 
 **How to set it:**
@@ -15,7 +15,7 @@ DUNE_API_KEY=vFSpHIY6RZ7Y4l5fw0PhMBufmwoKCsP6
 3. Navigate to **Settings** → **Environment Variables**
 4. Add new variable:
    - Name: `DUNE_API_KEY`
-   - Value: `vFSpHIY6RZ7Y4l5fw0PhMBufmwoKCsP6`
+   - Value: `<your Dune API key>`
    - Environments: Production, Preview, Development
 
 5. Redeploy the project
@@ -45,7 +45,7 @@ Browser → GET /api/dashboard-data → Dune API
 ## Testing Locally
 
 ```bash
-export DUNE_API_KEY=vFSpHIY6RZ7Y4l5fw0PhMBufmwoKCsP6
+export DUNE_API_KEY=<your Dune API key>
 vercel dev
 ```
 

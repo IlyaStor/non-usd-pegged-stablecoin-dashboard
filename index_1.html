@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Non-USD Stablecoins · On-chain tracker</title>
-<meta name="description" content="Live on-chain analytics for non-USD pegged stablecoins across Polygon, Stellar, Solana, Tron, Plasma and BSC.">
+<meta name="description" content="Live on-chain analytics for non-USD pegged stablecoins across Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
   --net-tron:#FF3232;
   --net-plasma:#00D2FF;
   --net-bsc:#F0B90B;
+  --net-arc:#7C8CFF;
   --net-suspicious:#F87171;
   --net-geography:#60A5FA;
   --grid:#1A1D25;
@@ -302,7 +303,7 @@ td.first{color:var(--text)}
   "@type": "Dataset",
   "@id": "https://analytics.solosolver.xyz/#dataset",
   "name": "Non-USD Pegged Stablecoin On-Chain Tracker",
-  "description": "Hourly-updated on-chain tracking of non-USD pegged stablecoins across 5 blockchains (Polygon, Stellar, Solana, Tron, Plasma). Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 365-day window. All underlying SQL queries are public.",
+  "description": "On-chain tracking of non-USD pegged stablecoins across 7 blockchains (Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc), refreshed every 2 days. Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 365-day window. All underlying SQL queries are public.",
   "url": "https://analytics.solosolver.xyz",
   "sameAs": "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard",
   "keywords": ["non-USD stablecoins","stablecoin analytics","A7A5 ruble stablecoin","EURC","on-chain transfer volume","Tron","Solana","Polygon","Stellar","Plasma"],
@@ -361,6 +362,7 @@ td.first{color:var(--text)}
       <button class="net-tab" data-net="tron" onclick="switchNetwork('tron')">Tron</button>
       <button class="net-tab" data-net="plasma" onclick="switchNetwork('plasma')">Plasma</button>
       <button class="net-tab" data-net="bsc" onclick="switchNetwork('bsc')">BSC</button>
+      <button class="net-tab" data-net="arc" onclick="switchNetwork('arc')">Arc</button>
       <button class="net-tab" data-net="suspicious" onclick="switchNetwork('suspicious')">Suspicious</button>
       <button class="net-tab" data-net="geography" onclick="switchNetwork('geography')">Geography</button>
     </nav>
@@ -408,14 +410,14 @@ td.first{color:var(--text)}
 
   <footer class="ftr">
     <span>NON-USD STABLECOIN TRACKER · Built by <a href="https://t.me/solosolver" target="_blank">@solosolver</a></span>
-    <span>Data from <a href="https://dune.com" target="_blank">Dune Analytics</a> · Refreshed hourly</span>
+    <span>Data from <a href="https://dune.com" target="_blank">Dune Analytics</a> · Refreshed every 2 days</span>
   </footer>
 </div>
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-const NET_ORDER = ['polygon','stellar','solana','tron','plasma','bsc','suspicious','geography'];
-const CHAIN_NETS = ['polygon','stellar','solana','tron','plasma','bsc'];
+const NET_ORDER = ['polygon','stellar','solana','tron','plasma','bsc','arc','suspicious','geography'];
+const CHAIN_NETS = ['polygon','stellar','solana','tron','plasma','bsc','arc'];
 
 const NET_COLOR = {
   polygon:'#8247E5',
@@ -424,6 +426,7 @@ const NET_COLOR = {
   tron:'#FF3232',
   plasma:'#00D2FF',
   bsc:'#F0B90B',
+  arc:'#7C8CFF',
   suspicious:'#F87171',
   geography:'#60A5FA',
 };
@@ -436,6 +439,7 @@ let NETWORKS = {
   tron:   {data:'',tm:{},cc:{}},
   plasma: {data:'',tm:{},cc:{}},
   bsc:    {data:'',tm:{},cc:{}},
+  arc:    {data:'',tm:{},cc:{}},
   suspicious:{
     rows:[
       {chain:'Solana',token:'JPYSC (5 variants)',reason:'Null mint/freeze authorities. News-reactive impersonation of SBI JPYSC (Feb 27, 2026). ~1T supply. 100% predictive scam marker.'},
@@ -443,7 +447,8 @@ let NETWORKS = {
       {chain:'Solana',token:'JPYCI',reason:'Fabricated ticker, no known issuer. Null authorities, ~500B supply.'},
       {chain:'Stellar',token:'IDRT',reason:'Unverified issuer on Stellar. Cross-chain mismatch: tracked on Polygon via Dune, appears on Stellar with inconsistent authority.'},
       {chain:'Stellar',token:'XSGD',reason:'Unverified issuer on Stellar. Cross-chain mismatch with Polygon data.'},
-      {chain:'Stellar',token:'RUBX, AUDX, INRX, CNYX, EURX',reason:'Bot-farm pattern. ~70% of low-volume Stellar from 13–15 senders with 15K+ transactions each.'}
+      {chain:'Stellar',token:'RUBX, AUDX, INRX, CNYX, EURX',reason:'Bot-farm pattern. ~70% of low-volume Stellar from 13–15 senders with 15K+ transactions each.'},
+      {chain:'Arc',token:'JPYC (ticker collision)',reason:'Circle StableFX docs list 0xE7C3…3c29; the Arc explorer shows it as an uninitialised proxy with no token metadata (10 Oct 2026). Several other Arc contracts use the JPYC ticker. Verify the address against issuer documentation.'}
     ]
   }
 };
@@ -493,13 +498,27 @@ const TOKEN_METADATA = {
   A7A5:{cur:'RUB',c:'#FF5252',n:'Russian Ruble — A7A5'},
   // BSC
   KGST:{cur:'KGS',c:'#F0B90B',n:'Kyrgyz Som — KGST'},
+  // Tron / Polygon (previously unmapped)
+  RubX:{cur:'RUB',c:'#E57373',n:'Russian Ruble — RubX'},
+  cNGC:{cur:'NGN',c:'#0288D1',n:'Nigerian Naira — cNGC'},
+  // Arc (Circle StableFX roster)
+  EURAU:{cur:'EUR',c:'#0D47A1',n:'Euro — EURAU (AllUnity)'},
+  GBPA:{cur:'GBP',c:'#7E57C2',n:'British Pound — GBPA (Agant)'},
+  MXNB:{cur:'MXN',c:'#66BB6A',n:'Mexican Peso — MXNB (Bitso)'},
+  AUDF:{cur:'AUD',c:'#00ACC1',n:'Australian Dollar — AUDF (Forte)'},
+  CADD:{cur:'CAD',c:'#A1887F',n:'Canadian Dollar — CADD'},
+  QCAD:{cur:'CAD',c:'#6D4C41',n:'Canadian Dollar — QCAD (Stablecorp)'},
+  KRW1:{cur:'KRW',c:'#EC407A',n:'South Korean Won — KRW1 (BDACS)'},
+  SEKAU:{cur:'SEK',c:'#FFD54F',n:'Swedish Krona — SEKAU (AllUnity)'},
+  ZARU:{cur:'ZAR',c:'#FBC02D',n:'South African Rand — ZARU'},
+  CHFAU:{cur:'CHF',c:'#F57C00',n:'Swiss Franc — CHFAU (AllUnity)'},
 };
 
 const CURRENCY_COLORS = {
   BRL:'#26A69A',SGD:'#5C6BC0',COP:'#FFA726',JPY:'#EF5350',IDR:'#78909C',
   PHP:'#AB47BC',AUD:'#26C6DA',CAD:'#8D6E63',EUR:'#42A5F5',TRY:'#FF7043',
   ZAR:'#FFCA28',ARS:'#9CCC65',NGN:'#29B6F6',PEN:'#FF7043',CHF:'#FF6D00',
-  RUB:'#FF5252',MXN:'#66BB6A',KGS:'#F0B90B',
+  RUB:'#FF5252',MXN:'#66BB6A',KGS:'#F0B90B',GBP:'#7E57C2',KRW:'#EC407A',SEK:'#FFD54F',
 };
 
 const GEO_MAP = {
@@ -521,6 +540,9 @@ const GEO_MAP = {
   RUB:{country:'Russia',flag:'🇷🇺',region:'Europe/Asia'},
   MXN:{country:'Mexico',flag:'🇲🇽',region:'Americas'},
   KGS:{country:'Kyrgyzstan',flag:'🇰🇬',region:'Europe/Asia'},
+  GBP:{country:'United Kingdom',flag:'🇬🇧',region:'Europe'},
+  KRW:{country:'South Korea',flag:'🇰🇷',region:'Asia'},
+  SEK:{country:'Sweden',flag:'🇸🇪',region:'Europe'},
 };
 
 // ── FORMATTERS ────────────────────────────────────────────
