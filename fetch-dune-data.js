@@ -37,7 +37,7 @@ const QUERIES = {
   bsc:     [8748306],            // KGST (Kyrgyz som), filtered version
   // Arc mainnet, StableFX roster. SQL: sql/arc_nonusd_transfers.sql.
   // Create the query on Dune, run it once, then put its ID here. Empty array = network skipped.
-  arc:     [],
+  arc:     [8924650],
 };
 
 // Fallback FX rates used ONLY when the Dune query did not return transfer_volume_usd
