@@ -42,13 +42,14 @@ jobs:
           const client = createClient({ url: process.env.REDIS_URL });
           await client.connect();
  
-          const [polygon, stellar, solana, tron, plasma, bsc, updated] = await Promise.all([
+          const [polygon, stellar, solana, tron, plasma, bsc, arc, updated] = await Promise.all([
             client.get('dashboard:polygon'),
             client.get('dashboard:stellar'),
             client.get('dashboard:solana'),
             client.get('dashboard:tron'),
             client.get('dashboard:plasma'),
             client.get('dashboard:bsc'),
+            client.get('dashboard:arc'),
             client.get('dashboard:updated'),
           ]);
  
@@ -64,6 +65,7 @@ jobs:
               tron:    tron    || '',
               plasma:  plasma  || '',
               bsc:     bsc     || '',
+              arc:     arc     || '',
             },
           };
  

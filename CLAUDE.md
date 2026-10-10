@@ -47,6 +47,7 @@ Python dependency: `requests` (`pip3 install requests`).
 - **Polygon Part 2** (query 6621899): BRLA, BRZ, BRL1, COPM, JPYC, XSGD, XIDR, IDRT, PHPC, PHT
 - **Stellar** (query 6712377): EURC, AUDD, ARS, GYEN, NGNC, PEN, BRLT, EURS
 - **Solana** (query 6689171): EURC, VCHF, VEUR, EUROe, BRZ
+- **Arc** (query 8924650; SQL in `sql/arc_nonusd_transfers.sql`): Circle StableFX roster — EURC, EURAU, GBPA, MXNB, AUDD, AUDF, CADD, QCAD, KRW1, SEKAU, ZARU, CHFAU, TRYB, BRLA, JPYC. Raw `arc.logs`; USD via static ECB rates (2026-10-09) inside the SQL.
 
 API key is hardcoded in Python scripts. Queries use 365-day rolling window (`CURRENT_DATE - INTERVAL '365' DAY`).
 

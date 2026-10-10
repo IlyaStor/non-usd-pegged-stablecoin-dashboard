@@ -35,20 +35,29 @@ const QUERIES = {
   tron:    [6695880],
   plasma:  [6663259],            // Plasma volume query; 6665855 (count) is redundant — daily_transactions = transfer_count
   bsc:     [8748306],            // KGST (Kyrgyz som), filtered version
+  // Arc mainnet, StableFX roster. SQL: sql/arc_nonusd_transfers.sql.
+  // Create the query on Dune, run it once, then put its ID here. Empty array = network skipped.
+  arc:     [8924650],
 };
 
 // Fallback FX rates used ONLY when the Dune query did not return transfer_volume_usd
 // (e.g. someone edits the SQL and forgets to keep the column). Safety net, not primary path.
+// EUR/CHF/BRL/JPY/TRY and Arc currencies: ECB reference rates of 2026-10-09 (USD per unit = EURUSD / EURXXX).
+// A7A5, PHT, KGST: unchanged legacy values, not re-based.
 const FX_FALLBACK = {
   // Solana
-  EURC: 1.14, EUROe: 1.14, VEUR: 1.14, EURCV: 1.14,
-  VCHF: 1.10, BRZ: 0.18, GYEN: 0.0066,
+  EURC: 1.1206, EUROe: 1.1206, VEUR: 1.1206, EURCV: 1.1206,
+  VCHF: 1.20326, BRZ: 0.1998, GYEN: 0.00631894,
   // Tron
   A7A5: 0.011, PHT: 0.017,
   // Plasma
-  EUROP: 1.14, TRYB: 0.029,
+  EUROP: 1.1206, TRYB: 0.0203364,
   // BSC
   KGST: 0.0114,
+  // Arc
+  EURAU: 1.1206, GBPA: 1.32204, MXNB: 0.0549448, AUDD: 0.698106, AUDF: 0.698106,
+  CADD: 0.702923, QCAD: 0.702923, KRW1: 0.000745442, SEKAU: 0.100345, ZARU: 0.0604847,
+  CHFAU: 1.20326, BRLA: 0.1998, JPYC: 0.00631894,
 };
 
 /**
@@ -174,42 +183,17 @@ async function main() {
 
     console.log('\nFetching data from Dune Analytics...');
 
-    // Fetch all networks
-    const polygonRows = await fetchNetwork('polygon', QUERIES.polygon);
-    const stellarRows = await fetchNetwork('stellar', QUERIES.stellar);
-    const solanaRows  = await fetchNetwork('solana',  QUERIES.solana);
-    const tronRows    = await fetchNetwork('tron',    QUERIES.tron);
-    const plasmaRows  = await fetchNetwork('plasma',  QUERIES.plasma);
-    const bscRows     = await fetchNetwork('bsc',     QUERIES.bsc);
-
-    // Format to pipe-delimited
-    const polygonData = rowsToFormat(polygonRows, 'polygon');
-    const stellarData = rowsToFormat(stellarRows, 'stellar');
-    const solanaData  = rowsToFormat(solanaRows,  'solana');
-    const tronData    = rowsToFormat(tronRows,    'tron');
-    const plasmaData  = rowsToFormat(plasmaRows,  'plasma');
-    const bscData     = rowsToFormat(bscRows,     'bsc');
-
-    // Store in Redis with 24h TTL
-    console.log('\nSaving to Redis...');
-
-    await client.setEx('dashboard:polygon', 86400, polygonData);
-    console.log(`✓ dashboard:polygon (${polygonData.length} chars)`);
-
-    await client.setEx('dashboard:stellar', 86400, stellarData);
-    console.log(`✓ dashboard:stellar (${stellarData.length} chars)`);
-
-    await client.setEx('dashboard:solana', 86400, solanaData);
-    console.log(`✓ dashboard:solana (${solanaData.length} chars)`);
-
-    await client.setEx('dashboard:tron', 86400, tronData);
-    console.log(`✓ dashboard:tron (${tronData.length} chars)`);
-
-    await client.setEx('dashboard:plasma', 86400, plasmaData);
-    console.log(`✓ dashboard:plasma (${plasmaData.length} chars)`);
-
-    await client.setEx('dashboard:bsc', 86400, bscData);
-    console.log(`✓ dashboard:bsc (${bscData.length} chars)`);
+    // Fetch all networks. A network with no query IDs is skipped and its Redis key is left untouched.
+    for (const [network, queryIds] of Object.entries(QUERIES)) {
+      if (!queryIds.length) {
+        console.log(`\nSkipping ${network}: no Dune query ID configured`);
+        continue;
+      }
+      const rows = await fetchNetwork(network, queryIds);
+      const formatted = rowsToFormat(rows, network);
+      await client.setEx(`dashboard:${network}`, 86400, formatted);
+      console.log(`✓ dashboard:${network} (${formatted.length} chars)`);
+    }
 
     const timestamp = new Date().toISOString();
     await client.setEx('dashboard:updated', 86400, timestamp);
