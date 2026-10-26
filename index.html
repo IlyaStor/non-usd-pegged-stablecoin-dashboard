@@ -333,7 +333,7 @@ td.first{color:var(--text)}
         <div class="live-dot"></div>
         <div class="brand-text">
           <span class="brand-title">NON-USD STABLECOINS</span>
-          <span class="brand-sub">On-chain tracker · 35 tokens · 16 fiat pegs · 5 chains</span>
+          <span class="brand-sub" id="brandSub">On-chain tracker · 38 tokens · 19 fiat pegs · 7 chains</span>
         </div>
       </div>
     </div>
@@ -596,6 +596,7 @@ async function loadDashboardData(){
       NETWORKS[net].cc=CURRENCY_COLORS;
     });
     lastUpdated=json.timestamp;
+    updateBrandSub();
     updateHeroStats();
     loadNetwork('polygon');
   }catch(err){
@@ -604,6 +605,22 @@ async function loadDashboardData(){
     e.style.display='block';
     e.textContent='Failed to load data: '+err.message;
   }
+}
+
+function updateBrandSub(){
+  const toks=new Set(), pegs=new Set();
+  let chains=0;
+  CHAIN_NETS.forEach(net=>{
+    const rows=parse(NETWORKS[net].data);
+    if(rows.length)chains++;
+    rows.forEach(r=>(r.items||[]).forEach(i=>{
+      toks.add(String(i.t).replace(/\s*\(.*\)$/,''));
+      const m=TOKEN_METADATA[i.t];
+      if(m&&m.cur)pegs.add(m.cur);
+    }));
+  });
+  const el=document.getElementById('brandSub');
+  if(el&&toks.size)el.textContent=`On-chain tracker · ${toks.size} tokens · ${pegs.size} fiat pegs · ${chains} chains`;
 }
 
 function updateHeroStats(){

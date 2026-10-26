@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Data &amp; API — Non-USD Stablecoin Dashboard | solosolver</title>
-  <meta name="description" content="Public JSON data for non-USD pegged stablecoins across 5 blockchains (A7A5, EURC, AUD, TRYB, ARS), updated hourly. Free to use with attribution. Open SQL on GitHub.">
+  <meta name="description" content="Public JSON data for non-USD pegged stablecoins across 7 blockchains (Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc), refreshed every 2 days. Free to use with attribution. Open SQL on GitHub.">
   <link rel="canonical" href="https://analytics.solosolver.xyz/data">
 
   <script type="application/ld+json">
@@ -29,7 +29,7 @@
         "@type": "Dataset",
         "@id": "https://analytics.solosolver.xyz/#dataset",
         "name": "Non-USD Pegged Stablecoin On-Chain Tracker",
-        "description": "Hourly-updated on-chain tracking of non-USD pegged stablecoins across 5 blockchains (Polygon, Stellar, Solana, Tron, Plasma). Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 90-day window. All underlying SQL queries are public.",
+        "description": "On-chain tracking of non-USD pegged stablecoins across 7 blockchains (Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc), refreshed every 2 days. Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 365-day window. All underlying SQL queries are public.",
         "url": "https://analytics.solosolver.xyz",
         "sameAs": "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard",
         "keywords": ["non-USD stablecoins", "stablecoin analytics", "A7A5 ruble stablecoin", "EURC", "on-chain transfer volume", "Tron", "Solana", "Polygon", "Stellar", "Plasma"],
@@ -70,7 +70,7 @@
   <nav class="top"><a href="https://analytics.solosolver.xyz">← dashboard</a><a href="https://analytics.solosolver.xyz/case">case study</a></nav>
 
   <h1>Data &amp; API</h1>
-  <div class="meta">Non-USD pegged stablecoins · 5 tokens · 5 chains · updated hourly</div>
+  <div class="meta">Non-USD pegged stablecoins · 38 tokens · 19 fiat pegs · 7 chains · refreshed every 2 days</div>
 
   <p>
     The full dataset behind the <a href="https://analytics.solosolver.xyz">solosolver dashboard</a> is public.
@@ -88,23 +88,32 @@
 
   <h2>Coverage</h2>
   <ul>
-    <li><b>Networks:</b> Polygon, Stellar, Solana, Tron, Plasma</li>
-    <li><b>Current tokens:</b> A7A5 (RUB), EURC (EUR), AUD, TRYB (TRY), ARS</li>
+    <li><b>Networks:</b> Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc</li>
+    <li><b>Current tokens:</b> 38 tokens across 19 fiat pegs, for example A7A5 (RUB), EURC (EUR), BRZ (BRL), AUD, TRYB (TRY), MXNB (MXN), ARS</li>
     <li><b>Metrics:</b> daily transfer count, daily transfer volume (USD)</li>
-    <li><b>Window:</b> rolling 90 days, refreshed hourly</li>
+    <li><b>Window:</b> rolling 365 days (Plasma, BSC and Arc from their first tracked day), refreshed every 2 days</li>
   </ul>
 
   <h2>Schema</h2>
-  <p><code>data.json</code> is keyed by network. Each network holds newline-separated daily rows; each row is pipe-delimited: <code>date|token|transfer_count|volume_usd</code>.</p>
+  <p><code>data.json</code> is keyed by network. Each network holds newline-separated daily rows; each row starts with the date, followed by repeating <code>token|transfer_count|volume_usd</code> triplets for every token active that day: <code>date|token|count|volume_usd|token|count|volume_usd|...</code>.</p>
   <pre>{
   "success": true,
-  "timestamp": "2026-06-09T16:07:34.654Z",
+  "timestamp": "2026-10-15T00:00:00.000Z",
   "data": {
-    "tron":    "2026-06-03|A7A5|107|49542559.23\n...",
-    "solana":  "2026-06-03|EURC|...|...\n...",
-    "polygon": "2026-06-03|AUD|...|...\n...",
-    "plasma":  "2026-06-03|TRYB|...|...\n...",
-    "stellar": "2026-06-03|ARS|...|...\n..."
+    "tron":    "2026-10-14|A7A5|38|346621506.22
+...",
+    "solana":  "2026-10-14|EURC|9516|6701950.37|EURCV|44|19347.54|...
+...",
+    "polygon": "2026-10-14|AUD|129|11897743.37|EURe|658|409126.07|...
+...",
+    "plasma":  "2026-10-14|TRYB|1|692.11
+...",
+    "stellar": "2026-10-14|ARS|376|59.08|AUDD|695|4340.57|...
+...",
+    "bsc":     "2026-10-14|KGST|339|36423.84
+...",
+    "arc":     "2026-10-15|GBPA|41|39987.07|EURC|3947|2406754.27
+..."
   }
 }</pre>
 
@@ -115,12 +124,14 @@ raw = requests.get("https://analytics.solosolver.xyz/data.json").json()
 rows = []
 for network, block in raw["data"].items():
     for line in block.strip().splitlines():
-        date, token, count, volume = line.split("|")
-        rows.append((network, date, token, int(count), float(volume)))
+        parts = line.split("|")
+        date = parts[0]
+        for i in range(1, len(parts) - 2, 3):
+            rows.append((network, date, parts[i], int(parts[i + 1]), float(parts[i + 2])))
 
-# total 90-day volume for the ruble token A7A5
+# total 365-day volume for the ruble token A7A5
 a7a5 = sum(v for _, _, t, _, v in rows if t == "A7A5")
-print(f"A7A5 90d volume: ${a7a5:,.0f}")</pre>
+print(f"A7A5 365d volume: ${a7a5:,.0f}")</pre>
 
   <h2>License &amp; attribution</h2>
   <p>
