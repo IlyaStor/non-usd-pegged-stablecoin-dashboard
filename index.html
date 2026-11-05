@@ -3,12 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Non-USD Stablecoins · On-chain tracker</title>
-<meta name="description" content="Live on-chain analytics for non-USD pegged stablecoins across Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc.">
+<title>Tracked non-USD stablecoins · On-chain analytics</title>
+<meta name="description" content="Tracked on-chain volume for the non-USD stablecoins currently followed on Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc. Coverage is not exhaustive; more tokens and chains will be added.">
+<link rel="canonical" href="https://analytics.solosolver.xyz/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="solosolver">
+<meta property="og:url" content="https://analytics.solosolver.xyz/">
+<meta property="og:title" content="Tracked non-USD stablecoin volume">
+<meta property="og:description" content="Tracked on-chain volume for the non-USD stablecoins currently followed on Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc. Coverage is not exhaustive; more tokens and chains will be added.">
+<meta property="og:image" content="https://analytics.solosolver.xyz/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Tracked non-USD stablecoin volume. Coverage is not exhaustive.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tracked non-USD stablecoin volume">
+<meta name="twitter:description" content="Tracked on-chain volume for the non-USD stablecoins currently followed on Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc. Coverage is not exhaustive; more tokens and chains will be added.">
+<meta name="twitter:image" content="https://analytics.solosolver.xyz/og.png">
+<meta name="twitter:image:alt" content="Tracked non-USD stablecoin volume. Coverage is not exhaustive.">
+<meta name="twitter:site" content="@scipiosiberian">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0A0B0F">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script id="chartjs" defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
 :root {
   --bg:#0A0B0F;
@@ -105,6 +124,21 @@ body{
 }
 .theme-btn:hover{background:var(--surface-2);border-color:var(--border-strong)}
 
+.hdr-social{display:flex;align-items:center;gap:8px}
+.hdr-social a{
+  color:var(--text-2);text-decoration:none;font-size:11px;font-weight:600;
+  border:1px solid var(--border);border-radius:6px;padding:6px 10px;
+  background:var(--surface);letter-spacing:.04em;
+}
+.hdr-social a:hover{color:var(--text);border-color:var(--border-strong)}
+
+.coverage-note{
+  margin:14px 0 0;padding:10px 12px;border:1px solid var(--border);
+  background:var(--surface);border-radius:8px;color:var(--text-2);
+  font-size:12px;line-height:1.5;
+}
+.coverage-note strong{color:var(--text);font-weight:600}
+
 /* ── BODY ─────────────────────────────────────────── */
 .body{padding:20px 0 40px}
 .error{color:#F87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);padding:12px 14px;margin-bottom:14px;border-radius:6px;font-size:12px}
@@ -162,6 +196,16 @@ body{
 }
 .share-btn:hover{color:var(--text);border-color:var(--border-strong)}
 
+.panel-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chart-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chart-actions a,.chart-actions button{
+  background:transparent;border:1px solid var(--border);color:var(--text-2);
+  padding:4px 8px;font-size:10px;cursor:pointer;font-family:var(--mono);
+  border-radius:5px;text-decoration:none;font-weight:600;letter-spacing:.03em;
+}
+.chart-actions a:hover,.chart-actions button:hover{color:var(--text);border-color:var(--border-strong)}
+.chart-meta{font-size:10.5px;color:var(--text-3);margin:-4px 0 12px;letter-spacing:.02em}
+
 /* ── CHIPS ─────────────────────────────────────────── */
 .chips{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .chip{
@@ -184,6 +228,7 @@ body{
   font-size:9.5px;color:var(--text-3);margin-bottom:14px;
   text-transform:uppercase;letter-spacing:.1em;font-weight:600;
   display:flex;align-items:center;justify-content:space-between;
+  gap:8px;flex-wrap:wrap;
 }
 .panel-t .net-pill{
   padding:2px 8px;font-size:8.5px;font-weight:600;
@@ -303,7 +348,7 @@ td.first{color:var(--text)}
   "@type": "Dataset",
   "@id": "https://analytics.solosolver.xyz/#dataset",
   "name": "Non-USD Pegged Stablecoin On-Chain Tracker",
-  "description": "On-chain tracking of non-USD pegged stablecoins across 7 blockchains (Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc), refreshed every 2 days. Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 365-day window. All underlying SQL queries are public.",
+  "description": "Tracked on-chain volume and transfer counts for the non-USD stablecoins currently followed on Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc. Coverage is not exhaustive; more tokens and chains will be added. Measures daily transfer count and transfer volume in USD over a rolling 365-day window. All underlying SQL queries are public.",
   "url": "https://analytics.solosolver.xyz",
   "sameAs": "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard",
   "keywords": ["non-USD stablecoins","stablecoin analytics","A7A5 ruble stablecoin","EURC","on-chain transfer volume","Tron","Solana","Polygon","Stellar","Plasma"],
@@ -311,7 +356,7 @@ td.first{color:var(--text)}
     "@type": "Organization",
     "name": "solosolver",
     "url": "https://solosolver.xyz",
-    "sameAs": ["https://t.me/solosolver","https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard"]
+    "sameAs": ["https://x.com/scipiosiberian","https://t.me/solosolver","https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard"]
   },
   "isAccessibleForFree": true,
   "spatialCoverage": "Global",
@@ -339,18 +384,24 @@ td.first{color:var(--text)}
     </div>
     <div class="hero-stats">
       <div class="hero-stat">
-        <span class="hero-stat-l">365d Total Volume</span>
+        <span class="hero-stat-l">Tracked volume</span>
         <span class="hero-stat-v" id="heroTotal">—</span>
         <span class="hero-stat-d" id="heroDelta"></span>
       </div>
       <div class="hero-stat">
-        <span class="hero-stat-l">Last Updated</span>
+        <span class="hero-stat-l" id="heroFreshLabel">Dune execution</span>
         <span class="hero-stat-v" id="heroUpd" style="font-size:13px">—</span>
         <span class="hero-stat-d" id="heroAge"></span>
+      </div>
+      <div class="hdr-social">
+        <a href="https://x.com/scipiosiberian" target="_blank" rel="noopener noreferrer">X</a>
+        <a href="https://t.me/solosolver" target="_blank" rel="noopener noreferrer">Telegram</a>
       </div>
       <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀ Light</button>
     </div>
   </header>
+
+  <p class="coverage-note" id="coverageNote">Figures cover only the non-USD stablecoins currently tracked. Coverage is not exhaustive — more tokens and chains will be added.</p>
 
   <main class="body">
     <div class="error" id="errorBox" style="display:none;"></div>
@@ -381,9 +432,17 @@ td.first{color:var(--text)}
 
     <section class="panel" id="chartPanel">
       <div class="panel-t" id="chartLabel">
-        <span>Transfer Volume (USD) — Daily Stacked</span>
-        <span class="net-pill" id="netPill"></span>
+        <span>Tracked transfer volume (USD) — daily stacked</span>
+        <span class="panel-tools">
+          <span class="net-pill" id="netPill"></span>
+          <span class="chart-actions">
+            <span id="chartSources"></span>
+            <button type="button" onclick="downloadMainPng()">Download PNG</button>
+            <button type="button" onclick="downloadMainCsv()">Download CSV</button>
+          </span>
+        </span>
       </div>
+      <p class="chart-meta" id="chartMeta"></p>
       <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
     </section>
 
@@ -398,7 +457,14 @@ td.first{color:var(--text)}
         </table>
       </div>
       <div class="panel">
-        <div class="panel-t">By fiat currency</div>
+        <div class="panel-t">
+          <span>Tracked volume by fiat</span>
+          <span class="chart-actions">
+            <span id="pieSources"></span>
+            <button type="button" onclick="downloadPiePng()">Download PNG</button>
+            <button type="button" onclick="downloadPieCsv()">Download CSV</button>
+          </span>
+        </div>
         <div class="pie-wrap"><canvas id="pieChart"></canvas></div>
         <div class="legend" id="pieLeg"></div>
       </div>
@@ -409,8 +475,8 @@ td.first{color:var(--text)}
   </main>
 
   <footer class="ftr">
-    <span>NON-USD STABLECOIN TRACKER · Built by <a href="https://t.me/solosolver" target="_blank">@solosolver</a></span>
-    <span>Data from <a href="https://dune.com" target="_blank">Dune Analytics</a> · Refreshed every 2 days</span>
+    <span>NON-USD STABLECOIN TRACKER · <a href="https://x.com/scipiosiberian" target="_blank" rel="noopener noreferrer">@scipiosiberian</a> · <a href="https://t.me/solosolver" target="_blank" rel="noopener noreferrer">Telegram</a></span>
+    <span>Tracked series from <a href="https://dune.com" target="_blank" rel="noopener noreferrer">Dune Analytics</a> · Not exhaustive · Refreshed about every 2 days</span>
   </footer>
 </div>
 
@@ -430,6 +496,18 @@ const NET_COLOR = {
   suspicious:'#F87171',
   geography:'#60A5FA',
 };
+
+// Keep in sync with lib/series.js QUERIES.
+const DUNE_QUERIES = {
+  polygon:[6614895,6621899],
+  stellar:[6712377],
+  solana:[6689171],
+  tron:[6695880],
+  plasma:[6663259],
+  bsc:[8748306],
+  arc:[8924650],
+};
+const COVERAGE_SENTENCE = 'Tracked non-USD stablecoins only. Coverage is not exhaustive; more tokens and chains will be added.';
 
 // ── STATE ──────────────────────────────────────────────────
 let NETWORKS = {
@@ -457,6 +535,8 @@ let metric = 'volume';
 let selected = new Set();
 let mainChartInstance = null, pieInst = null;
 let lastUpdated = null;
+let executions = null;
+let shownFreshnessIso = null;
 
 // ── METADATA ──────────────────────────────────────────────
 const TOKEN_METADATA = {
@@ -584,9 +664,42 @@ function relativeTime(iso){
 }
 
 // ── DATA LOAD ─────────────────────────────────────────────
+function chartReady(){
+  if(window.Chart) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const el=document.getElementById('chartjs');
+    if(!el) return reject(new Error('Chart.js missing'));
+    const done=()=>window.Chart?resolve():reject(new Error('Chart.js failed to load'));
+    el.addEventListener('load',done,{once:true});
+    el.addEventListener('error',()=>reject(new Error('Chart.js failed to load')),{once:true});
+    if(window.Chart) resolve();
+  });
+}
+
+function readNetFromUrl(){
+  const params=new URLSearchParams(location.search);
+  const q=(params.get('network')||params.get('net')||'').toLowerCase();
+  const h=(location.hash||'').replace(/^#/,'').split('&')[0].toLowerCase();
+  if(NET_ORDER.includes(q)) return q;
+  if(NET_ORDER.includes(h)) return h;
+  return null;
+}
+
+function syncUrl(net, mode){
+  const url=new URL(location.href);
+  if(url.searchParams.get('network')===net && url.hash==='#'+net) return;
+  url.searchParams.set('network', net);
+  url.hash=net;
+  const next=url.pathname+url.search+url.hash;
+  if(mode==='push') history.pushState({net},'',next);
+  else history.replaceState({net},'',next);
+}
+
 async function loadDashboardData(){
   try{
-    const res=await fetch('/data.json',{cache:'no-store'});
+    const dataPromise=fetch('/data.json',{cache:'no-store'});
+    await chartReady();
+    const res=await dataPromise;
     if(!res.ok)throw new Error(`Failed: ${res.status}`);
     const json=await res.json();
     if(!json.success)throw new Error(json.error||'Unknown error');
@@ -595,10 +708,13 @@ async function loadDashboardData(){
       NETWORKS[net].tm=TOKEN_METADATA;
       NETWORKS[net].cc=CURRENCY_COLORS;
     });
-    lastUpdated=json.timestamp;
+    executions=json.executions||null;
+    lastUpdated=null;
     updateBrandSub();
+    updateCoverageNote();
     updateHeroStats();
-    loadNetwork('polygon');
+    const initial=readNetFromUrl()||'polygon';
+    loadNetwork(initial,{url:'replace'});
   }catch(err){
     console.error(err);
     const e=document.getElementById('errorBox');
@@ -608,26 +724,88 @@ async function loadDashboardData(){
 }
 
 function updateBrandSub(){
+  const {tokens,pegs,chains}=countCoverage();
+  const el=document.getElementById('brandSub');
+  if(el&&tokens)el.textContent=`On-chain tracker · ${tokens} tracked tokens · ${pegs} fiat pegs · ${chains} chains`;
+}
+
+function countCoverage(){
   const toks=new Set(), pegs=new Set();
   let chains=0;
   CHAIN_NETS.forEach(net=>{
-    const rows=parse(NETWORKS[net].data);
+    const rows=rowsFor(net);
     if(rows.length)chains++;
     rows.forEach(r=>(r.items||[]).forEach(i=>{
-      toks.add(String(i.t).replace(/\s*\(.*\)$/,''));
+      toks.add(String(i.t));
       const m=TOKEN_METADATA[i.t];
       if(m&&m.cur)pegs.add(m.cur);
     }));
   });
-  const el=document.getElementById('brandSub');
-  if(el&&toks.size)el.textContent=`On-chain tracker · ${toks.size} tokens · ${pegs.size} fiat pegs · ${chains} chains`;
+  return {tokens:toks.size,pegs:pegs.size,chains};
+}
+
+function updateCoverageNote(){
+  const {tokens,pegs,chains}=countCoverage();
+  const el=document.getElementById('coverageNote');
+  if(!el)return;
+  if(!tokens){
+    el.textContent='Figures cover only the non-USD stablecoins currently tracked. Coverage is not exhaustive — more tokens and chains will be added.';
+    return;
+  }
+  el.innerHTML=`Tracked volume covers <strong>${tokens} non-USD stablecoins</strong> on <strong>${chains} chains</strong> (${pegs} fiat pegs). Coverage is not exhaustive — more tokens and chains will be added.`;
+}
+
+function normalizeIso(iso){
+  const s=String(iso||'').trim();
+  const m=s.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?((?:Z|[+-]\d{2}:?\d{2})?)$/);
+  if(!m) return s;
+  const frac=(m[2]||'0').slice(0,3).padEnd(3,'0');
+  return `${m[1]}.${frac}${m[3]||'Z'}`;
+}
+function formatIsoShort(iso){
+  const d=new Date(normalizeIso(iso));
+  if(!d||isNaN(d.getTime())) return String(iso||'').slice(0,16);
+  return d.toISOString().slice(0,10)+' '+d.toISOString().slice(11,16)+'Z';
+}
+function freshnessFor(net){
+  if(CHAIN_NETS.includes(net)){
+    const iso=executions?.[net]?.execution_ended_at;
+    if(iso) return {iso, scope:'network'};
+  }
+  const isos=CHAIN_NETS.map(n=>executions?.[n]?.execution_ended_at).filter(Boolean);
+  isos.sort((a,b)=>Date.parse(normalizeIso(a))-Date.parse(normalizeIso(b)));
+  if(isos.length) return {iso:isos[0], scope:'oldest'};
+  return null;
+}
+function renderFreshness(net){
+  const info=freshnessFor(net);
+  const label=document.getElementById('heroFreshLabel');
+  const value=document.getElementById('heroUpd');
+  const age=document.getElementById('heroAge');
+  shownFreshnessIso=info?.iso||null;
+  if(info?.iso){
+    label.textContent=info.scope==='network'?'Dune execution':'Oldest Dune run';
+    value.textContent=formatIsoShort(info.iso);
+    age.textContent=relativeTime(normalizeIso(info.iso));
+    return;
+  }
+  const through=dataThrough(CHAIN_NETS.includes(net)?net:null);
+  label.textContent=through?'Series through':'Dune execution';
+  value.textContent=through||'—';
+  age.textContent=through?'Dune time pending':'';
+}
+function dataThrough(net){
+  const nets=net?[net]:CHAIN_NETS;
+  let max='';
+  nets.forEach(n=>rowsFor(n).forEach(r=>{if(r.d>max)max=r.d;}));
+  return max;
 }
 
 function updateHeroStats(){
-  // 365d total across all chain networks + week-over-week delta
+  // Tracked 365d total across chain networks + week-over-week delta
   let total=0, prev=0, recent=0;
   CHAIN_NETS.forEach(net=>{
-    const rows=parse(NETWORKS[net].data);
+    const rows=rowsFor(net);
     if(!rows.length)return;
     rows.forEach(r=>r.items.forEach(i=>total+=i.v));
     if(rows.length>=14){
@@ -638,25 +816,26 @@ function updateHeroStats(){
     }
   });
   document.getElementById('heroTotal').textContent=fmtMoneyL(total);
-  if(lastUpdated){
-    const d=new Date(lastUpdated);
-    document.getElementById('heroUpd').textContent=
-      d.toISOString().slice(0,10)+' '+d.toISOString().slice(11,16)+'Z';
-    document.getElementById('heroAge').textContent=relativeTime(lastUpdated);
-  }
   const deltaEl=document.getElementById('heroDelta');
   if(prev>0){
     const delta=(recent-prev)/prev*100;
     const sign=delta>=0?'▲ +':'▼ ';
-    deltaEl.textContent=`${sign}${Math.abs(delta).toFixed(1)}% wow`;
+    deltaEl.textContent=`${sign}${Math.abs(delta).toFixed(1)}% wow · tracked`;
     deltaEl.className='hero-stat-d '+(delta>=0?'up':'down');
   }else{
-    deltaEl.textContent='';
+    deltaEl.textContent='365d · tracked only';
+    deltaEl.className='hero-stat-d';
   }
 }
 
 // ── PARSE ─────────────────────────────────────────────────
-function parse(data){
+// Drop the incomplete execution day. Same rule as lib/series.js dropPartialDays.
+function cutoffDayFor(net){
+  const iso=executions?.[net]?.execution_ended_at;
+  const day=iso?String(iso).slice(0,10):new Date().toISOString().slice(0,10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day)?day:new Date().toISOString().slice(0,10);
+}
+function parse(data, cutoffDay){
   if(!data)return [];
   const lines=data.trim().split('\n').filter(Boolean);
   const parsed=lines.map(line=>{
@@ -668,9 +847,12 @@ function parse(data){
       if(t)items.push({t,tx,v});
     }
     return {d,items};
-  });
+  }).filter(row=>!cutoffDay || !row.d || row.d<cutoffDay);
   if(parsed.length>=2 && parsed[0].d>parsed[parsed.length-1].d)parsed.reverse();
   return parsed;
+}
+function rowsFor(net){
+  return parse(NETWORKS[net]?.data||'', cutoffDayFor(net));
 }
 
 // ── NETWORK SWITCH ────────────────────────────────────────
@@ -680,10 +862,13 @@ function setNetColorVar(net){
   document.documentElement.style.setProperty('--net-color',NET_COLOR[net]||'#9CA3AF');
 }
 
-function loadNetwork(net){
+function loadNetwork(net, opts){
+  if(!NET_ORDER.includes(net)) net='polygon';
   curNet=net;
   setNetColorVar(net);
   document.querySelectorAll('.net-tab').forEach(b=>b.classList.toggle('on',b.dataset.net===net));
+  if(!opts || opts.url!==false) syncUrl(net, opts&&opts.url==='push'?'push':'replace');
+  renderFreshness(net);
 
   // Reset visibility
   document.getElementById('ctrl').style.display='flex';
@@ -718,8 +903,8 @@ function loadNetwork(net){
   }
 
   selected.clear();
-  const {data,tm}=NETWORKS[net];
-  parsedRows=parse(data);
+  const {tm}=NETWORKS[net];
+  parsedRows=rowsFor(net);
   const tokenData={}, currencyData={};
   totalV=0; totalTx=0;
   parsedRows.forEach(({items})=>{
@@ -741,7 +926,9 @@ function loadNetwork(net){
   document.documentElement.style.setProperty('--net-color',NET_COLOR[net]);
 
   document.getElementById('chartLabel').firstElementChild.textContent=
-    metric==='volume'?'Transfer Volume (USD) — Daily Stacked':'Transaction Count — Daily Stacked';
+    metric==='volume'?'Tracked transfer volume (USD) — daily stacked':'Tracked transaction count — daily stacked';
+  updateChartMeta();
+  updateSourceLinks();
 
   renderKPIs();
   renderChips();
@@ -750,13 +937,14 @@ function loadNetwork(net){
   renderPie();
   renderInsights();
 }
-function switchNetwork(net){loadNetwork(net);}
+function switchNetwork(net){loadNetwork(net,{url:'push'});}
 
 function setMetric(m){
   metric=m;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.m===m));
   document.getElementById('chartLabel').firstElementChild.textContent=
-    metric==='volume'?'Transfer Volume (USD) — Daily Stacked':'Transaction Count — Daily Stacked';
+    metric==='volume'?'Tracked transfer volume (USD) — daily stacked':'Tracked transaction count — daily stacked';
+  updateChartMeta();
   renderKPIs();
   renderMainChart();
   renderTable();
@@ -781,7 +969,7 @@ function renderKPIs(){
     const geoData={};
     let geoTotal=0;
     CHAIN_NETS.forEach(net=>{
-      const rows=parse(NETWORKS[net].data);
+      const rows=rowsFor(net);
       rows.forEach(({items})=>{
         items.forEach(({t,tx,v})=>{
           const cur=TOKEN_METADATA[t]?.cur||'OTHER';
@@ -805,7 +993,7 @@ function renderKPIs(){
   const topToken=tokensSorted[0];
   const topShare=topToken && totalV>0?(topToken[1].v/totalV*100).toFixed(1):'—';
   const items=[
-    {l:'365d Total Volume',v:fmtMoneyL(totalV),s:`${tokensSorted.length} active tokens`,c:accent},
+    {l:'Tracked 365d volume',v:fmtMoneyL(totalV),s:`${tokensSorted.length} tracked tokens`,c:accent},
     {l:'365d Transactions',v:fmtCompactCount(totalTx),s:'aggregated daily tx',c:accent},
     {l:'Top token',v:topToken?topToken[0]:'—',s:topToken?`${topShare}% of network`:'no data',c:topToken?TOKEN_METADATA[topToken[0]]?.c||accent:accent},
     {l:'Avg ticket',v:totalTx>0?fmtMoneyL(totalV/totalTx):'—',s:'volume ÷ tx',c:accent},
@@ -1087,7 +1275,7 @@ function renderGeography(){
   const totals={};
   let grand=0;
   CHAIN_NETS.forEach(net=>{
-    const rows=parse(NETWORKS[net].data);
+    const rows=rowsFor(net);
     rows.forEach(({d,items})=>{
       items.forEach(({t,tx,v})=>{
         const cur=TOKEN_METADATA[t]?.cur||'OTHER';
@@ -1118,6 +1306,105 @@ function renderGeography(){
   }).join('');
 }
 
+// ── EXPORTS / SOURCE LINKS ────────────────────────────────
+function updateChartMeta(){
+  const el=document.getElementById('chartMeta');
+  if(!el)return;
+  if(!CHAIN_NETS.includes(curNet)){el.textContent='';return;}
+  const iso=executions?.[curNet]?.execution_ended_at;
+  const through=dataThrough(curNet);
+  const parts=[curNet];
+  if(iso) parts.push('Dune execution '+formatIsoShort(iso));
+  else parts.push('Dune execution time pending');
+  if(through) parts.push('series through '+through);
+  parts.push('tracked tokens only');
+  el.textContent=parts.join(' · ');
+}
+function updateSourceLinks(){
+  const html=(DUNE_QUERIES[curNet]||[])
+    .map(id=>`<a href="https://dune.com/queries/${id}" target="_blank" rel="noopener noreferrer">Dune ${id}</a>`)
+    .join('');
+  const chartSources=document.getElementById('chartSources');
+  const pieSources=document.getElementById('pieSources');
+  if(chartSources) chartSources.innerHTML=html;
+  if(pieSources) pieSources.innerHTML=html;
+}
+function csvCell(value){
+  const s=String(value??'');
+  if(/^[=\-+@]/.test(s)||/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function downloadText(filename, text){
+  const blob=new Blob([text],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  const url=URL.createObjectURL(blob);
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function chartPng(chart){
+  const src=chart.canvas;
+  const noteH=Math.max(36, Math.round(src.width*0.045));
+  const canvas=document.createElement('canvas');
+  canvas.width=src.width;
+  canvas.height=src.height+noteH;
+  const ctx=canvas.getContext('2d');
+  const light=document.body.classList.contains('light-mode');
+  ctx.fillStyle=light?'#ffffff':'#11141B';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(src,0,0);
+  ctx.fillStyle=light?'#4B5563':'#9CA3AF';
+  const size=Math.max(14, Math.round(src.width/70));
+  ctx.font=`${size}px "IBM Plex Mono", ui-monospace, monospace`;
+  ctx.fillText(COVERAGE_SENTENCE, Math.round(src.width*0.02), src.height+Math.round(noteH*0.65));
+  return canvas.toDataURL('image/png');
+}
+function downloadDataUrl(filename, url){
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=filename;
+  a.click();
+}
+function downloadMainPng(){
+  if(!mainChartInstance) return;
+  downloadDataUrl(`tracked-${curNet}-${metric}.png`, chartPng(mainChartInstance));
+}
+function downloadPiePng(){
+  if(!pieInst) return;
+  downloadDataUrl(`tracked-${curNet}-fiat.png`, chartPng(pieInst));
+}
+function downloadMainCsv(){
+  const filter=selected.size===0?tokensSorted.map(([t])=>t):Array.from(selected);
+  const header=['date', ...filter.map(t=>metric==='volume'?`${t} volume_usd`:`${t} tx_count`)];
+  const lines=[
+    ['coverage_note', COVERAGE_SENTENCE].map(csvCell).join(','),
+    header.map(csvCell).join(','),
+  ];
+  parsedRows.forEach(row=>{
+    const cells=[row.d];
+    filter.forEach(token=>{
+      const it=row.items.find(i=>i.t===token);
+      cells.push(metric==='volume'?(it?.v||0):(it?.tx||0));
+    });
+    lines.push(cells.map(csvCell).join(','));
+  });
+  downloadText(`tracked-${curNet}-${metric}.csv`, lines.join('\n')+'\n');
+}
+function downloadPieCsv(){
+  const lines=[
+    ['coverage_note', COVERAGE_SENTENCE].map(csvCell).join(','),
+    'currency,volume_usd,share_pct',
+  ];
+  cursSorted.forEach(([k,v])=>{
+    const share=totalV>0?(v.v/totalV*100).toFixed(1):'0.0';
+    lines.push([k, v.v.toFixed(2), share].map(csvCell).join(','));
+  });
+  downloadText(`tracked-${curNet}-fiat.csv`, lines.join('\n')+'\n');
+}
+
 // ── SHARE / THEME ─────────────────────────────────────────
 function copyLink(){
   try{
@@ -1146,10 +1433,14 @@ if(savedTheme==='light'){
 setNetColorVar('polygon');
 loadDashboardData();
 
-// Refresh hero "last updated" relative time every 30s
+window.addEventListener('popstate', ()=>{
+  const net=readNetFromUrl()||'polygon';
+  if(net!==curNet) loadNetwork(net,{url:false});
+});
+
 setInterval(()=>{
-  if(lastUpdated){
-    document.getElementById('heroAge').textContent=relativeTime(lastUpdated);
+  if(shownFreshnessIso){
+    document.getElementById('heroAge').textContent=relativeTime(normalizeIso(shownFreshnessIso));
   }
 },30000);
 

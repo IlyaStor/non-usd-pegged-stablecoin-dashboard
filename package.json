@@ -2,11 +2,14 @@
   "type": "module",
   "name": "solosolver-dashboard",
   "version": "1.0.0",
-  "description": "Non-USD stablecoin dashboard",
+  "private": true,
+  "description": "Tracked non-USD stablecoin dashboard",
   "scripts": {
-    "fetch": "node fetch-dune-data.js"
+    "fetch": "node fetch-dune-data.js",
+    "og": "node generate-og.js",
+    "test": "node fetch-dune-data.js --self-test"
   },
-  "dependencies": {
-    "redis": "^4.6.0"
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
   }
 }

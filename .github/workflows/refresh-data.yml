@@ -1,83 +1,57 @@
 name: Refresh Dashboard Data
- 
+
 on:
   schedule:
-    - cron: '0 0 */2 * *'  # Every 2 days at 00:00 UTC
-  workflow_dispatch:     # Manual trigger from Actions tab
- 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
- 
+    # Every 2 days. A 20h freshness window inside fetch-dune-data.js still
+    # re-executes on this cadence, and skips a second execution if the job
+    # is retried the same day.
+    - cron: '0 0 */2 * *'
+  workflow_dispatch:
+
+# Queue a second trigger instead of cancelling a run that may already have
+# spent Dune execution credits.
+concurrency:
+  group: refresh-dashboard-data
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 45
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
- 
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
- 
+
+      - name: Install fonts for the social image
+        run: sudo apt-get update && sudo apt-get install -y fonts-liberation
+
       - name: Install dependencies
         run: npm install
- 
-      - name: Refresh Redis cache from Dune API
+
+      # GitHub Actions secret name is DUNE_API_KEY. Do not rename it.
+      # Optional repository variables: DUNE_PERFORMANCE (small|medium|large,
+      # default medium) and DUNE_FRESHNESS_HOURS (default 20).
+      # REDIS_URL is no longer read.
+      - name: Execute Dune queries and write data.json
         env:
-          REDIS_URL: ${{ secrets.REDIS_URL }}
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
+          DUNE_PERFORMANCE: ${{ vars.DUNE_PERFORMANCE }}
+          DUNE_FRESHNESS_HOURS: ${{ vars.DUNE_FRESHNESS_HOURS }}
         run: node fetch-dune-data.js
- 
-      - name: Fetch data from Redis and update data.json
-        env:
-          REDIS_URL: ${{ secrets.REDIS_URL }}
-        run: |
-          node << 'EOF'
-          import { createClient } from 'redis';
-          import fs from 'fs';
- 
-          const client = createClient({ url: process.env.REDIS_URL });
-          await client.connect();
- 
-          const [polygon, stellar, solana, tron, plasma, bsc, arc, updated] = await Promise.all([
-            client.get('dashboard:polygon'),
-            client.get('dashboard:stellar'),
-            client.get('dashboard:solana'),
-            client.get('dashboard:tron'),
-            client.get('dashboard:plasma'),
-            client.get('dashboard:bsc'),
-            client.get('dashboard:arc'),
-            client.get('dashboard:updated'),
-          ]);
- 
-          await client.quit();
- 
-          const data = {
-            success: true,
-            timestamp: updated || new Date().toISOString(),
-            data: {
-              polygon: polygon || '',
-              stellar: stellar || '',
-              solana:  solana  || '',
-              tron:    tron    || '',
-              plasma:  plasma  || '',
-              bsc:     bsc     || '',
-              arc:     arc     || '',
-            },
-          };
- 
-          fs.writeFileSync('data.json', JSON.stringify(data));
-          console.log(`Updated data.json at ${new Date().toISOString()}`);
-          EOF
- 
+
       - name: Commit and push if changed
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add data.json
+          git add data.json og.png
           if ! git diff --cached --quiet; then
             git commit -m "chore: update dashboard data [skip ci]"
             git push
@@ -86,4 +60,3 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
- 
