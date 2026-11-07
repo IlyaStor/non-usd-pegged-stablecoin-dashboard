@@ -1,4 +1,5 @@
 # robots.txt — analytics.solosolver.xyz
+Sitemap: https://analytics.solosolver.xyz/sitemap.xml
 # Явно пропускаем AI-краулеры (GEO) и классические поисковые боты.
 # Данные публичны, цель — максимальная индексируемость и цитируемость.
 

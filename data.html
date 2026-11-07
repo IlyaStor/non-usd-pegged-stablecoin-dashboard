@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Data &amp; API — Non-USD Stablecoin Dashboard | solosolver</title>
-  <meta name="description" content="Public JSON data for non-USD pegged stablecoins across 7 blockchains (Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc), refreshed every 2 days. Free to use with attribution. Open SQL on GitHub.">
+  <title>Tracked non-USD stablecoin data · solosolver</title>
+  <meta name="description" content="Public JSON for the non-USD stablecoins currently tracked on Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc. Coverage is not exhaustive; more tokens and chains will be added.">
   <link rel="canonical" href="https://analytics.solosolver.xyz/data">
 
   <script type="application/ld+json">
@@ -16,7 +16,7 @@
         "@id": "https://solosolver.xyz/#org",
         "name": "solosolver",
         "url": "https://solosolver.xyz",
-        "sameAs": ["https://t.me/solosolver", "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard"]
+        "sameAs": ["https://x.com/scipiosiberian", "https://t.me/solosolver", "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard"]
       },
       {
         "@type": "WebSite",
@@ -29,7 +29,7 @@
         "@type": "Dataset",
         "@id": "https://analytics.solosolver.xyz/#dataset",
         "name": "Non-USD Pegged Stablecoin On-Chain Tracker",
-        "description": "On-chain tracking of non-USD pegged stablecoins across 7 blockchains (Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc), refreshed every 2 days. Current coverage: A7A5 (RUB) on Tron, EURC (EUR) on Solana, AUD on Polygon, TRYB (TRY) on Plasma, ARS on Stellar. Measures daily transfer count and transfer volume in USD over a rolling 365-day window. All underlying SQL queries are public.",
+        "description": "Tracked on-chain volume for the non-USD stablecoins currently followed on Polygon, Stellar, Solana, Tron, Plasma, BSC and Arc. Coverage is not exhaustive; more tokens and chains will be added. Daily transfer count and USD volume over a rolling 365-day window.",
         "url": "https://analytics.solosolver.xyz",
         "sameAs": "https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard",
         "keywords": ["non-USD stablecoins", "stablecoin analytics", "A7A5 ruble stablecoin", "EURC", "on-chain transfer volume", "Tron", "Solana", "Polygon", "Stellar", "Plasma"],
@@ -70,32 +70,36 @@
   <nav class="top"><a href="https://analytics.solosolver.xyz">← dashboard</a><a href="https://analytics.solosolver.xyz/case">case study</a></nav>
 
   <h1>Data &amp; API</h1>
-  <div class="meta">Non-USD pegged stablecoins · 38 tokens · 19 fiat pegs · 7 chains · refreshed every 2 days</div>
+  <div class="meta">Tracked non-USD stablecoins only · coverage is not exhaustive · refreshed about every 2 days</div>
 
   <p>
-    The full dataset behind the <a href="https://analytics.solosolver.xyz">solosolver dashboard</a> is public.
-    No key, no signup. Free to use with attribution. If you are a journalist, researcher or developer, this page is for you.
+    The dataset behind the <a href="https://analytics.solosolver.xyz">solosolver dashboard</a> is public.
+    Totals are <b>tracked volume</b>: only the non-USD stablecoins currently in the roster.
+    Coverage is not exhaustive — more tokens and chains will be added. The live token and chain counts are on the dashboard.
+    No key, no signup. Free to use with attribution.
   </p>
 
   <h2>Endpoint</h2>
   <table>
     <tr><th>What</th><th>Where</th></tr>
     <tr><td>JSON data</td><td><a href="https://analytics.solosolver.xyz/data.json"><code>analytics.solosolver.xyz/data.json</code></a></td></tr>
-    <tr><td>Update frequency</td><td>Hourly (GitHub Actions + Dune Analytics)</td></tr>
+    <tr><td>Update frequency</td><td>About every 2 days. A GitHub Action executes the Dune queries and commits <code>data.json</code>.</td></tr>
     <tr><td>Source SQL</td><td><a href="https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard">github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard</a></td></tr>
     <tr><td>Format</td><td>application/json</td></tr>
   </table>
 
   <h2>Coverage</h2>
+  <p>This is not a complete census of non-USD stablecoins. Figures include only the tokens the queries currently track. More tokens and chains will be added; until then, do not describe a total as the whole market.</p>
   <ul>
-    <li><b>Networks:</b> Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc</li>
-    <li><b>Current tokens:</b> 38 tokens across 19 fiat pegs, for example A7A5 (RUB), EURC (EUR), BRZ (BRL), AUD, TRYB (TRY), MXNB (MXN), ARS</li>
+    <li><b>Networks currently tracked:</b> Polygon, Stellar, Solana, Tron, Plasma, BSC, Arc</li>
+    <li><b>Examples:</b> A7A5 (RUB), EURC (EUR), BRZ (BRL), AUD, TRYB (TRY), MXNB (MXN), ARS, KGST (KGS)</li>
     <li><b>Metrics:</b> daily transfer count, daily transfer volume (USD)</li>
-    <li><b>Window:</b> rolling 365 days (Plasma, BSC and Arc from their first tracked day), refreshed every 2 days</li>
+    <li><b>Window:</b> rolling 365 days (Plasma, BSC and Arc from their first tracked day). The in-progress UTC day is omitted so the last point is not a partial day.</li>
   </ul>
 
   <h2>Schema</h2>
-  <p><code>data.json</code> is keyed by network. Each network holds newline-separated daily rows; each row starts with the date, followed by repeating <code>token|transfer_count|volume_usd</code> triplets for every token active that day: <code>date|token|count|volume_usd|token|count|volume_usd|...</code>.</p>
+  <p><code>data.json</code> is keyed by network. Each network holds newline-separated daily rows; each row starts with the date, followed by repeating <code>token|transfer_count|volume_usd</code> triplets for every tracked token active that day: <code>date|token|count|volume_usd|token|count|volume_usd|...</code>.</p>
+  <p>After the next refresh, <code>timestamp</code> is the oldest Dune <code>execution_ended_at</code> across networks (not the git commit time). <code>executions.&lt;network&gt;.execution_ended_at</code> is that network’s own Dune execution time. <code>coverage.exhaustive</code> is <code>false</code>, and <code>coverage.note</code> repeats the tracked-only caveat. Token and chain counts in <code>coverage</code> describe the roster in that file.</p>
   <pre>{
   "success": true,
   "timestamp": "2026-10-15T00:00:00.000Z",
@@ -142,7 +146,8 @@ print(f"A7A5 365d volume: ${a7a5:,.0f}")</pre>
   <footer>
     Dashboard: <a href="https://analytics.solosolver.xyz">analytics.solosolver.xyz</a> ·
     Code: <a href="https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard">GitHub</a> ·
-    Channel: <a href="https://t.me/solosolver">t.me/solosolver</a>
+    X: <a href="https://x.com/scipiosiberian">@scipiosiberian</a> ·
+    Telegram: <a href="https://t.me/solosolver">t.me/solosolver</a>
   </footer>
 </main>
 </body>
