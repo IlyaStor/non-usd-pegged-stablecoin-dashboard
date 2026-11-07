@@ -20,7 +20,10 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # The script stops itself at DUNE_JOB_WAIT_MINUTES (default 36) so this
+    # limit is only a backstop. Stopping inside the script lets the commit
+    # step publish finished networks and the execution ledger.
+    timeout-minutes: 50
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -38,20 +41,27 @@ jobs:
 
       # GitHub Actions secret name is DUNE_API_KEY. Do not rename it.
       # Optional repository variables: DUNE_PERFORMANCE (small|medium|large,
-      # default medium) and DUNE_FRESHNESS_HOURS (default 20).
+      # default medium), DUNE_FRESHNESS_HOURS (default 20), and
+      # DUNE_JOB_WAIT_MINUTES (default 36).
       # REDIS_URL is no longer read.
+      # continue-on-error lets a partial run commit finished networks and the
+      # execution ledger before the job is marked failed.
       - name: Execute Dune queries and write data.json
+        id: fetch
+        continue-on-error: true
         env:
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
           DUNE_PERFORMANCE: ${{ vars.DUNE_PERFORMANCE }}
           DUNE_FRESHNESS_HOURS: ${{ vars.DUNE_FRESHNESS_HOURS }}
+          DUNE_JOB_WAIT_MINUTES: ${{ vars.DUNE_JOB_WAIT_MINUTES }}
         run: node fetch-dune-data.js
 
       - name: Commit and push if changed
+        if: always() && (steps.fetch.outcome == 'success' || steps.fetch.outcome == 'failure')
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add data.json og.png
+          git add data.json og.png refresh-state.json
           if ! git diff --cached --quiet; then
             git commit -m "chore: update dashboard data [skip ci]"
             git push
@@ -60,3 +70,9 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fail when a query is still running or was not started
+        if: steps.fetch.outcome == 'failure'
+        run: |
+          echo "Refresh incomplete. Finished networks were committed. Open Dune execution ids are in refresh-state.json; the next run resumes them and does not start duplicates."
+          exit 1
