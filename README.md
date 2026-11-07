@@ -14,7 +14,7 @@ GitHub Actions (`.github/workflows/refresh-data.yml`) runs about every 2 days, o
 
 The page reads `/data.json`. It shows each network’s Dune execution time, not the git commit time.
 
-A completed execution younger than 20 hours is reused so a same-day retry does not spend another run. If a query is still queued or running when the 36 minute job budget ends, its Dune execution id is stored in `refresh-state.json` and the series already on the site is left in place. The next run polls that id (status checks are not billed) and does not call execute again unless Dune reports the execution failed or expired. Finished networks from a partial run are still written. The default engine tier is `medium` (not `large`). Override with repository variables `DUNE_PERFORMANCE` (`small`, `medium`, `large`), `DUNE_FRESHNESS_HOURS`, and `DUNE_JOB_WAIT_MINUTES`.
+A completed execution younger than 20 hours is reused so a same-day retry does not spend another run. If Dune returns HTTP 429 or 503, the same execution is polled again after a backoff until the job budget ends. That is not a new execution. If a query is still queued or running when the 36 minute job budget ends, its Dune execution id is stored in `refresh-state.json` and the series already on the site is left in place. The next run polls that id (status checks are not billed) and does not call execute again unless Dune reports the execution failed or expired. Finished networks from a partial run are still written. The default engine tier is `medium` (not `large`). Override with repository variables `DUNE_PERFORMANCE` (`small`, `medium`, `large`), `DUNE_FRESHNESS_HOURS`, and `DUNE_JOB_WAIT_MINUTES`.
 
 The Actions secret must stay named `DUNE_API_KEY`.
 

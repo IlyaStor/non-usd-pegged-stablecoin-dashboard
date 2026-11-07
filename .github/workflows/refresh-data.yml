@@ -74,5 +74,5 @@ jobs:
       - name: Fail when a query is still running or was not started
         if: steps.fetch.outcome == 'failure'
         run: |
-          echo "Refresh incomplete. Finished networks were committed. Open Dune execution ids are in refresh-state.json; the next run resumes them and does not start duplicates."
+          echo "The fetch step exited before every network finished. Finished networks may already have been committed by the previous step. The query error is in the Execute Dune queries log above this message."
           exit 1
