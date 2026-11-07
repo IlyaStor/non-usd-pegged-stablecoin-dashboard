@@ -1,0 +1,32 @@
+-- PENDING — NOT EXECUTABLE.
+-- The live query SQL for this chain is not in the repository.
+-- Source tables and filters are unverified. Do not run this file.
+-- Do not create a new Dune query id. Edit the existing query named below.
+-- Do not insert zero-volume history. Days with no transfers stay absent.
+-- Chain: Stellar. Existing Dune query id: 6712377.
+-- Query 6712377 is not stored here, so it is unknown whether it keys on classic code/issuer or on a contract id.
+-- Keep the standard that already matches the query. Do not collapse these four assets into one address column.
+-- Classic assets use 7-digit precision. SEP-41 EURAU uses decimals 6.
+-- A SAC contract is the Soroban wrapper. It is not the classic issuer.
+-- EURQ | Stellar classic asset | decimals 7 | fx_usd 1.1206 from FX_FALLBACK.EURQ. This is the existing dashboard fallback, not a new price feed.
+--   classic asset_code EURQ
+--   classic issuer GCA6KZBWPBOEF6M2MZBTXRMKLMWRZOUCL2JFSIDT3WTDBOFIVDC4C4CE
+--   SAC contract CAA56M3OKR2IHHJB4ZAUPAJDYOGFXSVYN6NFJGN7PJN4NUMRKSDFABYI
+--   registry address field GCA6KZBWPBOEF6M2MZBTXRMKLMWRZOUCL2JFSIDT3WTDBOFIVDC4C4CE
+--   suggested series code: EURQ
+-- EURCV | Stellar classic asset + SAC | decimals 7 | fx_usd 1.1206 from FX_FALLBACK.EURCV. This is the existing dashboard fallback, not a new price feed.
+--   classic asset_code EURCV
+--   classic issuer GCEYGIVOLAVBF2TG2RUSGTUJCIN75KEX3NGLMY4VPL4GFE5L355AXW3G
+--   SAC contract CANKBYNNAYKEZXLB655F2UPNTAZFK5HILZUXL7ZTFR3NF6LKDSVY7KFH
+--   registry address field CANKBYNNAYKEZXLB655F2UPNTAZFK5HILZUXL7ZTFR3NF6LKDSVY7KFH
+--   suggested series code: EURCV
+-- BRMB | Stellar classic asset | decimals 7 | fx_usd PENDING. This symbol has no rate in FX_FALLBACK. Do not invent one. The query must emit transfer_volume_usd, or the dashboard stores 0.
+--   classic asset_code BRMB
+--   classic issuer GBVXEEYTHW4PUHVOOSEUPS4TTKVRU7XDZJIKAIZRG2H2XU7YWDEFKNTP
+--   SAC contract CBD67SY7LMNGXVELAAAUX7LHADZFJ4CK6BHYW36XBHCDNHQP5QO3AKXR
+--   registry address field GBVXEEYTHW4PUHVOOSEUPS4TTKVRU7XDZJIKAIZRG2H2XU7YWDEFKNTP
+--   suggested series code: BRMB
+-- EURAU | SEP-41 | decimals 6 | fx_usd 1.1206 from FX_FALLBACK.EURAU. This is the existing dashboard fallback, not a new price feed.
+--   SEP-41 contract CB44W727WSLHPXJ47A6DHF5D34RKWSOZAMEDXO3CF5TEEEQ2ZX4V3VRI
+--   registry address field CB44W727WSLHPXJ47A6DHF5D34RKWSOZAMEDXO3CF5TEEEQ2ZX4V3VRI
+--   suggested series code: EURAU

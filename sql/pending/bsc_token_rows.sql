@@ -1,0 +1,18 @@
+-- PENDING — NOT EXECUTABLE.
+-- The live query SQL for this chain is not in the repository.
+-- Source tables and filters are unverified. Do not run this file.
+-- Do not create a new Dune query id. Edit the existing query named below.
+-- Do not insert zero-volume history. Days with no transfers stay absent.
+-- Chain: BNB Chain. Existing Dune query id(s): 8748306.
+-- EURITE is the product name. The series code must be EURI, not EURITE.
+-- EURI is not the Polygon PHT contract. Do not attach this row to PHT.
+--
+-- Commented tuple for the existing token list. Remove the leading comment marks only when pasting into that query.
+-- EURI | BEP-20 | decimals 18 | fx_usd 1.1206 from FX_FALLBACK.EURI. This is the existing dashboard fallback, not a new price feed.
+--   address 0x9d1A7A3191102e9F900Faa10540837ba84dCBAE7
+--   suggested label: 'Euro - EURI'
+-- ('Euro - EURI', 0x9d1A7A3191102e9F900Faa10540837ba84dCBAE7, 18, 1.1206),
+-- EURAU | BEP-20 | decimals 6 | fx_usd 1.1206 from FX_FALLBACK.EURAU. This is the existing dashboard fallback, not a new price feed.
+--   address 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2
+--   suggested label: 'Euro - EURAU'
+-- ('Euro - EURAU', 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 6, 1.1206),

@@ -1,4 +1,6 @@
 -- Arc: classify non-USD stablecoin transfer volume by flow type and phase.
+-- Verified registry 2026-11-07: EURAU, SEKAU, and CHFAU are already in the token list
+-- below. Do not add a second row. This file is an audit query, not the dashboard series.
 -- Phase: private mainnet (genesis 2026-05-15) vs public mainnet (from 2026-09-16).
 -- Flow type by the contract the transaction was sent to (tx.to), plus mint/burn/self.
 --   0xc6e6b8...255f : unidentified automated liquidity manager (module on two 2-of-14/15 Safes,

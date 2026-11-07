@@ -1,0 +1,25 @@
+-- PENDING — NOT EXECUTABLE.
+-- The live query SQL for this chain is not in the repository.
+-- Source tables and filters are unverified. Do not run this file.
+-- Do not create a new Dune query id. Edit the existing query named below.
+-- Do not insert zero-volume history. Days with no transfers stay absent.
+-- Chain: Polygon. Existing Dune query id(s): 6614895, 6621899.
+-- EURQ is already in the published Polygon series. Do not add another EURQ row.
+-- Confirm the saved query already uses registry address 0xd571edb2ef29df10fcd6200fd6d0ed2389983db3 before saving.
+-- These two query ids both feed one Polygon series. Add each new contract to exactly one of them.
+-- fetch-dune-data.js sums rows that share a symbol and a day, so a contract in both queries double-counts.
+-- If that query emits bare tickers, use EURAU, SEKAU, or CHFAU. A "peg - SYMBOL" label is also accepted.
+--
+-- Commented tuple for the existing token list. Remove the leading comment marks only when pasting into that query.
+-- EURAU | ERC-20 | decimals 6 | fx_usd 1.1206 from FX_FALLBACK.EURAU. This is the existing dashboard fallback, not a new price feed.
+--   address 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2
+--   suggested label: 'Euro - EURAU'
+-- ('Euro - EURAU', 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 6, 1.1206),
+-- SEKAU | ERC-20 | decimals 6 | fx_usd 0.100345 from FX_FALLBACK.SEKAU. This is the existing dashboard fallback, not a new price feed.
+--   address 0x0297B579B0CB603B5eE814EB7322b960D3ae7A66
+--   suggested label: 'Swedish krona - SEKAU'
+-- ('Swedish krona - SEKAU', 0x0297B579B0CB603B5eE814EB7322b960D3ae7A66, 6, 0.100345),
+-- CHFAU | ERC-20 | decimals 6 | fx_usd 1.20326 from FX_FALLBACK.CHFAU. This is the existing dashboard fallback, not a new price feed.
+--   address 0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78
+--   suggested label: 'Swiss franc - CHFAU'
+-- ('Swiss franc - CHFAU', 0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78, 6, 1.20326),
