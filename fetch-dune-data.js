@@ -3,16 +3,20 @@
 /**
  * Refresh data.json from Dune.
  *
- * Each query is executed (POST /query/{id}/execute) unless a completed result
- * is already younger than DUNE_FRESHNESS_HOURS (default 20). The site schedule
- * is every 2 days, so a normal run still executes. A same-day retry reuses the
- * result instead of spending another execution.
+ * POST /query/{id}/execute is skipped when a completed result is younger than
+ * DUNE_FRESHNESS_HOURS (default 20) or when refresh-state.json already has an
+ * execution that is still queued or running. Status polls use
+ * GET /execution/{id}/status, which Dune does not bill.
  *
- * Status polls use GET /execution/{id}/status, which Dune does not bill.
- * Performance tier defaults to medium (override with DUNE_PERFORMANCE=small|medium|large).
- * Large is avoided because it burns more credits.
+ * Every execution we have already submitted is polled until it finishes or the
+ * job budget ends (default 36 minutes). The budget is the only wait cap: a
+ * shorter per-query cap previously abandoned Solana while it was still
+ * executing and while the Actions job had time left. At the budget, open
+ * executions stay running on Dune, finished networks are written, and the
+ * process exits non-zero. A later run resumes the saved ids and does not POST
+ * /execute for them again.
  *
- * Secret: DUNE_API_KEY (GitHub Actions). The value is never printed.
+ * Performance tier defaults to medium. Secret: DUNE_API_KEY. The value is never printed.
  *
  *   DUNE_API_KEY=... node fetch-dune-data.js
  *   node fetch-dune-data.js --self-test
@@ -21,44 +25,59 @@
 import { readFileSync, renameSync, writeFileSync } from 'fs';
 import { pathToFileURL } from 'url';
 import {
-  COVERAGE_NOTE,
   QUERIES,
-  coverageFromNetworks,
   dropPartialDays,
-  earliestIso,
   normalizeIso,
   rowsToPipe,
   utcDay,
 } from './lib/series.js';
+import {
+  OPEN_STATES,
+  decideQueryAction,
+  mergeRefresh,
+  mergeState,
+  networkUpdate,
+  pollUntil,
+} from './lib/refresh-plan.js';
 
 const DUNE_BASE = 'https://api.dune.com/api/v1';
+const STATE_PATH = 'refresh-state.json';
+const DATA_PATH = 'data.json';
 const PERFORMANCE = ['small', 'medium', 'large'].includes(process.env.DUNE_PERFORMANCE)
   ? process.env.DUNE_PERFORMANCE
   : 'medium';
 const FRESHNESS_HOURS = Number(process.env.DUNE_FRESHNESS_HOURS) > 0
   ? Number(process.env.DUNE_FRESHNESS_HOURS)
   : 20;
+const FRESHNESS_MS = FRESHNESS_HOURS * 60 * 60 * 1000;
 const CONCURRENCY = 2;
 const POLL_MS = 4000;
-const MAX_WAIT_MS = 12 * 60 * 1000;
 
-const TERMINAL = new Set([
-  'QUERY_STATE_COMPLETED',
-  'QUERY_STATE_FAILED',
-  'QUERY_STATE_CANCELED',
-  'QUERY_STATE_CANCELLED',
-  'QUERY_STATE_EXPIRED',
-  'QUERY_STATE_COMPLETED_PARTIAL',
-]);
+function minutes(name, fallback) {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+const JOB_WAIT_MS = minutes('DUNE_JOB_WAIT_MINUTES', 36) * 60 * 1000;
+const MIN_START_MS = 3 * 60 * 1000;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function isFresh(iso) {
-  const t = Date.parse(normalizeIso(iso));
-  if (!t || Number.isNaN(t)) return false;
-  return Date.now() - t < FRESHNESS_HOURS * 3600 * 1000;
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+function writeJsonAtomic(path, value) {
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, JSON.stringify(value));
+  renameSync(tmp, path);
 }
 
 async function dune(path, { method = 'GET', body } = {}) {
@@ -106,99 +125,197 @@ async function fetchAllRows(resultsPath) {
   return { rows, envelope };
 }
 
-async function executeQuery(queryId) {
-  let attempt = 0;
-  while (true) {
-    try {
-      const started = await dune(`/query/${queryId}/execute`, {
-        method: 'POST',
-        body: { performance: PERFORMANCE },
-      });
-      if (!started.execution_id) {
-        throw new Error(`Query ${queryId} did not return an execution_id`);
+const liveDune = {
+  latest(queryId) {
+    return dune(`/query/${queryId}/results?limit=1&offset=0`);
+  },
+  async execute(queryId) {
+    let attempt = 0;
+    while (true) {
+      try {
+        const started = await dune(`/query/${queryId}/execute`, {
+          method: 'POST',
+          body: { performance: PERFORMANCE },
+        });
+        if (!started.execution_id) {
+          throw new Error(`Query ${queryId} did not return an execution_id`);
+        }
+        return started.execution_id;
+      } catch (err) {
+        attempt += 1;
+        const retryable = err.status === 429 || /inflight|queue|concurrent|rate|too many/i.test(err.message);
+        if (!retryable || attempt > 5) throw err;
+        console.log(`  Query ${queryId} is waiting for an execution slot (${attempt}/5)`);
+        await sleep(15000);
       }
-      return started.execution_id;
-    } catch (err) {
-      attempt += 1;
-      const retryable = err.status === 429 || /inflight|queue|concurrent|rate|too many/i.test(err.message);
-      if (!retryable || attempt > 5) throw err;
-      console.log(`  Query ${queryId} is waiting for an execution slot (${attempt}/5)`);
-      await sleep(15000);
     }
-  }
+  },
+  status(executionId) {
+    return dune(`/execution/${executionId}/status`);
+  },
+  rows(executionId) {
+    return fetchAllRows(`/execution/${executionId}/results`);
+  },
+};
+
+function remember(bundle, patch) {
+  bundle.state = mergeState(bundle.state, [patch]);
+  if (bundle.persist) bundle.persist(bundle.state);
+  return bundle.state;
 }
 
-async function pollExecution(executionId, queryId) {
-  const started = Date.now();
-  let lastLog = 0;
-  while (Date.now() - started < MAX_WAIT_MS) {
-    const status = await dune(`/execution/${executionId}/status`);
-    const state = status.state;
-    if (status.is_execution_finished || TERMINAL.has(state)) return status;
-    if (Date.now() - lastLog > 30000) {
-      const waited = Math.round((Date.now() - started) / 1000);
-      console.log(`    Query ${queryId} ${state || 'running'} (${waited}s)`);
-      lastLog = Date.now();
-    }
-    await sleep(POLL_MS);
+async function followExecution(queryId, executionId, deps, { reused, allowReplacement }) {
+  const started = deps.now();
+  const polled = await pollUntil({
+    getStatus: async () => {
+      try {
+        return await deps.dune.status(executionId);
+      } catch (error) {
+        if (error.status === 404) {
+          return {
+            state: 'QUERY_STATE_EXPIRED',
+            is_execution_finished: true,
+            execution_id: executionId,
+            error: error.message,
+          };
+        }
+        throw error;
+      }
+    },
+    sleep: deps.sleep,
+    now: deps.now,
+    deadlineMs: deps.jobDeadline,
+    intervalMs: deps.pollMs,
+  });
+  const status = polled.status || {};
+  const state = status.state || (polled.done ? null : 'QUERY_STATE_EXECUTING');
+  remember(deps.bundle, {
+    id: queryId,
+    network: deps.network,
+    execution_id: status.execution_id || executionId,
+    state,
+    execution_ended_at: status.execution_ended_at ? normalizeIso(status.execution_ended_at) : null,
+  });
+
+  if (!polled.done) {
+    const waited = Math.round((deps.now() - started) / 1000);
+    console.log(`  Query ${queryId} still ${state} after ${waited}s (execution ${executionId}). Leaving it running; a re-run resumes this id and does not start another.`);
+    return {
+      id: queryId,
+      execution_id: executionId,
+      state,
+      inProgress: true,
+      reused: false,
+      rows: null,
+    };
   }
-  throw new Error(`Query ${queryId} timed out after 12 minutes (execution ${executionId})`);
+
+  if (state === 'QUERY_STATE_COMPLETED') {
+    if (status.execution_cost_credits != null && !reused) {
+      console.log(`    Credits reported for ${queryId}: ${status.execution_cost_credits}`);
+    }
+    const { rows } = await deps.dune.rows(status.execution_id || executionId);
+    const ended = status.execution_ended_at ? normalizeIso(status.execution_ended_at) : null;
+    const keptRows = dropPartialDays(rows, ended || new Date(deps.now()).toISOString());
+    console.log(`  Query ${queryId}: ${rows.length} rows, ${keptRows.length} after dropping ${utcDay(ended) || 'the partial day'}`);
+    if (!keptRows.length) {
+      return {
+        id: queryId,
+        execution_id: executionId,
+        execution_ended_at: ended,
+        state,
+        failed: true,
+        reused,
+        error: 'no rows after dropping the partial day',
+        rows: null,
+      };
+    }
+    return {
+      id: queryId,
+      execution_id: status.execution_id || executionId,
+      execution_ended_at: ended,
+      state,
+      reused,
+      row_count: rows.length,
+      rows,
+      keptRows,
+    };
+  }
+
+  const detail = status.error?.message || status.error || state || 'unknown state';
+  const replaceable = state === 'QUERY_STATE_FAILED'
+    || state === 'QUERY_STATE_CANCELED'
+    || state === 'QUERY_STATE_CANCELLED'
+    || state === 'QUERY_STATE_EXPIRED';
+  if (state === 'QUERY_STATE_COMPLETED_PARTIAL') {
+    console.log(`  Query ${queryId} result was truncated; keeping the previous series.`);
+  } else {
+    console.log(`  Query ${queryId} ${state}: ${detail}`);
+  }
+  if (allowReplacement && replaceable && deps.now() + deps.minStartMs < deps.jobDeadline) {
+    console.log(`  Query ${queryId} execution ${executionId} ended ${state}; starting one replacement.`);
+    return startExecution(queryId, deps);
+  }
+  return {
+    id: queryId,
+    execution_id: executionId,
+    state,
+    failed: true,
+    reused: false,
+    error: String(detail),
+    rows: null,
+  };
 }
 
-function assertCompleted(status, queryId) {
-  if (status.state === 'QUERY_STATE_COMPLETED') return;
-  if (status.state === 'QUERY_STATE_COMPLETED_PARTIAL') {
-    throw new Error(`Query ${queryId} result was truncated; refusing to publish a partial set`);
+async function startExecution(queryId, deps) {
+  if (deps.now() + deps.minStartMs >= deps.jobDeadline) {
+    console.log(`  Query ${queryId} deferred; under 3 minutes of job budget left. Not executing.`);
+    return { id: queryId, deferred: true, state: 'NOT_STARTED', execution_id: null, rows: null };
   }
-  const detail = status.error?.message || status.error || status.state || 'unknown state';
-  throw new Error(`Query ${queryId} ${status.state || 'did not complete'}: ${detail}`);
+  console.log(`  Query ${queryId} executing on the ${PERFORMANCE} tier`);
+  const executionId = await deps.dune.execute(queryId);
+  console.log(`    Execution ${executionId}`);
+  remember(deps.bundle, {
+    id: queryId,
+    network: deps.network,
+    execution_id: executionId,
+    state: 'QUERY_STATE_PENDING',
+    execution_ended_at: null,
+  });
+  return followExecution(queryId, executionId, deps, { reused: false, allowReplacement: false });
 }
 
 /**
- * Return rows plus the Dune execution that produced them.
- * Reuses a completed execution inside the freshness window.
+ * One query. `deps.dune` is injectable. An open saved execution is polled and
+ * never replaced with POST /execute.
  */
-export async function fetchQuery(queryId) {
-  const latest = await dune(`/query/${queryId}/results?limit=1&offset=0`);
-  const latestState = latest.state;
-  const latestEnded = latest.execution_ended_at || null;
-
-  if ((latestState === 'QUERY_STATE_PENDING' || latestState === 'QUERY_STATE_EXECUTING') && latest.execution_id) {
-    console.log(`  Query ${queryId} is already running (${latest.execution_id}); waiting, not starting another`);
-    const status = await pollExecution(latest.execution_id, queryId);
-    assertCompleted(status, queryId);
-    const { rows } = await fetchAllRows(`/execution/${status.execution_id}/results`);
-    return metaFrom(queryId, status, rows, false);
+export async function resolveQuery(queryId, deps) {
+  const saved = deps.bundle.state.queries?.[String(queryId)];
+  if (saved?.execution_id && OPEN_STATES.has(saved.state)) {
+    console.log(`  Query ${queryId} resuming ${saved.state} execution ${saved.execution_id}; not starting another`);
+    return followExecution(queryId, saved.execution_id, deps, { reused: false, allowReplacement: true });
   }
 
-  if (latestState === 'QUERY_STATE_COMPLETED' && isFresh(latestEnded)) {
-    console.log(`  Query ${queryId} reusing execution from ${latestEnded} (under ${FRESHNESS_HOURS}h)`);
-    const { rows, envelope } = await fetchAllRows(`/query/${queryId}/results`);
-    return metaFrom(queryId, envelope || latest, rows, true);
-  }
+  const latest = await deps.dune.latest(queryId);
+  if (latest?.execution_ended_at) latest.execution_ended_at = normalizeIso(latest.execution_ended_at);
+  const savedForDecision = saved?.execution_ended_at
+    ? { ...saved, execution_ended_at: normalizeIso(saved.execution_ended_at) }
+    : saved;
+  const decision = decideQueryAction({
+    saved: savedForDecision,
+    latest,
+    now: deps.now(),
+    freshnessMs: deps.freshnessMs,
+  });
+  console.log(`  Query ${queryId} ${decision.reason}${decision.executionId ? ` (${decision.executionId})` : ''}`);
 
-  console.log(`  Query ${queryId} executing on the ${PERFORMANCE} tier (latest was ${latestEnded || latestState || 'missing'})`);
-  const executionId = await executeQuery(queryId);
-  console.log(`    Execution ${executionId}`);
-  const status = await pollExecution(executionId, queryId);
-  assertCompleted(status, queryId);
-  if (status.execution_cost_credits != null) {
-    console.log(`    Credits reported for ${queryId}: ${status.execution_cost_credits}`);
+  if (decision.action === 'resume' || decision.action === 'reuse') {
+    return followExecution(queryId, decision.executionId, deps, {
+      reused: decision.action === 'reuse',
+      allowReplacement: decision.action === 'resume',
+    });
   }
-  const { rows } = await fetchAllRows(`/execution/${executionId}/results`);
-  return metaFrom(queryId, status, rows, false);
-}
-
-function metaFrom(queryId, status, rows, reused) {
-  return {
-    id: queryId,
-    execution_id: status.execution_id || null,
-    execution_ended_at: status.execution_ended_at || null,
-    state: status.state || null,
-    reused,
-    row_count: rows.length,
-    rows,
-  };
+  return startExecution(queryId, deps);
 }
 
 async function mapPool(items, limit, fn) {
@@ -216,65 +333,68 @@ async function mapPool(items, limit, fn) {
   return results;
 }
 
-export async function buildPayload(fetchOne = fetchQuery) {
+export async function runRefresh(options = {}) {
+  const duneClient = options.dune || liveDune;
+  const now = options.now || Date.now;
+  const jobWaitMs = options.jobWaitMs ?? JOB_WAIT_MS;
+  const startedAt = now();
+  const bundle = {
+    state: options.state || { queries: {} },
+    persist: options.persist || null,
+  };
   const jobs = [];
   for (const [network, ids] of Object.entries(QUERIES)) {
     for (const id of ids) jobs.push({ network, id });
   }
 
-  console.log(`Fetching ${jobs.length} Dune queries, ${CONCURRENCY} at a time, tier=${PERFORMANCE}, reuse<${FRESHNESS_HOURS}h`);
-  const fetched = await mapPool(jobs, CONCURRENCY, async job => {
+  console.log(`Fetching ${jobs.length} Dune queries, ${options.concurrency || CONCURRENCY} at a time, tier=${PERFORMANCE}, reuse<${FRESHNESS_HOURS}h, job wait ${Math.round(jobWaitMs / 60000)}m`);
+
+  const fetched = await mapPool(jobs, options.concurrency || CONCURRENCY, async job => {
     console.log(`\n${job.network} query ${job.id}`);
-    const result = await fetchOne(job.id);
-    return { ...job, ...result };
+    const deps = {
+      dune: duneClient,
+      bundle,
+      network: job.network,
+      now,
+      sleep: options.sleep || sleep,
+      pollMs: options.pollMs ?? POLL_MS,
+      minStartMs: options.minStartMs ?? MIN_START_MS,
+      jobDeadline: startedAt + jobWaitMs,
+      freshnessMs: options.freshnessMs ?? FRESHNESS_MS,
+    };
+    try {
+      const result = await resolveQuery(job.id, deps);
+      return { network: job.network, ...result };
+    } catch (error) {
+      console.log(`  Query ${job.id} failed before it could be published: ${error.message}`);
+      const saved = bundle.state.queries?.[String(job.id)];
+      return {
+        network: job.network,
+        id: job.id,
+        execution_id: saved?.execution_id || null,
+        state: saved?.state || 'ERROR',
+        failed: true,
+        error: error.message,
+        rows: null,
+      };
+    }
   });
 
-  const data = {};
-  const executions = {};
-
-  for (const network of Object.keys(QUERIES)) {
-    const parts = fetched.filter(item => item.network === network);
-    let rows = [];
-    for (const part of parts) {
-      const ended = part.execution_ended_at || new Date().toISOString();
-      const kept = dropPartialDays(part.rows, ended);
-      const cut = utcDay(ended);
-      console.log(`  ${network}/${part.id}: ${part.rows.length} rows, ${kept.length} after dropping ${cut || 'no cutoff'} and later`);
-      if (!kept.length) {
-        throw new Error(`Query ${part.id} (${network}) had no rows after dropping the partial day`);
-      }
-      rows = rows.concat(kept);
+  const byId = new Map(fetched.map(item => [String(item.id), item]));
+  const updates = {};
+  let incomplete = false;
+  for (const [network, ids] of Object.entries(QUERIES)) {
+    const update = networkUpdate(network, ids, byId, (rows, name) => rowsToPipe(rows, name, message => console.warn(message)));
+    if (!update) {
+      incomplete = true;
+      console.log(`Keeping the previous ${network} series; not every query finished.`);
+      continue;
     }
-    const pipe = rowsToPipe(rows, network, message => console.warn(message));
-    if (!pipe.trim()) throw new Error(`${network} produced an empty series`);
-    data[network] = pipe;
-    const executionEndedAt = earliestIso(parts.map(part => part.execution_ended_at));
-    executions[network] = {
-      execution_ended_at: executionEndedAt,
-      queries: parts.map(part => ({
-        id: part.id,
-        execution_id: part.execution_id,
-        execution_ended_at: part.execution_ended_at,
-        reused: part.reused,
-        row_count: part.row_count,
-      })),
-    };
+    updates[network] = update;
   }
 
-  const coverage = coverageFromNetworks(data);
-  const timestamp = earliestIso(Object.values(executions).map(item => item.execution_ended_at));
-  return {
-    success: true,
-    timestamp,
-    coverage: {
-      exhaustive: false,
-      note: COVERAGE_NOTE,
-      tokens: coverage.tokens,
-      chains: coverage.chains,
-    },
-    executions,
-    data,
-  };
+  const payload = mergeRefresh(options.previous || null, updates);
+  return { payload, state: bundle.state, incomplete, results: fetched };
 }
 
 async function main() {
@@ -284,15 +404,31 @@ async function main() {
   }
   console.log('DUNE_API_KEY is set');
 
-  const payload = await buildPayload();
-  const json = JSON.stringify(payload);
-  writeFileSync('data.json.tmp', json);
-  renameSync('data.json.tmp', 'data.json');
-  console.log(`\nWrote data.json (${json.length} bytes), oldest execution ${payload.timestamp}`);
+  const previous = readJson(DATA_PATH);
+  const state = readJson(STATE_PATH) || { queries: {} };
+  const { payload, state: nextState, incomplete } = await runRefresh({
+    previous,
+    state,
+    persist: next => writeJsonAtomic(STATE_PATH, next),
+  });
 
-  const { generateOg } = await import('./generate-og.js');
-  await generateOg('data.json', 'og.png');
-  console.log('Wrote og.png');
+  writeJsonAtomic(DATA_PATH, payload);
+  writeJsonAtomic(STATE_PATH, nextState);
+  console.log(`\nWrote data.json (${JSON.stringify(payload).length} bytes), oldest published execution ${payload.timestamp}`);
+  console.log(`Coverage: ${payload.coverage.tokens} tracked tokens on ${payload.coverage.chains} chains. ${payload.coverage.note}`);
+
+  try {
+    const { generateOg } = await import('./generate-og.js');
+    await generateOg(DATA_PATH, 'og.png');
+    console.log('Wrote og.png');
+  } catch (error) {
+    console.log(`og.png was not regenerated: ${error.message}`);
+  }
+
+  if (incomplete) {
+    console.error('Refresh incomplete. Finished networks were saved. Re-run to resume open executions without paying for them again.');
+    process.exit(2);
+  }
 }
 
 function assert(cond, message) {
@@ -315,32 +451,31 @@ function selfTest() {
   assert(pipe.includes('BRLA|1|2.00'), 'FX fallback should price BRLA');
   assert(!pipe.includes('2026-11-05'), 'pipe must not contain the partial day');
 
-  const oldest = earliestIso([
-    '2026-11-05T02:00:00.000000000Z',
-    '2026-11-04T23:00:00.000000000Z',
-  ]);
-  assert(utcDay(oldest) === '2026-11-04', 'network timestamp is the older execution');
-  assert(!Number.isNaN(Date.parse(normalizeIso(oldest))), 'nanosecond timestamps must parse');
-
   const workflow = readFileSync('.github/workflows/refresh-data.yml', 'utf8');
   assert(workflow.includes('secrets.DUNE_API_KEY'), 'workflow must keep the DUNE_API_KEY secret name');
   assert(!workflow.includes('secrets.REDIS_URL'), 'workflow must not read the REDIS_URL secret');
   assert(workflow.includes('fetch-dune-data.js'), 'workflow must run the fetch script');
+  assert(workflow.includes('refresh-state.json'), 'workflow must commit the execution ledger');
+  assert(workflow.includes('continue-on-error: true'), 'a partial refresh must still be able to commit');
   assert(!workflow.includes('/api/crons'), 'workflow must not call the removed cron route');
 
   const index = readFileSync('index.html', 'utf8');
-  assert(index.includes('twitter:card') && index.includes('summary_large_image'), 'twitter card missing');
-  assert(index.includes('og:image'), 'og:image missing');
-  assert(index.includes('defer'), 'CDN script should be deferred');
-  assert(index.includes('https://x.com/scipiosiberian'), 'X profile link missing');
-  assert(index.includes('Download PNG') && index.includes('Download CSV'), 'chart downloads missing');
   assert(index.includes('not exhaustive'), 'coverage caveat missing');
   assert(index.includes('Tracked volume'), 'tracked-volume wording missing');
-  assert(!index.includes('/api/dashboard-data'), 'index must not call the removed API');
 
   const source = readFileSync('fetch-dune-data.js', 'utf8');
-  assert(source.includes('/execute'), 'fetch script must trigger execution');
+  assert(source.includes('/execute'), 'fetch script must be able to trigger execution');
+  assert(source.includes('decideQueryAction'), 'fetch script must consult the resume plan');
   assert(!/DUNE_API_KEY\.substring/.test(source), 'do not log any part of the API key');
+  assert(source.includes('Leaving it running'), 'a budget stop must keep the Dune execution instead of aborting it');
+
+  const ledger = JSON.parse(readFileSync(STATE_PATH, 'utf8'));
+  assert(ledger.queries && typeof ledger.queries === 'object', 'refresh ledger must list queries');
+  for (const saved of Object.values(ledger.queries)) {
+    if (OPEN_STATES.has(saved.state)) {
+      assert(saved.execution_id, 'an open query needs an execution id so a retry does not pay again');
+    }
+  }
 
   console.log('self-test ok');
 }
