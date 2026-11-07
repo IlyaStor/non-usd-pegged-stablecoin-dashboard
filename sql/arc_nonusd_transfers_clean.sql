@@ -1,4 +1,6 @@
 -- Arc mainnet: non-USD stablecoin transfer volume (StableFX roster) — v2, "clean" volume
+-- Verified registry 2026-11-07: EURAU, SEKAU, and CHFAU are already in the token list
+-- below. Do not add a second row. This file is not the query the site runs.
 -- Source: arc.logs (raw). Token list: Circle StableFX docs, checked 2026-10-10.
 -- Decimals: Arc Blockscout API, 2026-10-10.
 -- USD: native amount x ECB reference rate of 2026-10-09 (USD per unit).

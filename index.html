@@ -49,6 +49,7 @@
   --net-arc:#7C8CFF;
   --net-suspicious:#F87171;
   --net-geography:#60A5FA;
+  --net-registry:#FBBF24;
   --grid:#1A1D25;
   --tooltip-bg:#0E1118;
   --tooltip-border:#252934;
@@ -328,6 +329,31 @@ td.first{color:var(--text)}
 .susp-chain{font-size:8.5px;color:var(--text-3);background:var(--surface-2);padding:2px 7px;border-radius:3px;letter-spacing:.08em;text-transform:uppercase}
 .susp-r{font-size:10.5px;color:var(--text-3);line-height:1.5}
 
+/* ── REGISTRY (catalog, not volume) ──────────────── */
+.registry-note code{font-size:11px}
+.registry-ctrl{margin-bottom:12px}
+.registry-table-wrap{
+  overflow:auto;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:8px 14px 14px;
+}
+.registry-table-wrap table{min-width:980px}
+.registry-table-wrap td,.registry-table-wrap th{padding-right:14px;vertical-align:top}
+.registry-table-wrap a{color:var(--text-2);text-decoration:none}
+.registry-table-wrap a:hover{color:var(--text)}
+.registry-table-wrap .sub{display:block;color:var(--text-3);font-size:10px;margin-top:3px;line-height:1.45;max-width:420px}
+.status-pill{
+  display:inline-block;font-size:10px;font-weight:600;letter-spacing:.02em;
+  padding:2px 6px;border-radius:4px;border:1px solid var(--border);
+}
+.status-live{color:#34D399}
+.status-sql,.status-pending{color:#FBBF24}
+.status-unsupported{color:var(--text-3)}
+.registry-steps{margin-top:18px;color:var(--text-2);font-size:12px;line-height:1.55}
+.registry-steps h2{font-size:13px;color:var(--text);margin:16px 0 8px;font-weight:650}
+.registry-steps ol,.registry-steps ul{padding-left:18px}
+.registry-steps li{margin:6px 0}
+.registry-warn{color:#F87171;margin-bottom:12px}
+
 /* ── FOOTER ───────────────────────────────────────── */
 .ftr{
   padding:18px 0 24px;margin-top:32px;border-top:1px solid var(--border);
@@ -416,6 +442,7 @@ td.first{color:var(--text)}
       <button class="net-tab" data-net="arc" onclick="switchNetwork('arc')">Arc</button>
       <button class="net-tab" data-net="suspicious" onclick="switchNetwork('suspicious')">Suspicious</button>
       <button class="net-tab" data-net="geography" onclick="switchNetwork('geography')">Geography</button>
+      <button class="net-tab" data-net="registry" onclick="switchNetwork('registry')">Registry</button>
     </nav>
 
     <div class="kpis" id="kpis"></div>
@@ -472,6 +499,7 @@ td.first{color:var(--text)}
 
     <section class="geo-grid" id="geoGrid" style="display:none"></section>
     <section class="susp" id="suspList" style="display:none"></section>
+    <section class="registry" id="registryPanel" style="display:none"></section>
   </main>
 
   <footer class="ftr">
@@ -482,7 +510,7 @@ td.first{color:var(--text)}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-const NET_ORDER = ['polygon','stellar','solana','tron','plasma','bsc','arc','suspicious','geography'];
+const NET_ORDER = ['polygon','stellar','solana','tron','plasma','bsc','arc','suspicious','geography','registry'];
 const CHAIN_NETS = ['polygon','stellar','solana','tron','plasma','bsc','arc'];
 
 const NET_COLOR = {
@@ -495,6 +523,7 @@ const NET_COLOR = {
   arc:'#7C8CFF',
   suspicious:'#F87171',
   geography:'#60A5FA',
+  registry:'#FBBF24',
 };
 
 // Keep in sync with lib/series.js QUERIES.
@@ -592,6 +621,10 @@ const TOKEN_METADATA = {
   SEKAU:{cur:'SEK',c:'#FFD54F',n:'Swedish Krona — SEKAU (AllUnity)'},
   ZARU:{cur:'ZAR',c:'#FBC02D',n:'South African Rand — ZARU'},
   CHFAU:{cur:'CHF',c:'#F57C00',n:'Swiss Franc — CHFAU (AllUnity)'},
+  // Present so a future series can be labeled. Absent from data.json until Dune returns the symbol.
+  EURI:{cur:'EUR',c:'#0B3A82',n:'Euro — EURI (EURITE)'},
+  BRMB:{cur:'CNY',c:'#C62828',n:'Chinese Yuan — BRMB'},
+  DDSC:{cur:'AED',c:'#C9A227',n:'Dirham — DDSC'},
 };
 
 const CURRENCY_COLORS = {
@@ -599,6 +632,7 @@ const CURRENCY_COLORS = {
   PHP:'#AB47BC',AUD:'#26C6DA',CAD:'#8D6E63',EUR:'#42A5F5',TRY:'#FF7043',
   ZAR:'#FFCA28',ARS:'#9CCC65',NGN:'#29B6F6',PEN:'#FF7043',CHF:'#FF6D00',
   RUB:'#FF5252',MXN:'#66BB6A',KGS:'#F0B90B',GBP:'#7E57C2',KRW:'#EC407A',SEK:'#FFD54F',
+  CNY:'#C62828',AED:'#C9A227',
 };
 
 const GEO_MAP = {
@@ -623,6 +657,8 @@ const GEO_MAP = {
   GBP:{country:'United Kingdom',flag:'🇬🇧',region:'Europe'},
   KRW:{country:'South Korea',flag:'🇰🇷',region:'Asia'},
   SEK:{country:'Sweden',flag:'🇸🇪',region:'Europe'},
+  CNY:{country:'China',flag:'🇨🇳',region:'Asia'},
+  AED:{country:'United Arab Emirates',flag:'🇦🇪',region:'Asia'},
 };
 
 // ── FORMATTERS ────────────────────────────────────────────
@@ -878,7 +914,19 @@ function loadNetwork(net, opts){
   document.getElementById('insights').style.display='grid';
   document.getElementById('geoGrid').style.display='none';
   document.getElementById('suspList').style.display='none';
+  document.getElementById('registryPanel').style.display='none';
 
+  if(net==='registry'){
+    document.getElementById('ctrl').style.display='none';
+    document.getElementById('chips').style.display='none';
+    document.getElementById('chartPanel').style.display='none';
+    document.getElementById('cols').style.display='none';
+    document.getElementById('insights').style.display='none';
+    document.getElementById('registryPanel').style.display='block';
+    renderRegistry();
+    renderKPIs();
+    return;
+  }
   if(net==='suspicious'){
     document.getElementById('ctrl').style.display='none';
     document.getElementById('chips').style.display='none';
@@ -941,7 +989,7 @@ function switchNetwork(net){loadNetwork(net,{url:'push'});}
 
 function setMetric(m){
   metric=m;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.m===m));
+  document.querySelectorAll('#ctrl .tab').forEach(t=>t.classList.toggle('on',t.dataset.m===m));
   document.getElementById('chartLabel').firstElementChild.textContent=
     metric==='volume'?'Tracked transfer volume (USD) — daily stacked':'Tracked transaction count — daily stacked';
   updateChartMeta();
@@ -951,8 +999,55 @@ function setMetric(m){
 }
 
 // ── KPIS ──────────────────────────────────────────────────
+let registryReport = null;
+
+function filterRegistry(status, btn){
+  document.querySelectorAll('#registryPanel tbody tr').forEach(tr=>{
+    tr.hidden = status !== 'all' && tr.dataset.status !== status;
+  });
+  document.querySelectorAll('#registryPanel .tab').forEach(tab=>tab.classList.toggle('on', tab===btn));
+}
+
+async function renderRegistry(){
+  const root=document.getElementById('registryPanel');
+  if(!registryReport) root.innerHTML='<p class="coverage-note">Loading the verified catalog…</p>';
+  try{
+    const mod=await import('./catalog-boot.js');
+    const view=await mod.loadCatalogView({
+      data:Object.fromEntries(CHAIN_NETS.map(net=>[net, NETWORKS[net].data||''])),
+      executions,
+    });
+    registryReport=view.report;
+    if(curNet==='registry'){
+      root.innerHTML=view.html;
+      renderKPIs();
+    }
+  }catch(err){
+    console.error(err);
+    if(curNet==='registry'){
+      root.innerHTML='<p class="registry-warn">Verified catalog failed to load: '+err.message+'</p>';
+    }
+  }
+}
+
 function renderKPIs(){
   const kpis=document.getElementById('kpis');
+  if(curNet==='registry'){
+    const summary=registryReport?.summary;
+    const items=summary?[
+      {l:'Verified catalog',v:summary.entries,s:`${summary.tokens} tokens · not volume`,c:NET_COLOR.registry},
+      {l:'In published series',v:summary.live,s:'left unchanged',c:'#34D399'},
+      {l:'Waiting on Dune',v:summary.pendingDune+summary.listedInRepoSql,s:`${summary.pendingDune} query edits · ${summary.listedInRepoSql} in Arc SQL only`,c:NET_COLOR.registry},
+      {l:'No dashboard chain',v:summary.unsupported,s:'no query id added',c:'#9CA3AF'},
+    ]:[
+      {l:'Verified catalog',v:'…',s:'not volume',c:NET_COLOR.registry},
+      {l:'In published series',v:'…',s:'left unchanged',c:'#34D399'},
+      {l:'Waiting on Dune',v:'…',s:'query text still required',c:NET_COLOR.registry},
+      {l:'No dashboard chain',v:'…',s:'no query id added',c:'#9CA3AF'},
+    ];
+    kpis.innerHTML=items.map(k=>`<div class="kpi" style="--kpi-c:${k.c}"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.v}</div><div class="kpi-s">${k.s}</div></div>`).join('');
+    return;
+  }
   if(curNet==='suspicious'){
     const rows=NETWORKS.suspicious.rows||[];
     const byChain={};
@@ -1418,7 +1513,7 @@ function toggleTheme(){
   localStorage.setItem('theme',light?'light':'dark');
   document.getElementById('themeBtn').textContent=light?'◐ Dark':'☀ Light';
   // Re-render chart pieces for new theme
-  if(curNet!=='suspicious' && curNet!=='geography'){
+  if(curNet!=='suspicious' && curNet!=='geography' && curNet!=='registry'){
     renderMainChart();
     renderPie();
   }
