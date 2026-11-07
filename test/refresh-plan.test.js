@@ -155,6 +155,39 @@ describe('pollUntil', () => {
     assert.equal(calls, 3);
     assert.match(result.error, /temporary/);
   });
+
+  it('keeps polling the same execution through HTTP 429 instead of stopping after three errors', async () => {
+    // Run 42350611583 aborted Plasma and BSC after about 45s while the 36 minute
+    // budget remained. Status errors were not printed. Three 429s must not do that.
+    let calls = 0;
+    const time = clock(0);
+    const result = await pollUntil({
+      getStatus: async () => {
+        calls += 1;
+        if (calls <= 2) return { state: 'QUERY_STATE_EXECUTING', is_execution_finished: false, execution_id: '01M6TDWCFK4SQE352XNE6VBXVS' };
+        if (calls <= 5) {
+          const error = new Error('Too many requests. Please upgrade your plan');
+          error.status = 429;
+          throw error;
+        }
+        return {
+          state: 'QUERY_STATE_COMPLETED',
+          is_execution_finished: true,
+          execution_id: '01M6TDWCFK4SQE352XNE6VBXVS',
+          execution_ended_at: '2026-11-07T07:20:00Z',
+        };
+      },
+      sleep: time.sleep,
+      now: time.now,
+      deadlineMs: 36 * 60 * 1000,
+      intervalMs: 4_000,
+    });
+    assert.equal(result.done, true);
+    assert.equal(result.status.state, 'QUERY_STATE_COMPLETED');
+    assert.equal(result.status.execution_id, '01M6TDWCFK4SQE352XNE6VBXVS');
+    assert.ok(calls >= 6);
+    assert.ok(time.now() < 36 * 60 * 1000);
+  });
 });
 
 describe('partial publish', () => {
@@ -385,5 +418,144 @@ describe('runRefresh', () => {
     assert.equal(result.incomplete, true);
     assert.equal(result.payload.data.solana, 'keep-me');
     assert.equal(result.payload.coverage.exhaustive, false);
+  });
+
+  it('does not start a second Plasma execution when status returns 429 and later completes', async () => {
+    const posts = [];
+    const time = clock(Date.parse('2026-11-07T07:17:00Z'));
+    let polls = 0;
+    const result = await runRefresh({
+      dune: {
+        async latest() {
+          return {
+            execution_id: 'fresh',
+            state: 'QUERY_STATE_COMPLETED',
+            execution_ended_at: '2026-11-07T07:01:47Z',
+          };
+        },
+        async execute(id) {
+          posts.push(id);
+          throw new Error(`execute ${id} must not be called`);
+        },
+        async status(executionId) {
+          if (executionId !== '01M6TDWCFK4SQE352XNE6VBXVS') {
+            return {
+              execution_id: executionId,
+              state: 'QUERY_STATE_COMPLETED',
+              is_execution_finished: true,
+              execution_ended_at: '2026-11-07T07:01:47Z',
+            };
+          }
+          polls += 1;
+          if (polls <= 2) {
+            return { execution_id: executionId, state: 'QUERY_STATE_EXECUTING', is_execution_finished: false };
+          }
+          if (polls <= 5) {
+            const error = new Error('Too many requests');
+            error.status = 429;
+            throw error;
+          }
+          return {
+            execution_id: executionId,
+            state: 'QUERY_STATE_COMPLETED',
+            is_execution_finished: true,
+            execution_ended_at: '2026-11-07T07:20:00Z',
+            execution_cost_credits: 12,
+          };
+        },
+        async rows() {
+          return {
+            rows: [
+              { date: '2026-11-07', token: 'TRYB', daily_transactions: '1', transfer_volume_usd: '9' },
+              { date: '2026-11-06', token: 'TRYB', daily_transactions: '4', transfer_volume_usd: '40' },
+            ],
+          };
+        },
+      },
+      now: time.now,
+      sleep: time.sleep,
+      previous: { data: { plasma: '2026-10-30|TRYB|1|1925.02' } },
+      state: {
+        queries: {
+          '6663259': {
+            network: 'plasma',
+            execution_id: '01M6TDWCFK4SQE352XNE6VBXVS',
+            state: 'QUERY_STATE_EXECUTING',
+            execution_ended_at: null,
+          },
+        },
+      },
+      jobWaitMs: 36 * 60 * 1000,
+      pollMs: 4_000,
+      minStartMs: 1_000,
+      concurrency: 1,
+      freshnessMs: FRESHNESS_MS,
+    });
+    assert.deepEqual(posts, []);
+    assert.equal(result.incomplete, false);
+    assert.equal(result.state.queries['6663259'].execution_id, '01M6TDWCFK4SQE352XNE6VBXVS');
+    assert.equal(result.state.queries['6663259'].state, 'QUERY_STATE_COMPLETED');
+    assert.equal(result.payload.data.plasma.includes('2026-11-06|TRYB|'), true);
+    assert.equal(result.payload.data.plasma.includes('2026-11-07'), false);
+    assert.equal(result.payload.coverage.exhaustive, false);
+    assert.match(result.payload.coverage.note, /not exhaustive/);
+  });
+
+  it('retries a 429 on latest results and executes Arc only after the read succeeds', async () => {
+    const posts = [];
+    let latestCalls = 0;
+    const time = clock(Date.parse('2026-11-07T07:17:40Z'));
+    const result = await runRefresh({
+      dune: {
+        async latest(id) {
+          if (id !== 8924650) {
+            return {
+              execution_id: `fresh-${id}`,
+              state: 'QUERY_STATE_COMPLETED',
+              execution_ended_at: '2026-11-07T07:01:47Z',
+            };
+          }
+          latestCalls += 1;
+          if (latestCalls <= 2) {
+            const error = new Error('Too many requests. Please upgrade your plan https://dune.com/pricing');
+            error.status = 429;
+            throw error;
+          }
+          return {
+            execution_id: 'old-arc',
+            state: 'QUERY_STATE_COMPLETED',
+            execution_ended_at: '2026-11-01T00:00:00Z',
+          };
+        },
+        async execute(id) {
+          posts.push(id);
+          return 'arc-new';
+        },
+        async status(executionId) {
+          return {
+            execution_id: executionId,
+            state: 'QUERY_STATE_COMPLETED',
+            is_execution_finished: true,
+            execution_ended_at: '2026-11-07T07:25:00Z',
+          };
+        },
+        async rows() {
+          return dayRows();
+        },
+      },
+      now: time.now,
+      sleep: time.sleep,
+      previous: { data: { arc: '2026-11-01|GBPA|6|50.59' } },
+      state: { queries: {} },
+      jobWaitMs: 36 * 60 * 1000,
+      pollMs: 4_000,
+      minStartMs: 1_000,
+      concurrency: 1,
+      freshnessMs: FRESHNESS_MS,
+    });
+    assert.equal(latestCalls, 3);
+    assert.deepEqual(posts, [8924650]);
+    assert.equal(result.state.queries['8924650'].execution_id, 'arc-new');
+    assert.equal(result.incomplete, false);
   });
 });

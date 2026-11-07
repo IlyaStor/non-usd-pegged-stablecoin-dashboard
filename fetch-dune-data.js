@@ -38,6 +38,7 @@ import {
   mergeState,
   networkUpdate,
   pollUntil,
+  rateLimitDelayMs,
 } from './lib/refresh-plan.js';
 
 const DUNE_BASE = 'https://api.dune.com/api/v1';
@@ -104,6 +105,8 @@ async function dune(path, { method = 'GET', body } = {}) {
       : (json.error?.message || text.slice(0, 300) || res.statusText);
     const err = new Error(`Dune ${method} ${path} -> ${res.status} ${message}`);
     err.status = res.status;
+    const retryAfter = Number(res.headers.get('retry-after'));
+    if (Number.isFinite(retryAfter) && retryAfter > 0) err.retryAfterMs = retryAfter * 1000;
     throw err;
   }
   return json;
@@ -164,6 +167,23 @@ function remember(bundle, patch) {
   return bundle.state;
 }
 
+async function retryRateLimit(queryId, label, fn, deps) {
+  let attempt = 0;
+  for (;;) {
+    try {
+      return await fn();
+    } catch (error) {
+      const delay = rateLimitDelayMs(error, attempt);
+      const remaining = deps.jobDeadline - deps.now();
+      if (delay == null || remaining <= 0) throw error;
+      attempt += 1;
+      const wait = Math.min(delay, remaining);
+      console.log(`  Query ${queryId} Dune ${error.status} on ${label}: ${error.message}. Waiting ${Math.round(wait / 1000)}s. Not starting an execution.`);
+      await deps.sleep(wait);
+    }
+  }
+}
+
 async function followExecution(queryId, executionId, deps, { reused, allowReplacement }) {
   const started = deps.now();
   const polled = await pollUntil({
@@ -186,6 +206,9 @@ async function followExecution(queryId, executionId, deps, { reused, allowReplac
     now: deps.now,
     deadlineMs: deps.jobDeadline,
     intervalMs: deps.pollMs,
+    onRetry: (error, delay) => {
+      console.log(`  Query ${queryId} Dune ${error.status} while polling ${executionId}: ${error.message}. Waiting ${Math.round(delay / 1000)}s. Not starting another execution.`);
+    },
   });
   const status = polled.status || {};
   const state = status.state || (polled.done ? null : 'QUERY_STATE_EXECUTING');
@@ -199,7 +222,8 @@ async function followExecution(queryId, executionId, deps, { reused, allowReplac
 
   if (!polled.done) {
     const waited = Math.round((deps.now() - started) / 1000);
-    console.log(`  Query ${queryId} still ${state} after ${waited}s (execution ${executionId}). Leaving it running; a re-run resumes this id and does not start another.`);
+    const detail = polled.error ? `: ${polled.error}` : '';
+    console.log(`  Query ${queryId} still ${state} after ${waited}s (execution ${executionId})${detail}. Leaving it running; a re-run resumes this id and does not start another.`);
     return {
       id: queryId,
       execution_id: executionId,
@@ -214,7 +238,12 @@ async function followExecution(queryId, executionId, deps, { reused, allowReplac
     if (status.execution_cost_credits != null && !reused) {
       console.log(`    Credits reported for ${queryId}: ${status.execution_cost_credits}`);
     }
-    const { rows } = await deps.dune.rows(status.execution_id || executionId);
+    const { rows } = await retryRateLimit(
+      queryId,
+      'result rows',
+      () => deps.dune.rows(status.execution_id || executionId),
+      deps,
+    );
     const ended = status.execution_ended_at ? normalizeIso(status.execution_ended_at) : null;
     const keptRows = dropPartialDays(rows, ended || new Date(deps.now()).toISOString());
     console.log(`  Query ${queryId}: ${rows.length} rows, ${keptRows.length} after dropping ${utcDay(ended) || 'the partial day'}`);
@@ -296,7 +325,7 @@ export async function resolveQuery(queryId, deps) {
     return followExecution(queryId, saved.execution_id, deps, { reused: false, allowReplacement: true });
   }
 
-  const latest = await deps.dune.latest(queryId);
+  const latest = await retryRateLimit(queryId, 'latest results', () => deps.dune.latest(queryId), deps);
   if (latest?.execution_ended_at) latest.execution_ended_at = normalizeIso(latest.execution_ended_at);
   const savedForDecision = saved?.execution_ended_at
     ? { ...saved, execution_ended_at: normalizeIso(saved.execution_ended_at) }
