@@ -34,7 +34,7 @@ The Actions secret must stay named `DUNE_API_KEY`.
 
 ## Verified additions
 
-35 verified token-network entries (8 tokens): 2 already in the published series, 3 listed in the saved Arc query but absent from that series, 10 in replacement SQL that is not yet the published series, 1 blocked with no sourced USD rate, 19 on chains this dashboard does not query.
+36 verified token-network entries (9 tokens): 2 already in the published series, 3 listed in the saved Arc query but absent from that series, 11 in replacement SQL that is not yet the published series, 1 blocked with no sourced USD rate, 16 on chains with candidate SQL but no query id, 3 on chains whose Dune dataset is unconfirmed.
 
 `registry/verified-additions.json` is a catalog of checked identities (sheet tab “Токены на добавление. 30.07”, 2026-11-07). The Registry tab reads that file and compares it with the symbols already in `data.json`. Catalog rows are not transfer history. They are not included in tracked volume, the hero total, or the coverage counts. `data.json` is unchanged by this catalog. Replacement SQL is not executed here.
 
@@ -78,6 +78,21 @@ Chains with no query id, and no tab added here: Ethereum (EURQ, EURCV, EURI, EUR
 BRMB has no CNY rate in FX_FALLBACK. Do not invent one. BRMB is excluded from the Stellar result. Do not invent a CNY rate. Its SAC is `CBD67SY7LMNGXVELAAAUX7LHADZFJ4CK6BHYW36XBHCDNHQP5QO3AKXR`.
 
 Also left out of the registry: unidentified SIDR, and the BRMB Ethereum issuer wallet (not a token contract).
+
+### Candidate networks, not live
+
+Candidate SQL lists only contracts already in `registry/verified-additions.json`. It does not add a network that has no verified row, and it does not invent extra deployments. Candidate queries are not attached to the refresh job. There is no query id for them. `fetch-dune-data.js` still runs only the eight existing ids, about every 2 days. A one-day filter does not cap Dune credits. Do not save a one-day validation query onto a refreshed query id. This pull request does not execute Dune queries. The datasets search API requires a key, so it was not called.
+
+| Chain | Registry rows | Preparation |
+| --- | ---: | --- |
+| Ethereum, Base, Arbitrum, Optimism | 11 | `sql/candidates/evm_tokens_transfers_365.sql` and `sql/validation/evm_tokens_transfers_one_day.sql`. Public `tokens_evm.transfers`. `amount` is already decimal-adjusted. |
+| Tempo | 3 | `sql/candidates/tempo_logs_365.sql`. Raw `tempo.logs`, standard Transfer topic only. TransferWithMemo is documented but its topic hash is not, so it is not counted. |
+| XRP Ledger | 2 | `sql/candidates/xrpl_transfers_365.sql`. Public `xrpl.transfers`. Decimals stay `n/a`. USD only when `delivered_amount_currency_iso` is `EUR`. |
+| Algorand, Xahau, Adi Chain | 3 | Algorand, Xahau, and Adi Chain datasets are unconfirmed. This is not a claim that Dune will never index them. No SQL. |
+
+Plasma query [6663259](https://dune.com/queries/6663259) keeps EUROP and TRYB and adds Circle EURC `0x3ee196e78d4d4248b849b8e1c7f44c5457fafd2c`, decimals 6. The prepared files are `sql/replacements/6663259_plasma.sql` and `sql/validation/6663259_one_day.sql`. CHF was not confirmed on Plasma. No CHF placeholder was added. EURR on Plasma is inactive and was not added. Its address is `0xC60BCA6BD5790611B8A302D4C5DF37D769C81121`.
+
+The one-day files for the existing replacements are `sql/validation/6614895_one_day.sql`, `sql/validation/6689171_one_day.sql`, `sql/validation/6712377_one_day.sql`, `sql/validation/8748306_one_day.sql`, and `sql/validation/6663259_one_day.sql`. The 365-day text stays beside them. This repository does not execute those files and does not attach them to the two-day refresh. A one-day filter does not cap Dune credits. Do not save a one-day validation query onto a refreshed query id.
 
 ## Local preview
 

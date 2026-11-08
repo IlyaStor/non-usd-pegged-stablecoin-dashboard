@@ -709,6 +709,29 @@
         "Solana getAccountInfo -> Token-2022 mint, decimals 6, CHFAU"
       ],
       "verified_onchain": true
+    },
+    {
+      "sheet_row": null,
+      "token": "EURC",
+      "network": "Plasma",
+      "address": "0x3ee196e78d4d4248b849b8e1c7f44c5457fafd2c",
+      "peg": "Euro",
+      "issuer_site": "https://www.circle.com/blog/now-available-usdc-eurc-cctp-and-bridge-kit-on-plasma",
+      "explorer": "https://plasmascan.to/token/0x3ee196e78d4d4248b849b8e1c7f44c5457fafd2c",
+      "decimals": 6,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "plasma",
+      "chain_id": 9745,
+      "standard": "ERC-20",
+      "onchain_symbol": "EURC",
+      "sources": [
+        "https://www.circle.com/blog/now-available-usdc-eurc-cctp-and-bridge-kit-on-plasma",
+        "https://plasmascan.to/token/0x3ee196e78d4d4248b849b8e1c7f44c5457fafd2c",
+        "rpc.plasma.to 2026-11-08: chainId 9745, symbol EURC, decimals 6"
+      ],
+      "verified_onchain": true,
+      "native_or_bridged": "native (Circle-issued)"
     }
   ],
   "exclusions": [
@@ -731,6 +754,16 @@
       "token": "EURITE",
       "network": "Polygon",
       "reason": "The address previously labeled EURITE on Polygon resolved to PHT Stablecoin. EURI is not on Polygon in this registry. The existing PHT series is unchanged."
+    },
+    {
+      "token": "EURR",
+      "network": "Plasma",
+      "reason": "Deployed at 0xC60BCA6BD5790611B8A302D4C5DF37D769C81121 with total supply 0 and 0 transfers on 2026-11-08. Inactive. Not added."
+    },
+    {
+      "token": "CHF",
+      "network": "Plasma",
+      "reason": "No CHF stablecoin was confirmed on Plasma. No placeholder was added."
     }
   ]
 }

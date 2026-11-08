@@ -1038,7 +1038,7 @@ function renderKPIs(){
       {l:'Verified catalog',v:summary.entries,s:`${summary.tokens} tokens · not volume`,c:NET_COLOR.registry},
       {l:'In published series',v:summary.live,s:'left unchanged',c:'#34D399'},
       {l:'Waiting on Dune',v:summary.pendingDune+summary.listedInRepoSql+summary.blockedNoFx,s:`${summary.pendingDune} in replacement SQL · ${summary.listedInRepoSql} in saved Arc SQL · ${summary.blockedNoFx} no CNY rate`,c:NET_COLOR.registry},
-      {l:'No dashboard chain',v:summary.unsupported,s:'no query id added',c:'#9CA3AF'},
+      {l:'No live chain yet',v:summary.newChainPending+summary.datasetUnconfirmed+summary.unsupported,s:`${summary.newChainPending} candidate SQL, no query id · ${summary.datasetUnconfirmed} dataset unconfirmed`,c:'#9CA3AF'},
     ]:[
       {l:'Verified catalog',v:'…',s:'not volume',c:NET_COLOR.registry},
       {l:'In published series',v:'…',s:'left unchanged',c:'#34D399'},

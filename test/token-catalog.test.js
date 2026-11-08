@@ -34,20 +34,22 @@ function rows(status) {
 }
 
 describe('verified registry', () => {
-  it('keeps 35 entries and 8 tokens, with no invariant failures', () => {
-    assert.equal(registry.entries.length, 35);
-    assert.equal(new Set(registry.entries.map(entry => entry.token)).size, 8);
+  it('keeps 36 entries and 9 tokens, with no invariant failures', () => {
+    assert.equal(registry.entries.length, 36);
+    assert.equal(new Set(registry.entries.map(entry => entry.token)).size, 9);
     assert.deepEqual(report.issues, []);
     assert.deepEqual(report.summary, {
-      entries: 35,
-      tokens: 8,
+      entries: 36,
+      tokens: 9,
       live: 2,
       listedInRepoSql: 3,
-      pendingDune: 10,
+      pendingDune: 11,
       blockedNoFx: 1,
-      unsupported: 19,
-      notInPublishedSeries: 33,
-      sentence: '35 verified token-network entries (8 tokens): 2 already in the published series, 3 listed in the saved Arc query but absent from that series, 10 in replacement SQL that is not yet the published series, 1 blocked with no sourced USD rate, 19 on chains this dashboard does not query.',
+      newChainPending: 16,
+      datasetUnconfirmed: 3,
+      unsupported: 0,
+      notInPublishedSeries: 34,
+      sentence: '36 verified token-network entries (9 tokens): 2 already in the published series, 3 listed in the saved Arc query but absent from that series, 11 in replacement SQL that is not yet the published series, 1 blocked with no sourced USD rate, 16 on chains with candidate SQL but no query id, 3 on chains whose Dune dataset is unconfirmed.',
     });
     assert.equal(readme.includes(report.summary.sentence), true);
   });
@@ -57,7 +59,9 @@ describe('verified registry', () => {
     for (const banned of ['SEKAU|solana', 'SIDR|ethereum', 'BRMB|ethereum', 'EURITE|polygon']) {
       assert.equal(present.includes(banned), false, banned);
     }
-    assert.equal(registry.exclusions.length, 4);
+    assert.equal(registry.exclusions.length, 6);
+    assert.equal(present.includes('EURR|plasma'), false);
+    assert.equal(present.includes('EURC|plasma'), true);
   });
 
   it('keeps issued-currency decimals as n/a and EURITE as EURI', () => {
@@ -185,11 +189,15 @@ describe('Dune SQL preparation', () => {
     for (const fact of ACTIVATION_FACTS) {
       assert.equal(readme.includes(fact), true, fact);
     }
-    assert.equal(rows(STATUS.PENDING_DUNE).length, 10);
+    assert.equal(rows(STATUS.PENDING_DUNE).length, 11);
+    assert.equal(rows(STATUS.PENDING_DUNE).some(row => row.analyticsSymbol === 'EURC' && row.dashboardNetwork === 'plasma'), true);
     assert.equal(rows(STATUS.BLOCKED_NO_FX).length, 1);
     assert.equal(rows(STATUS.BLOCKED_NO_FX)[0].analyticsSymbol, 'BRMB');
-    assert.equal(rows(STATUS.UNSUPPORTED_CHAIN).length, 19);
-    for (const row of rows(STATUS.UNSUPPORTED_CHAIN)) assert.deepEqual(row.queryIds, []);
+    assert.equal(rows(STATUS.NEW_CHAIN_PENDING).length, 16);
+    assert.equal(rows(STATUS.DATASET_UNCONFIRMED).length, 3);
+    assert.equal(rows(STATUS.UNSUPPORTED_CHAIN).length, 0);
+    for (const row of rows(STATUS.NEW_CHAIN_PENDING)) assert.deepEqual(row.queryIds, []);
+    for (const row of rows(STATUS.DATASET_UNCONFIRMED)) assert.deepEqual(row.queryIds, []);
     for (const row of rows(STATUS.PENDING_DUNE)) {
       assert.ok(row.queryIds.length > 0);
       for (const id of row.queryIds) assert.equal(KNOWN_QUERY_IDS.has(id), true);
