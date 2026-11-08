@@ -147,10 +147,20 @@ describe('one-day copies of the four existing replacements', () => {
     assert.equal(plasma.includes('0x90729a45948c3078890Bc80F2a4e7870A2Ea4C5E'), true);
     assert.equal(plasma.includes('0xC60BCA6BD5790611B8A302D4C5DF37D769C81121'), false);
     assert.equal(/CHF/i.test(plasma), false);
+    assert.equal(plasma.includes("'EUROP', 6, 1.18"), true);
+    assert.equal(plasma.includes("'EURC',  6, 1.18"), true);
+    assert.equal(plasma.includes("'TRYB',  6, 0.023"), true);
+    assert.equal(plasma.includes('prices.day'), false);
+    assert.equal(plasma.includes('COUNT(*)'), true);
+    const plasmaDay = code(read('sql/validation/6663259_one_day.sql'));
+    assert.equal(plasmaDay.includes("CAST(e.evt_block_time AS DATE) = DATE '2026-11-06'"), true);
+    assert.equal(plasmaDay.includes('prices.day'), false);
     for (const item of VALIDATION_OF_EXISTING) {
       const text = code(read(item.file));
-      assert.equal(text.includes("TIMESTAMP '2026-11-06 00:00:00'"), true, item.file);
-      assert.equal(text.includes("TIMESTAMP '2026-11-07 00:00:00'"), true, item.file);
+      if (item.queryId !== 6663259) {
+        assert.equal(text.includes("TIMESTAMP '2026-11-06 00:00:00'"), true, item.file);
+        assert.equal(text.includes("TIMESTAMP '2026-11-07 00:00:00'"), true, item.file);
+      }
       assert.equal(text.includes("INTERVAL '365' DAY"), false, item.file);
       assert.equal(Object.values(QUERIES).flat().includes(item.queryId), true);
     }
