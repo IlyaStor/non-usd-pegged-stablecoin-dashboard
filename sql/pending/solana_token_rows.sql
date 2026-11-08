@@ -1,14 +1,4 @@
--- PENDING — NOT EXECUTABLE.
--- The live query SQL for this chain is not in the repository.
--- Source tables and filters are unverified. Do not run this file.
--- Do not create a new Dune query id. Edit the existing query named below.
--- Do not insert zero-volume history. Days with no transfers stay absent.
--- Chain: Solana. Existing Dune query id: 6689171.
--- EURCV mint DghpMkatCiUsofbTmid3M3kAbDTPqDwKiYHnudXeGG52 is already in the published Solana series. Do not add it again.
--- Confirm the saved query uses that mint before saving.
--- SEKAU on Solana is not in the verified registry. The candidate issuer address resolved to a program, not a mint. Do not add it.
--- Match the mint standard already used by query 6689171. These mints are Token-2022.
--- EURAU | Token-2022 mint 9pCWprxbZMW2rYSMhPTeoyLMV2sN2WJqshdT7DQVt6hS | decimals 6 | fx_usd 1.1206 from FX_FALLBACK.EURAU. This is the existing dashboard fallback, not a new price feed.
---   suggested series code: EURAU
--- CHFAU | Token-2022 mint 3GJfXJvPcjuAu6VQZmcs9pAXQau8nz3z88CCpBztgQSv | decimals 6 | fx_usd 1.20326 from FX_FALLBACK.CHFAU. This is the existing dashboard fallback, not a new price feed.
---   suggested series code: CHFAU
+-- SUPERSEDED — NOT EXECUTABLE.
+-- The full replacement query is sql/replacements/6689171_solana.sql.
+-- Do not create a new Dune query id.
+-- Do not insert zero-volume history.

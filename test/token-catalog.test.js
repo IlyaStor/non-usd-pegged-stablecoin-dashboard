@@ -43,10 +43,11 @@ describe('verified registry', () => {
       tokens: 8,
       live: 2,
       listedInRepoSql: 3,
-      pendingDune: 11,
+      pendingDune: 10,
+      blockedNoFx: 1,
       unsupported: 19,
       notInPublishedSeries: 33,
-      sentence: '35 verified token-network entries (8 tokens): 2 already in the published series, 3 listed in the repo Arc SQL but absent from that series, 11 pending an edit to an existing Dune query, 19 on chains this dashboard does not query.',
+      sentence: '35 verified token-network entries (8 tokens): 2 already in the published series, 3 listed in the saved Arc query but absent from that series, 10 in replacement SQL that is not yet the published series, 1 blocked with no sourced USD rate, 19 on chains this dashboard does not query.',
     });
     assert.equal(readme.includes(report.summary.sentence), true);
   });
@@ -163,30 +164,16 @@ describe('Dune SQL preparation', () => {
     );
   });
 
-  it('writes non-executable pending notes for chains whose SQL is not in the repo', () => {
-    const files = pendingSqlFiles(registry);
+  it('points the old pending notes at the full replacement files', () => {
+    const files = pendingSqlFiles();
     for (const [path, text] of Object.entries(files)) {
       assert.equal(readFileSync(path, 'utf8'), text, path);
-      assert.equal(text.startsWith('-- PENDING — NOT EXECUTABLE.'), true);
+      assert.equal(text.startsWith('-- SUPERSEDED — NOT EXECUTABLE.'), true);
       assert.equal(/\bFROM\b/.test(text), false, path);
       assert.equal(text.includes('Do not create a new Dune query id.'), true);
       assert.equal(text.includes('Do not insert zero-volume history.'), true);
+      assert.equal(text.includes('sql/replacements/'), true);
     }
-    const polygon = files['sql/pending/polygon_token_rows.sql'];
-    assert.equal(polygon.includes('0x4933a85b5b5466fbaf179f72d3de273c287ec2c2'), true);
-    assert.equal(polygon.includes("('Euro - EURQ'"), false);
-    const bsc = files['sql/pending/bsc_token_rows.sql'];
-    assert.equal(bsc.includes("('Euro - EURI'"), true);
-    assert.equal(bsc.includes('EURITE'), true);
-    const solana = files['sql/pending/solana_token_rows.sql'];
-    assert.equal(solana.includes('DghpMkatCiUsofbTmid3M3kAbDTPqDwKiYHnudXeGG52'), true);
-    assert.equal(solana.includes('9pCWprxbZMW2rYSMhPTeoyLMV2sN2WJqshdT7DQVt6hS'), true);
-    assert.equal(/^-- EURCV \|/m.test(solana), false);
-    const stellar = files['sql/pending/stellar_token_rows.sql'];
-    assert.equal(stellar.includes('SEP-41 contract CB44W727WSLHPXJ47A6DHF5D34RKWSOZAMEDXO3CF5TEEEQ2ZX4V3VRI'), true);
-    assert.equal(stellar.includes('classic issuer GCA6KZBWPBOEF6M2MZBTXRMKLMWRZOUCL2JFSIDT3WTDBOFIVDC4C4CE'), true);
-    assert.equal(stellar.includes('SAC contract CAA56M3OKR2IHHJB4ZAUPAJDYOGFXSVYN6NFJGN7PJN4NUMRKSDFABYI'), true);
-    assert.equal(stellar.includes('fx_usd PENDING'), true);
   });
 
   it('points manual edits only at query ids the refresh already runs', () => {
@@ -198,7 +185,9 @@ describe('Dune SQL preparation', () => {
     for (const fact of ACTIVATION_FACTS) {
       assert.equal(readme.includes(fact), true, fact);
     }
-    assert.equal(rows(STATUS.PENDING_DUNE).length, 11);
+    assert.equal(rows(STATUS.PENDING_DUNE).length, 10);
+    assert.equal(rows(STATUS.BLOCKED_NO_FX).length, 1);
+    assert.equal(rows(STATUS.BLOCKED_NO_FX)[0].analyticsSymbol, 'BRMB');
     assert.equal(rows(STATUS.UNSUPPORTED_CHAIN).length, 19);
     for (const row of rows(STATUS.UNSUPPORTED_CHAIN)) assert.deepEqual(row.queryIds, []);
     for (const row of rows(STATUS.PENDING_DUNE)) {

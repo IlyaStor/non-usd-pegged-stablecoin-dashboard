@@ -346,7 +346,7 @@ td.first{color:var(--text)}
   padding:2px 6px;border-radius:4px;border:1px solid var(--border);
 }
 .status-live{color:#34D399}
-.status-sql,.status-pending{color:#FBBF24}
+.status-sql,.status-pending,.status-blocked{color:#FBBF24}
 .status-unsupported{color:var(--text-3)}
 .registry-steps{margin-top:18px;color:var(--text-2);font-size:12px;line-height:1.55}
 .registry-steps h2{font-size:13px;color:var(--text);margin:16px 0 8px;font-weight:650}
@@ -1037,7 +1037,7 @@ function renderKPIs(){
     const items=summary?[
       {l:'Verified catalog',v:summary.entries,s:`${summary.tokens} tokens · not volume`,c:NET_COLOR.registry},
       {l:'In published series',v:summary.live,s:'left unchanged',c:'#34D399'},
-      {l:'Waiting on Dune',v:summary.pendingDune+summary.listedInRepoSql,s:`${summary.pendingDune} query edits · ${summary.listedInRepoSql} in Arc SQL only`,c:NET_COLOR.registry},
+      {l:'Waiting on Dune',v:summary.pendingDune+summary.listedInRepoSql+summary.blockedNoFx,s:`${summary.pendingDune} in replacement SQL · ${summary.listedInRepoSql} in saved Arc SQL · ${summary.blockedNoFx} no CNY rate`,c:NET_COLOR.registry},
       {l:'No dashboard chain',v:summary.unsupported,s:'no query id added',c:'#9CA3AF'},
     ]:[
       {l:'Verified catalog',v:'…',s:'not volume',c:NET_COLOR.registry},
