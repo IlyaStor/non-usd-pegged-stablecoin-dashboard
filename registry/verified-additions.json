@@ -1,0 +1,769 @@
+{
+  "kind": "verified-token-registry",
+  "description": "Identities checked for the sheet tab \"Токены на добавление. 30.07\" on 2026-11-07. This file is a catalog. It is not live transfer history and it is not a claim that the dashboard already tracks these deployments.",
+  "verified_on": "2026-11-07",
+  "sheet_tab": "Токены на добавление. 30.07",
+  "entries": [
+    {
+      "sheet_row": 2,
+      "token": "EURQ",
+      "network": "Eth",
+      "address": "0x8dF723295214Ea6f21026eeEb4382d475f146F9f",
+      "peg": "Euro",
+      "issuer_site": "https://www.quantoz.com/",
+      "explorer": "https://etherscan.io/token/0x8df723295214ea6f21026eeeb4382d475f146f9f",
+      "decimals": 6,
+      "regulator": "DNB (Netherlands)",
+      "auditor": "Unidentified",
+      "chain_slug": "ethereum",
+      "standard": "ERC-20",
+      "sources": [
+        "https://www.quantoz.com/tokens/",
+        "eth_call decimals()/symbol() ethereum-rpc.publicnode.com -> 6, EURQ"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 3,
+      "token": "EURQ",
+      "network": "Polygon",
+      "address": "0xd571edb2ef29df10fcd6200fd6d0ed2389983db3",
+      "peg": "Euro",
+      "issuer_site": "https://www.quantoz.com/",
+      "explorer": "https://polygonscan.com/token/0xd571edb2ef29df10fcd6200fd6d0ed2389983db3",
+      "decimals": 6,
+      "regulator": "DNB (Netherlands)",
+      "auditor": "Unidentified",
+      "chain_slug": "polygon",
+      "standard": "ERC-20",
+      "sources": [
+        "https://www.quantoz.com/tokens/",
+        "eth_call polygon-bor-rpc.publicnode.com -> 6, EURQ"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 4,
+      "token": "EURQ",
+      "network": "Algorand",
+      "address": "2768422954",
+      "peg": "Euro",
+      "issuer_site": "https://www.quantoz.com/",
+      "explorer": "https://allo.info/asset/2768422954",
+      "decimals": 6,
+      "regulator": "DNB (Netherlands)",
+      "auditor": "Unidentified",
+      "chain_slug": "algorand",
+      "standard": "ASA",
+      "sources": [
+        "https://www.quantoz.com/tokens/",
+        "https://mainnet-idx.algonode.cloud/v2/assets/2768422954 -> unit EURQ, decimals 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 5,
+      "token": "EURQ",
+      "network": "XRP",
+      "address": "rDk1xiArDMjDqnrR2yWypwQAKg4mKnQYvs",
+      "peg": "Euro",
+      "issuer_site": "https://www.quantoz.com/",
+      "explorer": "https://livenet.xrpl.org/accounts/rDk1xiArDMjDqnrR2yWypwQAKg4mKnQYvs",
+      "decimals": "n/a",
+      "regulator": "DNB (Netherlands)",
+      "auditor": "Unidentified",
+      "chain_slug": "xrpl",
+      "standard": "XRPL issued currency",
+      "currency_code_hex": "4555525100000000000000000000000000000000",
+      "issuer": "rDk1xiArDMjDqnrR2yWypwQAKg4mKnQYvs",
+      "sources": [
+        "https://www.quantoz.com/tokens/ (issuer + currency code 4555525100000000000000000000000000000000)",
+        "https://xrpl.org/docs/references/protocol/data-types/currency-formats (issued currencies: no fixed decimals)"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 6,
+      "token": "EURQ",
+      "network": "Stellar",
+      "address": "GCA6KZBWPBOEF6M2MZBTXRMKLMWRZOUCL2JFSIDT3WTDBOFIVDC4C4CE",
+      "peg": "Euro",
+      "issuer_site": "https://www.quantoz.com/",
+      "explorer": "https://stellar.expert/explorer/public/asset/EURQ-GCA6KZBWPBOEF6M2MZBTXRMKLMWRZOUCL2JFSIDT3WTDBOFIVDC4C4CE-1",
+      "decimals": 7,
+      "regulator": "DNB (Netherlands)",
+      "auditor": null,
+      "chain_slug": "stellar",
+      "standard": "Stellar classic asset",
+      "asset_code": "EURQ",
+      "issuer": "GCA6KZBWPBOEF6M2MZBTXRMKLMWRZOUCL2JFSIDT3WTDBOFIVDC4C4CE",
+      "sac_contract": "CAA56M3OKR2IHHJB4ZAUPAJDYOGFXSVYN6NFJGN7PJN4NUMRKSDFABYI",
+      "sources": [
+        "https://www.quantoz.com/tokens/",
+        "https://quantozpay.com/.well-known/stellar.toml",
+        "horizon.stellar.org/assets?asset_issuer= -> EURQ",
+        "Stellar classic assets: 7-digit precision"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 7,
+      "token": "EURQ",
+      "network": "Xahau",
+      "address": "rDk1xiArDMjDqnrR2yWypwQAKg4mKnQYvs",
+      "peg": "Euro",
+      "issuer_site": "https://www.quantoz.com/",
+      "explorer": "https://xahauexplorer.com/account/rDk1xiArDMjDqnrR2yWypwQAKg4mKnQYvs",
+      "decimals": "n/a",
+      "regulator": "DNB (Netherlands)",
+      "auditor": null,
+      "chain_slug": "xahau",
+      "standard": "Xahau issued currency",
+      "currency_code_hex": "4555525100000000000000000000000000000000",
+      "issuer": "rDk1xiArDMjDqnrR2yWypwQAKg4mKnQYvs",
+      "sources": [
+        "https://www.quantoz.com/tokens/ (issuer + currency code)"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 8,
+      "token": "EURCV",
+      "network": "Stellar",
+      "address": "CANKBYNNAYKEZXLB655F2UPNTAZFK5HILZUXL7ZTFR3NF6LKDSVY7KFH",
+      "peg": "Euro",
+      "issuer_site": "https://www.sgforge.com/product/coinvertible/",
+      "explorer": "https://stellar.expert/explorer/public/asset/EURCV-GCEYGIVOLAVBF2TG2RUSGTUJCIN75KEX3NGLMY4VPL4GFE5L355AXW3G-2",
+      "decimals": 7,
+      "regulator": "ACPR (France)",
+      "auditor": "Hacken",
+      "chain_slug": "stellar",
+      "standard": "Stellar classic asset + SAC",
+      "asset_code": "EURCV",
+      "issuer": "GCEYGIVOLAVBF2TG2RUSGTUJCIN75KEX3NGLMY4VPL4GFE5L355AXW3G",
+      "sources": [
+        "SG Forge EURCV white paper (issuer GCEYGI…, code EURCV)",
+        "Soroban simulate decimals() on CANKB… -> 7, name EURCV:GCEYGI… (SAC)"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 9,
+      "token": "EURCV",
+      "network": "Solana",
+      "address": "DghpMkatCiUsofbTmid3M3kAbDTPqDwKiYHnudXeGG52",
+      "peg": "Euro",
+      "issuer_site": "https://www.sgforge.com/product/coinvertible/",
+      "explorer": "https://solscan.io/token/DghpMkatCiUsofbTmid3M3kAbDTPqDwKiYHnudXeGG52",
+      "decimals": 2,
+      "regulator": "ACPR (France)",
+      "auditor": "Hacken",
+      "chain_slug": "solana",
+      "standard": "Token-2022",
+      "sources": [
+        "SG Forge EURCV white paper",
+        "Solana getAccountInfo -> Token-2022 mint, decimals 2"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 10,
+      "token": "EURCV",
+      "network": "XRP",
+      "address": "rUNaS5sqRuxZz6V7rBGhoSaZiVYA3ut4UL",
+      "peg": "Euro",
+      "issuer_site": "https://www.sgforge.com/product/coinvertible/",
+      "explorer": "https://bithomp.com/account/rUNaS5sqRuxZz6V7rBGhoSaZiVYA3ut4UL",
+      "decimals": "n/a",
+      "regulator": "ACPR (France)",
+      "auditor": "Hacken",
+      "chain_slug": "xrpl",
+      "standard": "XRPL issued currency",
+      "currency_code_hex": "4555524356000000000000000000000000000000",
+      "issuer": "rUNaS5sqRuxZz6V7rBGhoSaZiVYA3ut4UL",
+      "sources": [
+        "SG Forge EURCV white paper (issuer + token code 4555524356000000000000000000000000000000)",
+        "https://xrpl.org/docs/references/protocol/data-types/currency-formats"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 11,
+      "token": "EURCV",
+      "network": "Eth",
+      "address": "0x5F7827FDeb7c20b443265Fc2F40845B715385Ff2",
+      "peg": "Euro",
+      "issuer_site": "https://www.sgforge.com/product/coinvertible/",
+      "explorer": "https://etherscan.io/token/0x5F7827FDeb7c20b443265Fc2F40845B715385Ff2",
+      "decimals": 18,
+      "regulator": "ACPR (France)",
+      "auditor": "Hacken",
+      "chain_slug": "ethereum",
+      "standard": "ERC-20",
+      "sources": [
+        "SG Forge EURCV white paper",
+        "eth_call -> 18, EURCV"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 12,
+      "token": "EURITE",
+      "network": "Eth",
+      "address": "0x9d1A7A3191102e9F900Faa10540837ba84dCBAE7",
+      "peg": "Euro",
+      "issuer_site": "https://www.eurite.com/",
+      "explorer": "https://etherscan.io/token/0x9d1a7a3191102e9f900faa10540837ba84dcbae7",
+      "decimals": 18,
+      "regulator": "CSSF (Luxembourg)",
+      "auditor": "PeckShield (smart contract audit)",
+      "chain_slug": "ethereum",
+      "standard": "ERC-20",
+      "onchain_symbol": "EURI",
+      "sources": [
+        "https://www.eurite.com/ (ERC-20 + BEP-20; CSSF; PeckShield audit)",
+        "eth_call -> 18, EURI"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 13,
+      "token": "EURITE",
+      "network": "BNB Chain",
+      "address": "0x9d1A7A3191102e9F900Faa10540837ba84dCBAE7",
+      "peg": "Euro",
+      "issuer_site": "https://www.eurite.com/",
+      "explorer": "https://bscscan.com/token/0x9d1a7a3191102e9f900faa10540837ba84dcbae7",
+      "decimals": 18,
+      "regulator": "CSSF (Luxembourg)",
+      "auditor": "PeckShield (smart contract audit)",
+      "chain_slug": "bnb",
+      "standard": "BEP-20",
+      "onchain_symbol": "EURI",
+      "sources": [
+        "https://www.eurite.com/ + EURI white paper (ETH & BSC only)",
+        "eth_call bsc-rpc.publicnode.com -> 18, EURI"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 14,
+      "token": "DDSC",
+      "network": "Adi Chain",
+      "address": "0x1211f0cfe66739433c1330e21f4951b80e813479",
+      "peg": "Dirham",
+      "issuer_site": "https://www.ddsc.ai/",
+      "explorer": "https://explorer.adifoundation.ai/address/0x1211f0cfe66739433c1330e21f4951B80E813479",
+      "decimals": 6,
+      "regulator": "CBUAE (UAE)",
+      "auditor": null,
+      "chain_slug": "adi",
+      "standard": "ERC-20",
+      "sources": [
+        "https://docs.adi.foundation/how-to-start/network-contracts",
+        "https://docs.adi.foundation/how-to-start/block-explorer",
+        "https://www.ddsc.ai/ (CBUAE SVF + PTSR licences)",
+        "eth_call rpc.adifoundation.ai -> 6, DDSC"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 18,
+      "token": "BRMB",
+      "network": "Stellar",
+      "address": "GBVXEEYTHW4PUHVOOSEUPS4TTKVRU7XDZJIKAIZRG2H2XU7YWDEFKNTP",
+      "peg": "Chinese Yuan",
+      "issuer_site": "https://bullionblock.io/#heading-14",
+      "explorer": "https://stellar.expert/explorer/public/asset/BRMB-GBVXEEYTHW4PUHVOOSEUPS4TTKVRU7XDZJIKAIZRG2H2XU7YWDEFKNTP-1",
+      "decimals": 7,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "stellar",
+      "standard": "Stellar classic asset",
+      "asset_code": "BRMB",
+      "issuer": "GBVXEEYTHW4PUHVOOSEUPS4TTKVRU7XDZJIKAIZRG2H2XU7YWDEFKNTP",
+      "sac_contract": "CBD67SY7LMNGXVELAAAUX7LHADZFJ4CK6BHYW36XBHCDNHQP5QO3AKXR",
+      "sources": [
+        "https://bullionblock.io/.well-known/stellar.toml (code BRMB, issuer GBVX…, anchor CNY)",
+        "horizon.stellar.org/assets -> BRMB",
+        "Stellar classic assets: 7-digit precision"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 30,
+      "token": "EURAU",
+      "network": "Eth",
+      "address": "0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://etherscan.io/token/0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "ethereum",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6, EURAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 31,
+      "token": "EURAU",
+      "network": "Polygon",
+      "address": "0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://polygonscan.com/token/0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "polygon",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 32,
+      "token": "EURAU",
+      "network": "Base",
+      "address": "0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://basescan.org/token/0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "base",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 33,
+      "token": "EURAU",
+      "network": "Arbitrum",
+      "address": "0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://arbiscan.io/token/0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "arbitrum",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 34,
+      "token": "EURAU",
+      "network": "Optimism",
+      "address": "0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://optimistic.etherscan.io/token/0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "optimism",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 35,
+      "token": "EURAU",
+      "network": "BNB Chain",
+      "address": "0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://bscscan.com/token/0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "bnb",
+      "standard": "BEP-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 36,
+      "token": "EURAU",
+      "network": "Arc",
+      "address": "0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://arc-scan.org/address/0x4933a85b5b5466fbaf179f72d3de273c287ec2c2",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "arc",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call rpc.mainnet.arc.io -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 37,
+      "token": "EURAU",
+      "network": "Tempo",
+      "address": "0x20c0000000000000000000009A4a4b17E0Dc6651",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": null,
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "tempo",
+      "standard": "TIP-20",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "eth_call rpc.tempo.xyz -> 6, EURAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 38,
+      "token": "EURAU",
+      "network": "Solana",
+      "address": "9pCWprxbZMW2rYSMhPTeoyLMV2sN2WJqshdT7DQVt6hS",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://explorer.solana.com/address/9pCWprxbZMW2rYSMhPTeoyLMV2sN2WJqshdT7DQVt6hS",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "solana",
+      "standard": "Token-2022",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "Solana getAccountInfo -> Token-2022 mint, decimals 6, EURAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 39,
+      "token": "EURAU",
+      "network": "Stellar",
+      "address": "CB44W727WSLHPXJ47A6DHF5D34RKWSOZAMEDXO3CF5TEEEQ2ZX4V3VRI",
+      "peg": "Euro",
+      "issuer_site": "https://allunity.com/eurau",
+      "explorer": "https://stellar.expert/explorer/public/contract/CB44W727WSLHPXJ47A6DHF5D34RKWSOZAMEDXO3CF5TEEEQ2ZX4V3VRI",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "stellar",
+      "standard": "SEP-41",
+      "sources": [
+        "https://allunity.com/eurau (Supported blockchains)",
+        "https://allunity.com/eurau (BaFin-licensed EMI, MiCAR)",
+        "Soroban simulate decimals() -> 6, EURAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 40,
+      "token": "SEKAU",
+      "network": "Eth",
+      "address": "0x0297B579B0CB603B5eE814EB7322b960D3ae7A66",
+      "peg": "Swedish Krona",
+      "issuer_site": "https://allunity.com/sekau",
+      "explorer": "https://etherscan.io/token/0x0297B579B0CB603B5eE814EB7322b960D3ae7A66",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "ethereum",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/sekau (Supported blockchains)",
+        "https://allunity.com/sekau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6, SEKAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 41,
+      "token": "SEKAU",
+      "network": "Polygon",
+      "address": "0x0297B579B0CB603B5eE814EB7322b960D3ae7A66",
+      "peg": "Swedish Krona",
+      "issuer_site": "https://allunity.com/sekau",
+      "explorer": "https://polygonscan.com/token/0x0297B579B0CB603B5eE814EB7322b960D3ae7A66",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "polygon",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/sekau (Supported blockchains)",
+        "https://allunity.com/sekau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 42,
+      "token": "SEKAU",
+      "network": "Base",
+      "address": "0x0297B579B0CB603B5eE814EB7322b960D3ae7A66",
+      "peg": "Swedish Krona",
+      "issuer_site": "https://allunity.com/sekau",
+      "explorer": "https://basescan.org/token/0x0297B579B0CB603B5eE814EB7322b960D3ae7A66",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "base",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/sekau (Supported blockchains)",
+        "https://allunity.com/sekau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 43,
+      "token": "SEKAU",
+      "network": "Arc",
+      "address": "0xf8524b5ab17d5eca2f78abe8377ceffd323b1dc1",
+      "peg": "Swedish Krona",
+      "issuer_site": "https://allunity.com/sekau",
+      "explorer": "https://arc-scan.org/address/0xf8524b5ab17d5eca2f78abe8377ceffd323b1dc1",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "arc",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/sekau (Supported blockchains)",
+        "https://allunity.com/sekau (BaFin-licensed EMI, MiCAR)",
+        "eth_call rpc.mainnet.arc.io -> 6, SEKAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 44,
+      "token": "SEKAU",
+      "network": "Tempo",
+      "address": "0x20c0000000000000000000002E2829D90e7Da7Fa",
+      "peg": "Swedish Krona",
+      "issuer_site": "https://allunity.com/sekau",
+      "explorer": null,
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "tempo",
+      "standard": "TIP-20",
+      "sources": [
+        "https://allunity.com/sekau (Supported blockchains)",
+        "https://allunity.com/sekau (BaFin-licensed EMI, MiCAR)",
+        "eth_call rpc.tempo.xyz -> 6, SEKAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 45,
+      "token": "CHFAU",
+      "network": "Eth",
+      "address": "0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78",
+      "peg": "Swiss Franc",
+      "issuer_site": "https://allunity.com/chfau",
+      "explorer": "https://etherscan.io/token/0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "ethereum",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/chfau (Supported blockchains)",
+        "https://allunity.com/chfau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6, CHFAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 46,
+      "token": "CHFAU",
+      "network": "Polygon",
+      "address": "0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78",
+      "peg": "Swiss Franc",
+      "issuer_site": "https://allunity.com/chfau",
+      "explorer": "https://polygonscan.com/token/0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "polygon",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/chfau (Supported blockchains)",
+        "https://allunity.com/chfau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 47,
+      "token": "CHFAU",
+      "network": "Base",
+      "address": "0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78",
+      "peg": "Swiss Franc",
+      "issuer_site": "https://allunity.com/chfau",
+      "explorer": "https://basescan.org/token/0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "base",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/chfau (Supported blockchains)",
+        "https://allunity.com/chfau (BaFin-licensed EMI, MiCAR)",
+        "eth_call -> 6"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 48,
+      "token": "CHFAU",
+      "network": "Arc",
+      "address": "0xc6df1b92a6ae61a27059c41e541a91ce8dcb1605",
+      "peg": "Swiss Franc",
+      "issuer_site": "https://allunity.com/chfau",
+      "explorer": "https://arc-scan.org/address/0xc6df1b92a6ae61a27059c41e541a91ce8dcb1605",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "arc",
+      "standard": "ERC-20",
+      "sources": [
+        "https://allunity.com/chfau (Supported blockchains)",
+        "https://allunity.com/chfau (BaFin-licensed EMI, MiCAR)",
+        "eth_call rpc.mainnet.arc.io -> 6, CHFAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 49,
+      "token": "CHFAU",
+      "network": "Tempo",
+      "address": "0x20C00000000000000000000042109aef2f8B28e1",
+      "peg": "Swiss Franc",
+      "issuer_site": "https://allunity.com/chfau",
+      "explorer": null,
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "tempo",
+      "standard": "TIP-20",
+      "sources": [
+        "https://allunity.com/chfau (Supported blockchains)",
+        "https://allunity.com/chfau (BaFin-licensed EMI, MiCAR)",
+        "eth_call rpc.tempo.xyz -> 6, CHFAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": 50,
+      "token": "CHFAU",
+      "network": "Solana",
+      "address": "3GJfXJvPcjuAu6VQZmcs9pAXQau8nz3z88CCpBztgQSv",
+      "peg": "Swiss Franc",
+      "issuer_site": "https://allunity.com/chfau",
+      "explorer": "https://explorer.solana.com/address/3GJfXJvPcjuAu6VQZmcs9pAXQau8nz3z88CCpBztgQSv",
+      "decimals": 6,
+      "regulator": "BaFin (Germany)",
+      "auditor": null,
+      "chain_slug": "solana",
+      "standard": "Token-2022",
+      "sources": [
+        "https://allunity.com/chfau (Supported blockchains)",
+        "https://allunity.com/chfau (BaFin-licensed EMI, MiCAR)",
+        "Solana getAccountInfo -> Token-2022 mint, decimals 6, CHFAU"
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": null,
+      "token": "EURC",
+      "network": "Plasma",
+      "address": "0x3ee196e78d4d4248b849b8e1c7f44c5457fafd2c",
+      "peg": "Euro",
+      "issuer_site": "https://www.circle.com/blog/now-available-usdc-eurc-cctp-and-bridge-kit-on-plasma",
+      "explorer": "https://plasmascan.to/token/0x3ee196e78d4d4248b849b8e1c7f44c5457fafd2c",
+      "decimals": 6,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "plasma",
+      "chain_id": 9745,
+      "standard": "ERC-20",
+      "onchain_symbol": "EURC",
+      "sources": [
+        "https://www.circle.com/blog/now-available-usdc-eurc-cctp-and-bridge-kit-on-plasma",
+        "https://plasmascan.to/token/0x3ee196e78d4d4248b849b8e1c7f44c5457fafd2c",
+        "rpc.plasma.to 2026-11-08: chainId 9745, symbol EURC, decimals 6"
+      ],
+      "verified_onchain": true,
+      "native_or_bridged": "native (Circle-issued)"
+    }
+  ],
+  "exclusions": [
+    {
+      "token": "SEKAU",
+      "network": "Solana",
+      "reason": "The candidate issuer address resolved to a program, not a mint. It was left out of the verified registry and must not be added to the Solana query."
+    },
+    {
+      "token": "SIDR",
+      "network": "Ethereum",
+      "reason": "The sheet row was left unidentified. It is not part of the verified registry."
+    },
+    {
+      "token": "BRMB",
+      "network": "Ethereum",
+      "reason": "The sheet address was an issuer wallet, not a token contract. It is not part of the verified registry."
+    },
+    {
+      "token": "EURITE",
+      "network": "Polygon",
+      "reason": "The address previously labeled EURITE on Polygon resolved to PHT Stablecoin. EURI is not on Polygon in this registry. The existing PHT series is unchanged."
+    },
+    {
+      "token": "EURR",
+      "network": "Plasma",
+      "reason": "Deployed at 0xC60BCA6BD5790611B8A302D4C5DF37D769C81121 with total supply 0 and 0 transfers on 2026-11-08. Inactive. Not added."
+    },
+    {
+      "token": "CHF",
+      "network": "Plasma",
+      "reason": "No CHF stablecoin was confirmed on Plasma. No placeholder was added."
+    }
+  ]
+}

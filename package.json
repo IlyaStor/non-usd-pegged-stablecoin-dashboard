@@ -7,7 +7,7 @@
   "scripts": {
     "fetch": "node fetch-dune-data.js",
     "og": "node generate-og.js",
-    "test": "node --test test/refresh-plan.test.js && node fetch-dune-data.js --self-test"
+    "test": "node --test test/refresh-plan.test.js test/token-catalog.test.js test/replacements.test.js test/candidates.test.js && node fetch-dune-data.js --self-test"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2"

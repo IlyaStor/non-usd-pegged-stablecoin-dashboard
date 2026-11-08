@@ -1,4 +1,10 @@
 -- Arc mainnet: non-USD stablecoin transfer volume (StableFX roster)
+-- Verified registry 2026-11-07: EURAU 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2,
+-- SEKAU 0xf8524b5ab17d5eca2f78abe8377ceffd323b1dc1, and
+-- CHFAU 0xc6df1b92a6ae61a27059c41e541a91ce8dcb1605 are already in the token list
+-- below (decimals 6). Do not add a second row for any of them.
+-- The published data.json series does not currently contain these symbols.
+-- This file does not prove Dune query 8924650 has been updated, and it does not emit zero-filled days.
 -- Dune engine: DuneSQL. Source table: arc.logs (raw; Dune has no curated transfers/prices for Arc).
 --
 -- Token list: Circle docs, "StableFX supported currencies" (developers.circle.com/stablefx/references/supported-currencies),

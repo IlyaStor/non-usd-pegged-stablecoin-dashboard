@@ -1,0 +1,4 @@
+-- SUPERSEDED — NOT EXECUTABLE.
+-- The full replacement query is sql/replacements/6614895_polygon.sql.
+-- Do not create a new Dune query id.
+-- Do not insert zero-volume history.
