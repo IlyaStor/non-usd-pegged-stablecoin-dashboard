@@ -42,11 +42,13 @@ The Actions secret must stay named `DUNE_API_KEY`.
 | --- | ---: | --- |
 | In the published series | 2 | EURQ on Polygon, EURCV on Solana. Left as they are. |
 | In the saved Arc query, absent from the series | 3 | EURAU, SEKAU, CHFAU. Already listed in query 8924650. SQL presence is not a series row. |
-| In replacement SQL, not in the series | 10 | Polygon 6614895, Stellar, Solana, BSC. Files in `sql/replacements/`. Not saved on Dune. |
+| Saved on the existing query, not in the published series | 11 | Polygon 6614895 v23, Solana 6689171 v27, Stellar 6712377 v32, BSC 8748306 v4, Plasma 6663259 v14. Waiting for the next refresh. `data.json` is unchanged. |
 | Blocked, no sourced USD rate | 1 | BRMB on Stellar. The SAC is known. The result does not emit it. |
 | No dashboard chain | 19 | No query id and no new network tab. |
 
-The refresh job still calls only the query ids in the table above. It does not gain a network, a query id, or a rate-limit change.
+The refresh job still calls only those eight query ids. It does not gain a network, a query id, or a rate-limit change. Merging this pull request does not add a Dune query and does not start a run: `.github/workflows/refresh-data.yml` has no `push` trigger. The existing two-day cron, the next time it runs on `main`, will execute the same eight ids and will then use the SQL already saved on Dune.
+
+Saved 365-day text, read back after PATCH, is not yet in `data.json`. Short tests on medium, 1–7 Nov 2026 (Plasma 6 Nov), matched the old overlap: Polygon 31 rows, Solana 35, Stellar 48, BSC 7, Plasma 1. New rows inside that window: Solana CHFAU one transfer on 3 Nov ($27.35); Stellar EURAU one transfer on 2 Nov (native 89.75604, $93.60, decimals 6); BSC EURI on seven days; Plasma EURC on 6 Nov, two transfers ($31,266.6488). Other new tokens were absent in that window. That is not proof they have no history. The four-chain `tokens_evm.transfers` test stayed pending for more than five minutes and was cancelled with no rows. Tempo and XRPL were not run. No new chain has a query id. The catalog still marks a token live only when its symbol is in `data.json`. That validation pass moved the account by 47.944 credits, counted conservatively. Reported finished compute was 7.939647. The remaining 40 is unexplained and is included in the 47.944.
 
 ### Replacement SQL
 
