@@ -510,8 +510,9 @@ td.first{color:var(--text)}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-const NET_ORDER = ['polygon','stellar','solana','tron','plasma','bsc','arc','suspicious','geography','registry'];
+const NET_ORDER = ['polygon','stellar','solana','tron','plasma','bsc','arc','ethereum','base','suspicious','geography','registry'];
 const CHAIN_NETS = ['polygon','stellar','solana','tron','plasma','bsc','arc'];
+const LATENT_CHAIN_NETS = ['ethereum','base'];
 
 const NET_COLOR = {
   polygon:'#8247E5',
@@ -521,6 +522,8 @@ const NET_COLOR = {
   plasma:'#00D2FF',
   bsc:'#F0B90B',
   arc:'#7C8CFF',
+  ethereum:'#627EEA',
+  base:'#0052FF',
   suspicious:'#F87171',
   geography:'#60A5FA',
   registry:'#FBBF24',
@@ -547,6 +550,8 @@ let NETWORKS = {
   plasma: {data:'',tm:{},cc:{}},
   bsc:    {data:'',tm:{},cc:{}},
   arc:    {data:'',tm:{},cc:{}},
+  ethereum:{data:'',tm:{},cc:{}},
+  base:   {data:'',tm:{},cc:{}},
   suspicious:{
     rows:[
       {chain:'Solana',token:'JPYSC (5 variants)',reason:'Null mint/freeze authorities. News-reactive impersonation of SBI JPYSC (Feb 27, 2026). ~1T supply. 100% predictive scam marker.'},
@@ -739,11 +744,12 @@ async function loadDashboardData(){
     if(!res.ok)throw new Error(`Failed: ${res.status}`);
     const json=await res.json();
     if(!json.success)throw new Error(json.error||'Unknown error');
-    CHAIN_NETS.forEach(net=>{
+    [...CHAIN_NETS, ...LATENT_CHAIN_NETS].forEach(net=>{
       NETWORKS[net].data=json.data[net]||'';
       NETWORKS[net].tm=TOKEN_METADATA;
       NETWORKS[net].cc=CURRENCY_COLORS;
     });
+    revealLatentTabs();
     executions=json.executions||null;
     lastUpdated=null;
     updateBrandSub();
@@ -759,6 +765,31 @@ async function loadDashboardData(){
   }
 }
 
+function shownChainNets(){
+  return CHAIN_NETS.concat(LATENT_CHAIN_NETS.filter(net => String(NETWORKS[net]?.data||'').trim()));
+}
+function isSeriesNet(net){
+  return CHAIN_NETS.includes(net) || LATENT_CHAIN_NETS.includes(net);
+}
+function revealLatentTabs(){
+  const nav=document.getElementById('netTabs');
+  const anchor=nav.querySelector('[data-net="suspicious"]');
+  LATENT_CHAIN_NETS.forEach(net=>{
+    const has=String(NETWORKS[net]?.data||'').trim();
+    let btn=nav.querySelector(`[data-net="${net}"]`);
+    if(!has){
+      if(btn) btn.remove();
+      return;
+    }
+    if(btn) return;
+    btn=document.createElement('button');
+    btn.className='net-tab';
+    btn.dataset.net=net;
+    btn.textContent=net.charAt(0).toUpperCase()+net.slice(1);
+    btn.addEventListener('click', ()=>switchNetwork(net));
+    nav.insertBefore(btn, anchor);
+  });
+}
 function updateBrandSub(){
   const {tokens,pegs,chains}=countCoverage();
   const el=document.getElementById('brandSub');
@@ -768,7 +799,7 @@ function updateBrandSub(){
 function countCoverage(){
   const toks=new Set(), pegs=new Set();
   let chains=0;
-  CHAIN_NETS.forEach(net=>{
+  shownChainNets().forEach(net=>{
     const rows=rowsFor(net);
     if(rows.length)chains++;
     rows.forEach(r=>(r.items||[]).forEach(i=>{
@@ -804,11 +835,11 @@ function formatIsoShort(iso){
   return d.toISOString().slice(0,10)+' '+d.toISOString().slice(11,16)+'Z';
 }
 function freshnessFor(net){
-  if(CHAIN_NETS.includes(net)){
+  if(isSeriesNet(net)){
     const iso=executions?.[net]?.execution_ended_at;
     if(iso) return {iso, scope:'network'};
   }
-  const isos=CHAIN_NETS.map(n=>executions?.[n]?.execution_ended_at).filter(Boolean);
+  const isos=shownChainNets().map(n=>executions?.[n]?.execution_ended_at).filter(Boolean);
   isos.sort((a,b)=>Date.parse(normalizeIso(a))-Date.parse(normalizeIso(b)));
   if(isos.length) return {iso:isos[0], scope:'oldest'};
   return null;
@@ -825,13 +856,13 @@ function renderFreshness(net){
     age.textContent=relativeTime(normalizeIso(info.iso));
     return;
   }
-  const through=dataThrough(CHAIN_NETS.includes(net)?net:null);
+  const through=dataThrough(isSeriesNet(net)?net:null);
   label.textContent=through?'Series through':'Dune execution';
   value.textContent=through||'—';
   age.textContent=through?'Dune time pending':'';
 }
 function dataThrough(net){
-  const nets=net?[net]:CHAIN_NETS;
+  const nets=net?[net]:shownChainNets();
   let max='';
   nets.forEach(n=>rowsFor(n).forEach(r=>{if(r.d>max)max=r.d;}));
   return max;
@@ -840,7 +871,7 @@ function dataThrough(net){
 function updateHeroStats(){
   // Tracked 365d total across chain networks + week-over-week delta
   let total=0, prev=0, recent=0;
-  CHAIN_NETS.forEach(net=>{
+  shownChainNets().forEach(net=>{
     const rows=rowsFor(net);
     if(!rows.length)return;
     rows.forEach(r=>r.items.forEach(i=>total+=i.v));
@@ -1063,7 +1094,7 @@ function renderKPIs(){
   if(curNet==='geography'){
     const geoData={};
     let geoTotal=0;
-    CHAIN_NETS.forEach(net=>{
+    shownChainNets().forEach(net=>{
       const rows=rowsFor(net);
       rows.forEach(({items})=>{
         items.forEach(({t,tx,v})=>{
@@ -1369,7 +1400,7 @@ function renderGeography(){
   const dailyByCur={};
   const totals={};
   let grand=0;
-  CHAIN_NETS.forEach(net=>{
+  shownChainNets().forEach(net=>{
     const rows=rowsFor(net);
     rows.forEach(({d,items})=>{
       items.forEach(({t,tx,v})=>{
@@ -1405,7 +1436,7 @@ function renderGeography(){
 function updateChartMeta(){
   const el=document.getElementById('chartMeta');
   if(!el)return;
-  if(!CHAIN_NETS.includes(curNet)){el.textContent='';return;}
+  if(!isSeriesNet(curNet)){el.textContent='';return;}
   const iso=executions?.[curNet]?.execution_ended_at;
   const through=dataThrough(curNet);
   const parts=[curNet];

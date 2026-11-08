@@ -40,6 +40,7 @@ import {
   pollUntil,
   rateLimitDelayMs,
 } from './lib/refresh-plan.js';
+import { ethereumBaseJob, rowsForChain } from './lib/ethereum-base-query.js';
 
 const DUNE_BASE = 'https://api.dune.com/api/v1';
 const STATE_PATH = 'refresh-state.json';
@@ -375,6 +376,8 @@ export async function runRefresh(options = {}) {
   for (const [network, ids] of Object.entries(QUERIES)) {
     for (const id of ids) jobs.push({ network, id });
   }
+  const splitJob = ethereumBaseJob();
+  if (splitJob) jobs.push(splitJob);
 
   console.log(`Fetching ${jobs.length} Dune queries, ${options.concurrency || CONCURRENCY} at a time, tier=${PERFORMANCE}, reuse<${FRESHNESS_HOURS}h, job wait ${Math.round(jobWaitMs / 60000)}m`);
 
@@ -393,7 +396,7 @@ export async function runRefresh(options = {}) {
     };
     try {
       const result = await resolveQuery(job.id, deps);
-      return { network: job.network, ...result };
+      return { network: job.network, splitChains: job.splitChains || null, ...result };
     } catch (error) {
       console.log(`  Query ${job.id} failed before it could be published: ${error.message}`);
       const saved = bundle.state.queries?.[String(job.id)];
@@ -420,6 +423,23 @@ export async function runRefresh(options = {}) {
       continue;
     }
     updates[network] = update;
+  }
+  for (const item of fetched) {
+    if (!item.splitChains || !item.keptRows) continue;
+    for (const chain of item.splitChains) {
+      const keptRows = rowsForChain(item.keptRows, chain);
+      if (!keptRows.length) {
+        console.log(`Query ${item.id} returned no ${chain} rows. Not writing an empty series.`);
+        continue;
+      }
+      const update = networkUpdate(
+        chain,
+        [item.id],
+        new Map([[String(item.id), { ...item, rows: keptRows, keptRows }]]),
+        (rows, name) => rowsToPipe(rows, name, message => console.warn(message)),
+      );
+      if (update) updates[chain] = update;
+    }
   }
 
   const payload = mergeRefresh(options.previous || null, updates);

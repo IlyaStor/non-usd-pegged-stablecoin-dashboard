@@ -42,11 +42,17 @@ The Actions secret must stay named `DUNE_API_KEY`.
 | --- | ---: | --- |
 | In the published series | 2 | EURQ on Polygon, EURCV on Solana. Left as they are. |
 | In the saved Arc query, absent from the series | 3 | EURAU, SEKAU, CHFAU. Already listed in query 8924650. SQL presence is not a series row. |
-| In replacement SQL, not in the series | 10 | Polygon 6614895, Stellar, Solana, BSC. Files in `sql/replacements/`. Not saved on Dune. |
+| Saved on the existing query, not in the published series | 11 | Polygon 6614895 v23, Solana 6689171 v27, Stellar 6712377 v32, BSC 8748306 v4, Plasma 6663259 v14. Waiting for the next refresh. `data.json` is unchanged. |
 | Blocked, no sourced USD rate | 1 | BRMB on Stellar. The SAC is known. The result does not emit it. |
 | No dashboard chain | 19 | No query id and no new network tab. |
 
 The refresh job still calls only the query ids in the table above. It does not gain a network, a query id, or a rate-limit change.
+
+### Ethereum and Base, one query, not scheduled
+
+`sql/candidates/ethereum_base_tokens_transfers_365.sql` is the file to create as a new Dune query. It is not executed here and it has no query id. `lib/ethereum-base-query.js` keeps `enabled: false` and `queryId: null`, so `fetch-dune-data.js` does not call it. Setting both in a later reviewed commit is what would let one result set be split into `data.ethereum` and `data.base` by the `blockchain` column. Arbitrum, Optimism, Tempo, and XRPL stay out of that file. The Nov 6 medium execution `01M6XQ007G6AWQH7BD0FDY587N` compiled all four EVM chains and returned rows only for Ethereum and Base. Symbols missing that day stay in the SQL. The query does not emit a row for a day with no transfers.
+
+Columns: `blockchain`, `date`, `token`, `daily_transactions`, `transfer_volume` (native, already decimal-adjusted), `transfer_volume_usd`, `price_source` (`tokens_evm.amount_usd`, `fx_fallback`, or `mixed`). Creating the query does not fill `data.json`. The published series changes only after a full history run is saved and the existing refresh is allowed to fetch that id.
 
 ### Replacement SQL
 
