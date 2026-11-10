@@ -1,3 +1,5 @@
+-- NOT THE CREATE TARGET. The Nov 6 2026 test showed rows only on Ethereum and Base.
+-- The file to create is sql/candidates/ethereum_base_tokens_transfers_365.sql.
 -- CANONICAL WINDOW. Not a saved query and not attached to the refresh job.
 -- This repository does not execute this file. A 365-day scan of
 -- tokens_evm.transfers is the historical query, not the validation query.
