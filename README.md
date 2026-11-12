@@ -34,25 +34,25 @@ The Actions secret must stay named `DUNE_API_KEY`.
 
 ## Verified additions
 
-36 verified token-network entries (9 tokens): 2 already in the published series, 3 listed in the saved Arc query but absent from that series, 11 in replacement SQL that is not yet the published series, 1 blocked with no sourced USD rate, 16 on chains with candidate SQL but no query id, 3 on chains whose Dune dataset is unconfirmed.
+41 verified token-network entries (11 tokens): 13 already in the published series, 3 listed in the saved Arc query but absent from that series, 14 in replacement SQL that is not yet the published series, 0 in candidate diffs that are not saved on Dune, 1 blocked with no sourced USD rate, 7 on chains with candidate SQL but no query id, 3 on chains whose Dune dataset is unconfirmed.
 
 `registry/verified-additions.json` is a catalog of checked identities (sheet tab “Токены на добавление. 30.07”, 2026-11-07). The Registry tab reads that file and compares it with the symbols already in `data.json`. Catalog rows are not transfer history. They are not included in tracked volume, the hero total, or the coverage counts. `data.json` is unchanged by this catalog. Replacement SQL is not executed here.
 
 | Status | Count | Meaning |
 | --- | ---: | --- |
-| In the published series | 2 | EURQ on Polygon, EURCV on Solana. Left as they are. |
+| In the published series | 13 | Registry symbols present in the current `data.json` pipes, including ZARsc on Solana. |
 | In the saved Arc query, absent from the series | 3 | EURAU, SEKAU, CHFAU. Already listed in query 8924650. SQL presence is not a series row. |
-| Saved on the existing query, not in the published series | 11 | Polygon 6614895 v23, Solana 6689171 v27, Stellar 6712377 v32, BSC 8748306 v4, Plasma 6663259 v14. Waiting for the next refresh. `data.json` is unchanged. |
+| Saved on Dune, not in the published series yet | 14 | EURAU on Polygon, IDRX on Polygon, BSC, and Solana, and the Ethereum and Base contracts on query 9117254. |
 | Blocked, no sourced USD rate | 1 | BRMB on Stellar. The SAC is known. The result does not emit it. |
-| No dashboard chain | 19 | No query id and no new network tab. |
+| No dashboard chain | 10 | 7 on chains with candidate SQL and no query id, plus 3 unconfirmed datasets. |
 
-The refresh job still calls only the query ids in the table above. It does not gain a network, a query id, or a rate-limit change.
+The scheduled workflow is unchanged. The fetch script now also calls query 9117254 and splits it into Ethereum and Base. That is one extra execution, about 25 credits on a full run.
 
-### Ethereum and Base, one query, not scheduled
+### Ethereum and Base
 
-`sql/candidates/ethereum_base_tokens_transfers_365.sql` is the file to create as a new Dune query. It is not executed here and it has no query id. `lib/ethereum-base-query.js` keeps `enabled: false` and `queryId: null`, so `fetch-dune-data.js` does not call it. Setting both in a later reviewed commit is what would let one result set be split into `data.ethereum` and `data.base` by the `blockchain` column. Arbitrum, Optimism, Tempo, and XRPL stay out of that file. The Nov 6 medium execution `01M6XQ007G6AWQH7BD0FDY587N` compiled all four EVM chains and returned rows only for Ethereum and Base. Symbols missing that day stay in the SQL. The query does not emit a row for a day with no transfers.
+Query [9117254](https://dune.com/queries/9117254) is the saved Ethereum and Base query. `ETHEREUM_BASE_QUERY_ID` is `9117254`, so the refresh fetches it once and splits rows into `data.ethereum` and `data.base`. The tabs appear only after `data.json` contains those series. Each refresh now executes this one extra query, about 25 credits for a full run. The cron is unchanged. IDRX is saved on queries 6614895 v24, 8748306 v5, and 6689171 v36. Query 9117254 is the Ethereum and Base refresh. The header control “Without A7A5” drops the published label `A7A5` when the URL has `without=A7A5`. Methodology is at `/methodology`. Work with me is at `/work`, and its three packages are placeholders. Arbitrum, Optimism, Tempo, and XRPL stay out of that file. The Nov 6 medium execution `01M6XQ007G6AWQH7BD0FDY587N` compiled all four EVM chains and returned rows only for Ethereum and Base. Symbols missing that day stay in the SQL. The query does not emit a row for a day with no transfers.
 
-Columns: `blockchain`, `date`, `token`, `daily_transactions`, `transfer_volume` (native, already decimal-adjusted), `transfer_volume_usd`, `price_source` (`tokens_evm.amount_usd`, `fx_fallback`, or `mixed`). Creating the query does not fill `data.json`. The published series changes only after a full history run is saved and the existing refresh is allowed to fetch that id.
+Columns: `blockchain`, `date`, `token`, `daily_transactions`, `transfer_volume` (native, already decimal-adjusted), `transfer_volume_usd`, `price_source` (`tokens_evm.amount_usd`, `fx_fallback`, or `mixed`). The history run is done. `data.json` does not contain Ethereum or Base until the refresh fetches query 9117254.
 
 ### Replacement SQL
 

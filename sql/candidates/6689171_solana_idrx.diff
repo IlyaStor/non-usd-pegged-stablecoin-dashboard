@@ -1,0 +1,15 @@
+--- a/sql/replacements/6689171_solana.sql
++++ b/sql/replacements/6689171_solana.sql
+@@ -21,7 +21,11 @@
+         ('9pCWprxbZMW2rYSMhPTeoyLMV2sN2WJqshdT7DQVt6hS', 'EURAU', 1.0428), -- decimals 6, Token-2022; amount_display already scaled
+         ('3GJfXJvPcjuAu6VQZmcs9pAXQau8nz3z88CCpBztgQSv', 'CHFAU', 1.11), -- decimals 6, Token-2022; fallback matches VCHF in this query
+         ('AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sZ3LFHsch', 'VCHF',  1.11),
+-        ('2VhjJ9WxaGC3EZFwJG9BDUs9KxKCAjQY4vgd1qxgYWVg', 'EUROe', 1.0428)
++        ('2VhjJ9WxaGC3EZFwJG9BDUs9KxKCAjQY4vgd1qxgYWVg', 'EUROe', 1.0428),
++        -- IDRX decimals 2. amount_display is already scaled; do not divide.
++        -- Static fallback 0.000061 matches XIDR, IDDR, and IDRT in query 6621899. Not a live IDR feed.
++        -- Deprecated mint idrxTdNftk6tYedPv2M7tCFHBVCpk5rkiNRd8yUArhr is not listed.
++        ('idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur', 'IDRX', 0.000061)
+     ) AS t (mint, symbol, fallback_price)
+ ),
+ daily_price AS (
