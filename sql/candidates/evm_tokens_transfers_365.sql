@@ -25,6 +25,7 @@ WITH tokens AS (
         ('base', 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 'Euro - EURAU', 6, 1.1206),
         ('base', 0x0297B579B0CB603B5eE814EB7322b960D3ae7A66, 'Swedish krona - SEKAU', 6, 0.100345),
         ('base', 0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78, 'Swiss franc - CHFAU', 6, 1.20326),
+        ('base', 0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22, 'Indonesian Rupiah - IDRX', 2, 0.000061),
         ('arbitrum', 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 'Euro - EURAU', 6, 1.1206),
         ('optimism', 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 'Euro - EURAU', 6, 1.1206)
     ) AS t (blockchain, contract_address, token, decimals, fallback_price)

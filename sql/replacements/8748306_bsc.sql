@@ -1,5 +1,5 @@
--- BNB Chain non-USD stablecoins. Dune query 8748306. Full replacement of the saved query.
--- Do not save over the canonical query until an ad-hoc run matches KGST.
+-- BNB Chain non-USD stablecoins. Dune query 8748306 v5. This file matches the saved query.
+-- IDRX was saved on that version. Decimals 0 stay 0. Same address as Polygon.
 -- KGST stays. Added, both absent from the saved query: EURI and EURAU.
 -- Series code for the EURITE product is EURI, not EURITE. Decimals 18.
 -- EURAU decimals 6. prices.day (blockchain = bnb) is still preferred by contract.
@@ -18,7 +18,10 @@ WITH token_meta AS (
     SELECT * FROM (VALUES
         (0x94be0bba8e1e303fe998c9360b57b826f1a4f828, 'KGST', 18, 0.0114),
         (0x9d1A7A3191102e9F900Faa10540837ba84dCBAE7, 'EURI', 18, 1.1206),
-        (0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 'EURAU', 6, 1.1206)
+        (0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 'EURAU', 6, 1.1206),
+        -- IDRX saved on 8748306 v5. Decimals 0 are official; do not rewrite them to 6 or 18.
+        -- Same address as Polygon. Static fallback 0.000061 matches XIDR, IDDR, and IDRT in query 6621899.
+        (0x649a2DA7B28E0D54c13D5eFf95d3A660652742cC, 'IDRX', 0, 0.000061)
     ) AS t (contract_address, symbol, decimals, fallback_price)
 ),
 daily_price AS (

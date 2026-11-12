@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Methodology · Non-USD stablecoin tracker</title>
+  <meta name="description" content="How the solosolver non-USD stablecoin tracker counts transfers, prices them, and refreshes. Registry rows are not tracked volume.">
+  <link rel="canonical" href="https://analytics.solosolver.xyz/methodology">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/pages.css">
+</head>
+<body>
+<main class="wrap">
+  <nav class="top">
+    <a href="/">← tracker</a>
+    <a href="/data.html">data</a>
+    <a href="/work.html">Work with me</a>
+    <a href="https://solosolver.xyz">solosolver.xyz</a>
+  </nav>
+  <h1>Methodology</h1>
+  <p class="lede">Solosolver is Ilia’s personal project on non-USD stablecoins, onchain FX, and payments infrastructure. This page describes the tracker as it is built in this repository. It does not add a number that the code does not compute.</p>
+
+  <h2>Tracked volume and the registry</h2>
+  <p>The charts, hero total, rankings, and shares read <code>data.json</code>. Each network is a pipe of <code>date|token|tx_count|volume_usd</code>. A token is tracked only when that symbol is in the pipe.</p>
+  <p><code>registry/verified-additions.json</code> is a catalog of checked identities. A catalog row does not add a day or a volume. The Registry tab says so. <code>data.json</code> is not rewritten by the catalog.</p>
+
+  <h2>Refresh</h2>
+  <p><code>.github/workflows/refresh-data.yml</code> runs on the cron <code>0 0 */2 * *</code>, about every 2 days, and on manual dispatch. <code>fetch-dune-data.js</code> executes the query ids in <code>lib/series.js</code>, waits, and drops the incomplete UTC day of that execution. The page drops that same day. A completed result younger than 20 hours is reused. The default performance tier is medium. This page does not add a query to that schedule.</p>
+
+  <h2>Query ids and tables</h2>
+  <table>
+    <thead><tr><th>Network</th><th>Query</th><th>Table in the repo SQL</th></tr></thead>
+    <tbody>
+      <tr><td>Polygon</td><td>6614895 and 6621899</td><td><code>erc20_polygon.evt_transfer</code>, with <code>prices.day</code> where <code>blockchain = 'polygon'</code></td></tr>
+      <tr><td>Stellar</td><td>6712377</td><td><code>stellar.history_contract_events</code></td></tr>
+      <tr><td>Solana</td><td>6689171</td><td><code>tokens_solana.transfers</code>, and <code>prices.day</code> only for symbols VCHF and EURC</td></tr>
+      <tr><td>Tron</td><td>6695880</td><td>The SQL text is not in this repository</td></tr>
+      <tr><td>Plasma</td><td>6663259</td><td><code>erc20_plasma.evt_transfer</code>. No <code>prices.day</code> join</td></tr>
+      <tr><td>BSC</td><td>8748306</td><td><code>erc20_bnb.evt_transfer</code>, with <code>prices.day</code> where <code>blockchain = 'bnb'</code></td></tr>
+      <tr><td>Arc</td><td>8924650</td><td><code>arc.logs</code>. No <code>prices.day</code> join</td></tr>
+    </tbody>
+  </table>
+  <p>Polygon is two queries summed by symbol and day. A contract in both would be counted twice. The files under <code>sql/replacements/</code> are the reference text. They are not executed by the page.</p>
+
+  <h2>What counts as a transfer</h2>
+  <ul>
+    <li>Polygon 6614895 and 6621899: <code>value &gt; 0</code>, sender is not the zero address, receiver is not the zero address or <code>0x…dEaD</code>, and sender is not receiver. <code>daily_transactions</code> is distinct transaction hashes.</li>
+    <li>BSC 8748306: the same mint, burn, self-transfer, and zero-value exclusions. <code>daily_transactions</code> is distinct transaction hashes.</li>
+    <li>Plasma 6663259: the same mint, burn, and self-transfer exclusions, and <code>value &gt; 0</code>. <code>daily_transactions</code> is <code>COUNT(*)</code>, not distinct hashes.</li>
+    <li>Solana 6689171: rows in <code>tokens_solana.transfers</code> with <code>amount_display &gt; 0</code>. That file does not apply the zero-address mint or burn filter. <code>amount_display</code> is already scaled. <code>daily_transactions</code> is <code>COUNT(*)</code>.</li>
+    <li>Stellar 6712377: successful events whose first decoded topic symbol is <code>transfer</code>, for the listed contracts only. Classic Stellar payments (asset code plus issuer) are not in <code>stellar.history_contract_events</code>. The file does not apply a zero-address filter.</li>
+    <li>Arc 8924650: ERC-20 Transfer logs from 2026-09-16, excluding mint, burn, and self-transfers. Transactions that emit pool Mint, Burn, or Collect are excluded. The StableFX escrow address <code>0xe2e5f173576b513d994073ccbdacbe027d43dfe6</code> is excluded as a sender so the outbound leg of a settlement is not counted again.</li>
+    <li>Tron 6695880: the query id is executed by the refresh. Its SQL is not stored here, so this page does not describe its mint, burn, or self-transfer filters.</li>
+  </ul>
+
+  <h2>Pricing</h2>
+  <p>Where a query joins <code>prices.day</code>, that price is used for the day. The numeric fallback in the query is used only when that join has no row. Those fallbacks are static literals in the SQL. They are not a live FX feed.</p>
+  <p>The static IDR fallback already used for XIDR, IDDR, and IDRT in <code>sql/replacements/6621899_polygon.sql</code> is <code>0.000061</code>. IDRX uses that same static rate. Polygon part 1 writes Euro fallbacks as <code>1.04</code>. <code>lib/series.js</code> <code>FX_FALLBACK</code> is a separate static table, used only when a result row has no <code>transfer_volume_usd</code>. Its Euro rate is <code>1.1206</code>. The two tables are not the same number. Arc multiplies by the ECB reference rates of 2026-10-09 written in <code>sql/replacements/8924650_arc.sql</code>. Plasma uses only its own static fallbacks and does not join <code>prices.day</code>. Stellar multiplies by the static <code>fx_usd</code> on each token row.</p>
+  <p>BRMB is not emitted. There is no CNY rate in the Stellar query or in <code>FX_FALLBACK</code>. A 0 or 1 rate is not used.</p>
+
+  <h2>A7A5</h2>
+  <p>The published label is exactly <code>A7A5</code>. In the current <code>data.json</code> it appears on Tron only, query 6695880. The contract named for that series is <code>0x751f6515e355dc49474a8565a1234bf3424b9fe4</code>. Its share of tracked volume is computed from <code>data.json</code> when this page loads: <strong id="a7a5Share">reading data.json…</strong></p>
+  <p>The header control “Without A7A5” leaves the series unchanged until it is pressed. Pressed, the page drops points whose token label is exactly <code>A7A5</code> from the hero total, charts, rankings, shares, and geography. The URL gains <code>without=A7A5</code> so the view can be shared. The default has no such parameter, so A7A5 stays included. <code>data.json</code> is not edited.</p>
+
+  <h2>Chains that are not in the refresh</h2>
+  <p>Ethereum and Base are query <a href="https://dune.com/queries/9117254">9117254</a>. The SQL is <code>sql/candidates/ethereum_base_tokens_transfers_365.sql</code>, including Base IDRX at 2 decimals. One result carries a <code>blockchain</code> column, and the refresh splits it into <code>data.ethereum</code> and <code>data.base</code>. <code>ETHEREUM_BASE_QUERY_ID</code> is <code>9117254</code>. The workflow still runs about every 2 days. Each refresh now executes this one extra query, about 25 credits for a full run, on top of the eight existing queries. The history run <code>01M77ZG014V1XZDMFAAMSQ52XQ</code> returned 2,272 rows for 2025-11-12 through 2026-11-12. Those rows are not in <code>data.json</code> until a refresh fetches the id. The Ethereum and Base tabs are drawn only after that series is in the file.</p>
+  <p>Arbitrum, Optimism, Tempo, and XRPL stay in disabled candidate files. They are not on the refresh. Algorand, Xahau, and Adi Chain have no confirmed dataset page in this pass. That is not a claim Dune will never index them.</p>
+
+  <h2>IDRX</h2>
+  <p>IDRX is the rupiah token from PT IDRX Indo Inovasi, pegged 1 IDRX = 1 IDR, from the issuer list. It is not XIDR, IDDR, or IDRT. It is not in <code>data.json</code> yet. The parent saved it on the existing queries: Polygon 6614895 v24, BSC 8748306 v5, and Solana 6689171 v36. Base IDRX is in query 9117254. The next refresh is what writes the series. This repository does not run those queries.</p>
+  <ul>
+    <li>Polygon <code>0x649a2DA7B28E0D54c13D5eFf95d3A660652742cC</code>, decimals 0, saved on query 6614895 v24 only. Decimals stay 0. The raw value is not divided by 10^6 or 10^18.</li>
+    <li>BNB Chain, the same address, decimals 0, saved on query 8748306 v5.</li>
+    <li>Base <code>0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22</code>, decimals 2, in the Ethereum/Base candidate. <code>tokens_evm.transfers.amount</code> is already decimal-adjusted.</li>
+    <li>Solana mint <code>idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur</code>, decimals 2, saved on query 6689171 v36. <code>amount_display</code> is already scaled. The deprecated mint <code>idrxTdNftk6tYedPv2M7tCFHBVCpk5rkiNRd8yUArhr</code> is not added. That same version also lists ZARsc, mint <code>5ekaHEqpRUXH4RoZVRMErdJE74bibWAzihMtPcjKyceQ</code>, decimals 6, Token-2022. ZARsc is already in the published Solana series. Its static fallback is <code>0.0604847</code>, the same rate as ZARU.</li>
+  </ul>
+  <p>There is no Ethereum IDRX row. Stellar, Tron, Plasma, and Arc have none. Celo, Monad, and Kaia are on the issuer list and are not on this tracker. No contract for those three is stored here.</p>
+
+  <footer>
+    <a href="/">Tracker</a> ·
+    <a href="https://github.com/IlyaStor/non-usd-pegged-stablecoin-dashboard">GitHub</a> ·
+    <a href="https://t.me/solosolver">Telegram</a>
+  </footer>
+</main>
+<script type="module">
+  import { a7a5VolumeShare, parseTrackedRows } from './lib/a7a5-toggle.js';
+  const el = document.getElementById('a7a5Share');
+  try {
+    const json = await fetch('/data.json', { cache: 'no-store' }).then(res => res.json());
+    const share = a7a5VolumeShare(parseTrackedRows(json.data, json.executions));
+    const pct = (share.share * 100).toFixed(1);
+    const where = share.chains.length ? share.chains.join(', ') : 'no chain in this file';
+    el.textContent = `A7A5 is ${pct}% of tracked volume on ${where}.`;
+  } catch (error) {
+    el.textContent = 'The share could not be read from data.json.';
+  }
+</script>
+</body>
+</html>

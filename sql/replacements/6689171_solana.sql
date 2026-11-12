@@ -1,5 +1,5 @@
--- Solana non-USD stablecoins. Dune query 6689171. Full replacement of the saved query.
--- Do not save over the canonical query until an ad-hoc run matches existing mints.
+-- Solana non-USD stablecoins. Dune query 6689171 v36. This file matches the saved query.
+-- IDRX and ZARsc were saved on that version. amount_display is already scaled.
 -- Added: EURAU and CHFAU. Both are Token-2022, same as EURCV.
 -- amount_display is already scaled by the mint decimals. Do not divide again.
 -- EURCV mint DghpMkatCiUsofbTmid3M3kAbDTPqDwKiYHnudXeGG52 stays, decimals 2.
@@ -21,7 +21,15 @@ WITH token_meta AS (
         ('9pCWprxbZMW2rYSMhPTeoyLMV2sN2WJqshdT7DQVt6hS', 'EURAU', 1.0428), -- decimals 6, Token-2022; amount_display already scaled
         ('3GJfXJvPcjuAu6VQZmcs9pAXQau8nz3z88CCpBztgQSv', 'CHFAU', 1.11), -- decimals 6, Token-2022; fallback matches VCHF in this query
         ('AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sZ3LFHsch', 'VCHF',  1.11),
-        ('2VhjJ9WxaGC3EZFwJG9BDUs9KxKCAjQY4vgd1qxgYWVg', 'EUROe', 1.0428)
+        ('2VhjJ9WxaGC3EZFwJG9BDUs9KxKCAjQY4vgd1qxgYWVg', 'EUROe', 1.0428),
+        -- IDRX saved on 6689171 v36. Decimals 2. amount_display is already scaled; do not divide.
+        -- Static fallback 0.000061 matches XIDR, IDDR, and IDRT in query 6621899. Not a live IDR feed.
+        -- Deprecated mint idrxTdNftk6tYedPv2M7tCFHBVCpk5rkiNRd8yUArhr is not listed.
+        ('idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur', 'IDRX', 0.000061),
+        -- ZARsc Token-2022, decimals 6. amount_display is already scaled; do not divide.
+        -- Issuer mint https://www.supercoin.co.za/ 5ekaHEqpRUXH4RoZVRMErdJE74bibWAzihMtPcjKyceQ
+        -- Static fallback 0.0604847 matches ZARU in FX_FALLBACK and query 8924650. Not a live ZAR feed.
+        ('5ekaHEqpRUXH4RoZVRMErdJE74bibWAzihMtPcjKyceQ', 'ZARsc', 0.0604847)
     ) AS t (mint, symbol, fallback_price)
 ),
 daily_price AS (

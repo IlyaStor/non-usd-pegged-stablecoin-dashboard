@@ -732,6 +732,125 @@
       ],
       "verified_onchain": true,
       "native_or_bridged": "native (Circle-issued)"
+    },
+    {
+      "sheet_row": null,
+      "token": "IDRX",
+      "network": "Polygon",
+      "address": "0x649a2DA7B28E0D54c13D5eFf95d3A660652742cC",
+      "peg": "Indonesian rupiah",
+      "peg_note": "1 IDRX = 1 IDR",
+      "issuer": "PT IDRX Indo Inovasi",
+      "issuer_site": "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+      "explorer": "https://polygonscan.com/token/0x649a2DA7B28E0D54c13D5eFf95d3A660652742cC",
+      "decimals": 0,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "polygon",
+      "standard": "ERC-20",
+      "onchain_symbol": "IDRX",
+      "sql_file": "sql/replacements/6614895_polygon.sql",
+      "sources": [
+        "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+        "Issuer PT IDRX Indo Inovasi. RPC-checked 2026-11-12 with the verified list.",
+        "Distinct from XIDR, IDDR, and IDRT already in query 6621899. Decimals 0 are official."
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": null,
+      "token": "IDRX",
+      "network": "BNB Chain",
+      "address": "0x649a2DA7B28E0D54c13D5eFf95d3A660652742cC",
+      "peg": "Indonesian rupiah",
+      "peg_note": "1 IDRX = 1 IDR",
+      "issuer": "PT IDRX Indo Inovasi",
+      "issuer_site": "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+      "explorer": "https://bscscan.com/token/0x649a2DA7B28E0D54c13D5eFf95d3A660652742cC",
+      "decimals": 0,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "bnb",
+      "standard": "BEP-20",
+      "onchain_symbol": "IDRX",
+      "sql_file": "sql/replacements/8748306_bsc.sql",
+      "sources": [
+        "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+        "Issuer PT IDRX Indo Inovasi. RPC-checked 2026-11-12 with the verified list.",
+        "Same address as Polygon. Decimals 0 are official."
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": null,
+      "token": "IDRX",
+      "network": "Base",
+      "address": "0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22",
+      "peg": "Indonesian rupiah",
+      "peg_note": "1 IDRX = 1 IDR",
+      "issuer": "PT IDRX Indo Inovasi",
+      "issuer_site": "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+      "explorer": "https://basescan.org/token/0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22",
+      "decimals": 2,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "base",
+      "standard": "ERC-20",
+      "onchain_symbol": "IDRX",
+      "sql_file": "sql/candidates/ethereum_base_tokens_transfers_365.sql",
+      "sources": [
+        "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+        "Issuer PT IDRX Indo Inovasi. RPC-checked 2026-11-12 with the verified list.",
+        "Decimals 2. No Ethereum IDRX contract is official."
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": null,
+      "token": "IDRX",
+      "network": "Solana",
+      "address": "idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur",
+      "peg": "Indonesian rupiah",
+      "peg_note": "1 IDRX = 1 IDR",
+      "issuer": "PT IDRX Indo Inovasi",
+      "issuer_site": "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+      "explorer": "https://explorer.solana.com/address/idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur",
+      "decimals": 2,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "solana",
+      "standard": "SPL mint",
+      "onchain_symbol": "IDRX",
+      "sql_file": "sql/replacements/6689171_solana.sql",
+      "sources": [
+        "https://docs.idrx.co/introduction/supported-chain-and-contract-address",
+        "Issuer PT IDRX Indo Inovasi. RPC-checked 2026-11-12 with the verified list.",
+        "Decimals 2. The deprecated mint idrxTdNftk6tYedPv2M7tCFHBVCpk5rkiNRd8yUArhr is not this mint."
+      ],
+      "verified_onchain": true
+    },
+    {
+      "sheet_row": null,
+      "token": "ZARsc",
+      "network": "Solana",
+      "address": "5ekaHEqpRUXH4RoZVRMErdJE74bibWAzihMtPcjKyceQ",
+      "peg": "South African rand",
+      "issuer": "Supercoin",
+      "issuer_site": "https://www.supercoin.co.za/",
+      "explorer": "https://explorer.solana.com/address/5ekaHEqpRUXH4RoZVRMErdJE74bibWAzihMtPcjKyceQ",
+      "decimals": 6,
+      "regulator": null,
+      "auditor": null,
+      "chain_slug": "solana",
+      "standard": "Token-2022",
+      "onchain_symbol": "ZARsc",
+      "sql_file": "sql/replacements/6689171_solana.sql",
+      "sources": [
+        "https://www.supercoin.co.za/ (Token-2022, 6 decimals, mint 5ekaHEqpRUXH4RoZVRMErdJE74bibWAzihMtPcjKyceQ)",
+        "Saved on Dune query 6689171 v36. The symbol ZARsc is already in the published Solana series.",
+        "Static USD fallback 0.0604847 matches ZARU in FX_FALLBACK. Not a live ZAR feed."
+      ],
+      "verified_onchain": true
     }
   ],
   "exclusions": [
@@ -764,6 +883,43 @@
       "token": "CHF",
       "network": "Plasma",
       "reason": "No CHF stablecoin was confirmed on Plasma. No placeholder was added."
+    },
+    {
+      "token": "IDRX",
+      "network": "Ethereum",
+      "reason": "Not an official IDRX deployment. No Ethereum contract is in the registry."
+    },
+    {
+      "token": "IDRX",
+      "network": "Solana deprecated mint",
+      "reason": "Deprecated mint idrxTdNftk6tYedPv2M7tCFHBVCpk5rkiNRd8yUArhr is not added. The verified mint is idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur."
+    },
+    {
+      "token": "IDRX",
+      "network": "Stellar",
+      "reason": "No official IDRX deployment. No contract is stored."
+    },
+    {
+      "token": "IDRX",
+      "network": "Tron",
+      "reason": "No official IDRX deployment. No contract is stored."
+    },
+    {
+      "token": "IDRX",
+      "network": "Plasma",
+      "reason": "No official IDRX deployment. No contract is stored."
+    },
+    {
+      "token": "IDRX",
+      "network": "Arc",
+      "reason": "No official IDRX deployment. No contract is stored."
+    }
+  ],
+  "off_tracker": [
+    {
+      "token": "IDRX",
+      "networks": ["Celo", "Monad", "Kaia"],
+      "reason": "Official on the issuer list at https://docs.idrx.co/introduction/supported-chain-and-contract-address. Not part of this tracker. No contract address is stored and no SQL is prepared."
     }
   ]
 }
