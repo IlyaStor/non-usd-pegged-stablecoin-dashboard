@@ -75,7 +75,7 @@ describe('candidate SQL matches the verified registry only', () => {
         decimals: entry.decimals,
       }))
     ));
-    assert.equal(expected.length, 11);
+    assert.equal(expected.length, 12);
     assert.equal(rows.length, expected.length);
     for (const entry of expected) {
       const hits = rows.filter(row => row.chain === entry.chain && row.address === entry.address);

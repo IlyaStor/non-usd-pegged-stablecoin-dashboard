@@ -1,5 +1,5 @@
--- Polygon part 1 of 2. Dune query 6614895. Full replacement of the saved query.
--- Do not save over the canonical query until an ad-hoc run matches existing tokens.
+-- Polygon part 1 of 2. Dune query 6614895 v24. This file matches the saved query.
+-- IDRX was saved on that version. Decimals 0 stay 0. It is not in query 6621899.
 -- EURAU, SEKAU, and CHFAU are added in this part only. Query 6621899 does not list them.
 -- EURQ 0xD571Edb2EF29DF10fcd6200fd6D0Ed2389983db3 and every saved row stay.
 -- prices.day (blockchain = polygon) is still used when that feed has a row.
@@ -21,7 +21,11 @@ WITH stablecoin_contracts AS (
             (0x52828daa48C1a9A06F37500882b42daf0bE04C3B, 'Nigerian naira - cNGC',      6,  0.00063),
             (0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 'Euro - EURAU',                6,  1.04),
             (0x0297B579B0CB603B5eE814EB7322b960D3ae7A66, 'Swedish krona - SEKAU',       6,  0.100345),
-            (0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78, 'Swiss franc - CHFAU',         6,  1.20326)
+            (0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78, 'Swiss franc - CHFAU',         6,  1.20326),
+            -- IDRX saved on 6614895 v24. Decimals 0 are official; do not rewrite them to 6 or 18.
+            -- Static fallback 0.000061 matches XIDR, IDDR, and IDRT in query 6621899. Not a live IDR feed.
+            -- Distinct from XIDR, IDDR, and IDRT. This address is not added to query 6621899.
+            (0x649a2DA7B28E0D54c13D5eFf95d3A660652742cC, 'Indonesian Rupiah - IDRX', 0, 0.000061)
     ) AS t (contract_address, symbol, decimals, fallback_price)
 ),
 daily_prices AS (

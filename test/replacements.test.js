@@ -106,6 +106,7 @@ describe('replacement SQL rosters', () => {
       ['0x4933a85b5b5466fbaf179f72d3de273c287ec2c2', 'Euro - EURAU', 6],
       ['0x0297b579b0cb603b5ee814eb7322b960d3ae7a66', 'Swedish krona - SEKAU', 6],
       ['0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78', 'Swiss franc - CHFAU', 6],
+      ['0x649a2da7b28e0d54c13d5eff95d3a660652742cc', 'Indonesian Rupiah - IDRX', 0],
     ];
     for (const [address, label, decimals] of added) {
       const hits = part1.filter(row => row.address === address);
@@ -136,6 +137,11 @@ describe('replacement SQL rosters', () => {
     assert.equal(/amount_display\s*\//.test(code(solana)), false);
     assert.equal(/POWER\s*\(\s*10/.test(code(solana)), false);
     assert.equal(rows.some(row => row.label === 'SEKAU'), false);
+    assert.equal(byLabel.IDRX.mint, 'idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur');
+    assert.equal(byLabel.IDRX.price, '0.000061');
+    assert.equal(byLabel.ZARsc.mint, '5ekaHEqpRUXH4RoZVRMErdJE74bibWAzihMtPcjKyceQ');
+    assert.equal(byLabel.ZARsc.price, '0.0604847');
+    assert.equal(code(solana).includes('idrxTdNftk6tYedPv2M7tCFHBVCpk5rkiNRd8yUArhr'), false);
     for (const mint of [
       'FtgGSFADXBtroxq8VCausXRr2of47QBf5AS1NtZCu4GD',
       'A94X2fRy3wydNShU4dRaDyap2UuoeWJGWyATtyp61WZf',
@@ -202,7 +208,10 @@ describe('replacement SQL rosters', () => {
     assert.equal(byLabel.EURAU.decimals, 6);
     assert.equal(byLabel.EURAU.price, String(FX_FALLBACK.EURAU));
     assert.equal(rows.some(row => row.label.includes('EURITE')), false);
-    assert.equal(rows.length, 3);
+    assert.equal(byLabel.IDRX.address, '0x649a2da7b28e0d54c13d5eff95d3a660652742cc');
+    assert.equal(byLabel.IDRX.decimals, 0);
+    assert.equal(byLabel.IDRX.price, '0.000061');
+    assert.equal(rows.length, 4);
   });
 
   it('does not duplicate Arc contracts that the saved query already lists', () => {
@@ -230,11 +239,15 @@ describe('replacement SQL rosters', () => {
       arcSql: read('sql/arc_nonusd_transfers.sql'),
     });
     const live = report.rows.filter(row => row.status === STATUS.LIVE).map(row => `${row.analyticsSymbol}|${row.dashboardNetwork}`);
-    assert.deepEqual(live.sort(), ['EURCV|solana', 'EURQ|polygon']);
-    const prepared = ['EURAU|polygon', 'SEKAU|polygon', 'CHFAU|polygon', 'EURAU|solana', 'CHFAU|solana', 'EURI|bsc', 'EURAU|bsc', 'EURQ|stellar', 'EURCV|stellar', 'EURAU|stellar'];
-    for (const key of prepared) {
+    assert.equal(live.includes('EURQ|polygon'), true);
+    assert.equal(live.includes('EURCV|solana'), true);
+    assert.equal(live.some(key => key.startsWith('IDRX|')), false);
+    const polygonEurau = report.rows.find(item => item.analyticsSymbol === 'EURAU' && item.dashboardNetwork === 'polygon');
+    assert.equal(polygonEurau.status, STATUS.PENDING_DUNE);
+    const nowPublished = ['SEKAU|polygon', 'CHFAU|polygon', 'EURAU|solana', 'CHFAU|solana', 'EURI|bsc', 'EURAU|bsc', 'EURQ|stellar', 'EURCV|stellar', 'EURAU|stellar'];
+    for (const key of nowPublished) {
       const row = report.rows.find(item => `${item.analyticsSymbol}|${item.dashboardNetwork}` === key);
-      assert.equal(row.status, STATUS.PENDING_DUNE, key);
+      assert.equal(row.status, STATUS.LIVE, key);
     }
     const brmb = report.rows.find(row => row.token === 'BRMB' && row.chainSlug === 'stellar');
     assert.equal(brmb.status, STATUS.BLOCKED_NO_FX);

@@ -1,10 +1,15 @@
--- CREATE TARGET. One query for Ethereum and Base. Not executed by this repository.
--- Not attached to the refresh job. No query id exists yet.
+-- Saved Dune query 9117254. The refresh fetches this id. This file is not executed here.
+-- One result set. Split data.ethereum and data.base on the blockchain column.
 -- Nov 6 2026 medium execution 01M6XQ007G6AWQH7BD0FDY587N compiled Ethereum,
 -- Base, Arbitrum, and Optimism. Positive rows were only Ethereum and Base.
 -- Arbitrum and Optimism stay out of this file until they show coverage.
 -- SEKAU is included on both chains, and Base CHFAU is included, even though
 -- they were absent on Nov 6. Absence in that window is not zero history.
+-- Base IDRX 0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22 decimals 2.
+-- amount is already decimal-adjusted. Do not divide it again.
+-- There is no Ethereum IDRX row. The deprecated Solana mint is not in this file.
+-- fallback 0.000061 is the static rate used for XIDR, IDDR, and IDRT in
+-- sql/replacements/6621899_polygon.sql. It is not a live IDR feed.
 -- This query emits a day only when transfers exist. It does not write zero rows.
 --
 -- Docs: https://docs.dune.com/data-catalog/curated/token-transfers/evm/token-transfers
@@ -27,7 +32,8 @@ WITH tokens AS (
         ('ethereum', 0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78, 'Swiss franc - CHFAU', 6, 1.20326),
         ('base', 0x4933a85b5b5466fbaf179f72d3de273c287ec2c2, 'Euro - EURAU', 6, 1.1206),
         ('base', 0x0297B579B0CB603B5eE814EB7322b960D3ae7A66, 'Swedish krona - SEKAU', 6, 0.100345),
-        ('base', 0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78, 'Swiss franc - CHFAU', 6, 1.20326)
+        ('base', 0xbd4dfc058eb95b8de5ceaf39966a1a70f5556f78, 'Swiss franc - CHFAU', 6, 1.20326),
+        ('base', 0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22, 'Indonesian Rupiah - IDRX', 2, 0.000061)
     ) AS t (blockchain, contract_address, token, decimals, fallback_price)
 )
 SELECT

@@ -27,29 +27,30 @@ const report = buildCatalogReport({
   arcSql,
 });
 
-const KNOWN_QUERY_IDS = new Set(Object.values(QUERIES).flat());
+const KNOWN_QUERY_IDS = new Set([...Object.values(QUERIES).flat(), 9117254]);
 
 function rows(status) {
   return report.rows.filter(row => row.status === status);
 }
 
 describe('verified registry', () => {
-  it('keeps 36 entries and 9 tokens, with no invariant failures', () => {
-    assert.equal(registry.entries.length, 36);
-    assert.equal(new Set(registry.entries.map(entry => entry.token)).size, 9);
+  it('keeps 41 entries and 11 tokens, with no invariant failures', () => {
+    assert.equal(registry.entries.length, 41);
+    assert.equal(new Set(registry.entries.map(entry => entry.token)).size, 11);
     assert.deepEqual(report.issues, []);
     assert.deepEqual(report.summary, {
-      entries: 36,
-      tokens: 9,
-      live: 2,
+      entries: 41,
+      tokens: 11,
+      live: 13,
       listedInRepoSql: 3,
-      pendingDune: 11,
+      pendingDune: 14,
+      candidateNotSaved: 0,
       blockedNoFx: 1,
-      newChainPending: 16,
+      newChainPending: 7,
       datasetUnconfirmed: 3,
       unsupported: 0,
-      notInPublishedSeries: 34,
-      sentence: '36 verified token-network entries (9 tokens): 2 already in the published series, 3 listed in the saved Arc query but absent from that series, 11 in replacement SQL that is not yet the published series, 1 blocked with no sourced USD rate, 16 on chains with candidate SQL but no query id, 3 on chains whose Dune dataset is unconfirmed.',
+      notInPublishedSeries: 28,
+      sentence: '41 verified token-network entries (11 tokens): 13 already in the published series, 3 listed in the saved Arc query but absent from that series, 14 in replacement SQL that is not yet the published series, 0 in candidate diffs that are not saved on Dune, 1 blocked with no sourced USD rate, 7 on chains with candidate SQL but no query id, 3 on chains whose Dune dataset is unconfirmed.',
     });
     assert.equal(readme.includes(report.summary.sentence), true);
   });
@@ -59,7 +60,9 @@ describe('verified registry', () => {
     for (const banned of ['SEKAU|solana', 'SIDR|ethereum', 'BRMB|ethereum', 'EURITE|polygon']) {
       assert.equal(present.includes(banned), false, banned);
     }
-    assert.equal(registry.exclusions.length, 6);
+    assert.equal(registry.exclusions.length, 12);
+    assert.equal(registry.entries.some(entry => entry.token === 'IDRX' && entry.chain_slug === 'ethereum'), false);
+    assert.equal(registry.entries.some(entry => String(entry.address).includes('idrxTdNftk6tYedPv2M7tCFHBVCpk5rkiNRd8yUArhr')), false);
     assert.equal(present.includes('EURR|plasma'), false);
     assert.equal(present.includes('EURC|plasma'), true);
   });
@@ -95,19 +98,34 @@ describe('verified registry', () => {
 });
 
 describe('published series stay separate from the catalog', () => {
-  it('marks only EURQ on Polygon and EURCV on Solana as live', () => {
+  it('marks a registry row live only when its symbol is in that network pipe', () => {
     assert.deepEqual(
       rows(STATUS.LIVE).map(row => `${row.analyticsSymbol}|${row.dashboardNetwork}`).sort(),
-      ['EURCV|solana', 'EURQ|polygon'],
+      [
+        'CHFAU|polygon',
+        'CHFAU|solana',
+        'EURAU|bsc',
+        'EURAU|solana',
+        'EURAU|stellar',
+        'EURC|plasma',
+        'EURCV|solana',
+        'EURCV|stellar',
+        'EURI|bsc',
+        'EURQ|polygon',
+        'EURQ|stellar',
+        'SEKAU|polygon',
+        'ZARsc|solana',
+      ].sort(),
     );
-    const absent = ['EURAU', 'SEKAU', 'CHFAU', 'EURI', 'BRMB', 'DDSC'];
+    assert.equal(rows(STATUS.LIVE).some(row => row.token === 'IDRX'), false);
     for (const pipe of Object.values(published.data)) {
       const symbols = symbolsInPipe(pipe);
-      for (const symbol of absent) assert.equal(symbols.has(symbol), false, symbol);
+      for (const symbol of ['IDRX', 'BRMB', 'DDSC']) assert.equal(symbols.has(symbol), false, symbol);
     }
     assert.equal(symbolsInPipe(published.data.polygon).has('EURQ'), true);
+    assert.equal(symbolsInPipe(published.data.polygon).has('EURAU'), false);
     assert.equal(symbolsInPipe(published.data.solana).has('EURCV'), true);
-    assert.equal(symbolsInPipe(published.data.stellar).has('EURQ'), false);
+    assert.equal(symbolsInPipe(published.data.stellar).has('EURQ'), true);
   });
 
   it('does not add networks or query ids', () => {
@@ -124,7 +142,8 @@ describe('published series stay separate from the catalog', () => {
     assert.deepEqual(chainNets, Object.keys(QUERIES));
     assert.equal(index.includes('data-net="registry"'), true);
     assert.equal(chainNets.includes('registry'), false);
-    assert.equal(Object.values(DASHBOARD_NETWORK_BY_SLUG).includes('ethereum'), false);
+    assert.equal(DASHBOARD_NETWORK_BY_SLUG.ethereum, 'ethereum');
+    assert.equal(Object.prototype.hasOwnProperty.call(QUERIES, 'ethereum'), false);
     const coverage = coverageFromNetworks(published.data);
     assert.equal(published.coverage.tokens, coverage.tokens);
     assert.equal(published.coverage.chains, coverage.chains);
@@ -189,11 +208,14 @@ describe('Dune SQL preparation', () => {
     for (const fact of ACTIVATION_FACTS) {
       assert.equal(readme.includes(fact), true, fact);
     }
-    assert.equal(rows(STATUS.PENDING_DUNE).length, 11);
-    assert.equal(rows(STATUS.PENDING_DUNE).some(row => row.analyticsSymbol === 'EURC' && row.dashboardNetwork === 'plasma'), true);
+    assert.equal(rows(STATUS.PENDING_DUNE).length, 14);
+    assert.equal(rows(STATUS.PENDING_DUNE).some(row => row.analyticsSymbol === 'EURAU' && row.dashboardNetwork === 'polygon'), true);
+    assert.equal(rows(STATUS.PENDING_DUNE).some(row => row.analyticsSymbol === 'IDRX' && row.dashboardNetwork === 'polygon'), true);
+    assert.equal(rows(STATUS.LIVE).some(row => row.analyticsSymbol === 'EURC' && row.dashboardNetwork === 'plasma'), true);
     assert.equal(rows(STATUS.BLOCKED_NO_FX).length, 1);
     assert.equal(rows(STATUS.BLOCKED_NO_FX)[0].analyticsSymbol, 'BRMB');
-    assert.equal(rows(STATUS.NEW_CHAIN_PENDING).length, 16);
+    assert.equal(rows(STATUS.NEW_CHAIN_PENDING).length, 7);
+    assert.equal(rows(STATUS.CANDIDATE_NOT_SAVED).length, 0);
     assert.equal(rows(STATUS.DATASET_UNCONFIRMED).length, 3);
     assert.equal(rows(STATUS.UNSUPPORTED_CHAIN).length, 0);
     for (const row of rows(STATUS.NEW_CHAIN_PENDING)) assert.deepEqual(row.queryIds, []);
@@ -214,6 +236,8 @@ describe('registry tab copy', () => {
     assert.equal(html.includes('SEP-41'), true);
     assert.equal(html.includes('product EURITE'), true);
     assert.equal(html.includes('program, not a mint'), true);
+    assert.equal(html.includes('Celo'), true);
+    assert.equal(html.includes('queries/9117254'), true);
     const linked = [...html.matchAll(/queries\/(\d+)/g)].map(match => Number(match[1]));
     assert.ok(linked.length > 0);
     for (const id of linked) assert.equal(KNOWN_QUERY_IDS.has(id), true, String(id));

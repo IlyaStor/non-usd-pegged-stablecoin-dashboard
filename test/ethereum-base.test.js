@@ -34,8 +34,9 @@ describe('ethereum and base create target', () => {
         decimals: entry.decimals,
         symbol: entry.onchain_symbol || entry.token,
       }));
-    assert.equal(expected.length, 9);
-    assert.equal(rows.length, 9);
+    assert.equal(expected.length, 10);
+    assert.equal(rows.length, 10);
+    assert.equal(rows.some(row => row.chain === 'ethereum' && row.label.endsWith('IDRX')), false);
     for (const entry of expected) {
       const hit = rows.find(row => row.chain === entry.chain && row.address === entry.address);
       assert.ok(hit, `${entry.chain} ${entry.symbol}`);
@@ -56,10 +57,11 @@ describe('ethereum and base create target', () => {
     assert.equal(body.includes('0 AS transfer_volume'), false);
   });
 
-  it('does not schedule the new query while the id is unset', () => {
-    assert.equal(ETHEREUM_BASE_REFRESH.enabled, false);
-    assert.equal(ETHEREUM_BASE_REFRESH.queryId, null);
-    assert.equal(ethereumBaseJob(), null);
+  it('fetches query 9117254 once and does not add a second schedule', () => {
+    assert.equal(ETHEREUM_BASE_REFRESH.enabled, true);
+    assert.equal(ETHEREUM_BASE_REFRESH.queryId, 9117254);
+    assert.equal(ethereumBaseJob().id, 9117254);
+    assert.deepEqual(ethereumBaseJob().splitChains, ['ethereum', 'base']);
     assert.equal(ethereumBaseJob({ enabled: true, queryId: null, chains: ['ethereum', 'base'] }), null);
     assert.deepEqual(
       ethereumBaseJob({ enabled: true, queryId: 123, chains: ['ethereum', 'base'] }).splitChains,

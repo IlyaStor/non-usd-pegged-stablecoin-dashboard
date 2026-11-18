@@ -133,6 +133,25 @@ body{
 }
 .hdr-social a:hover{color:var(--text);border-color:var(--border-strong)}
 
+.a7a5-toggle{
+  display:flex;align-items:center;gap:8px;text-align:left;
+  background:var(--surface);border:1px solid var(--border);color:var(--text-2);
+  padding:6px 10px;border-radius:6px;cursor:pointer;font-family:var(--mono);
+}
+.a7a5-toggle:hover{border-color:var(--border-strong);color:var(--text)}
+.a7a5-toggle[aria-pressed="true"]{border-color:var(--accent);color:var(--text)}
+.a7a5-switch{
+  width:28px;height:16px;border-radius:99px;background:var(--border-strong);position:relative;flex-shrink:0;
+}
+.a7a5-switch::after{
+  content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text-3);
+}
+.a7a5-toggle[aria-pressed="true"] .a7a5-switch{background:var(--accent)}
+.a7a5-toggle[aria-pressed="true"] .a7a5-switch::after{left:14px;background:#fff}
+.a7a5-copy{display:flex;flex-direction:column;line-height:1.2}
+.a7a5-label{font-size:10.5px;font-weight:650;letter-spacing:.04em}
+.a7a5-share{font-size:9px;color:var(--text-3);margin-top:1px}
+
 .coverage-note{
   margin:14px 0 0;padding:10px 12px;border:1px solid var(--border);
   background:var(--surface);border-radius:8px;color:var(--text-2);
@@ -419,7 +438,16 @@ td.first{color:var(--text)}
         <span class="hero-stat-v" id="heroUpd" style="font-size:13px">—</span>
         <span class="hero-stat-d" id="heroAge"></span>
       </div>
+      <button type="button" class="a7a5-toggle" id="a7a5Toggle" aria-pressed="false" onclick="toggleA7A5()">
+        <span class="a7a5-switch" aria-hidden="true"></span>
+        <span class="a7a5-copy">
+          <span class="a7a5-label">Without A7A5</span>
+          <span class="a7a5-share" id="a7a5Share">Share from data.json</span>
+        </span>
+      </button>
       <div class="hdr-social">
+        <a href="/methodology.html">Methodology</a>
+        <a href="/work.html">Work with me</a>
         <a href="https://x.com/scipiosiberian" target="_blank" rel="noopener noreferrer">X</a>
         <a href="https://t.me/solosolver" target="_blank" rel="noopener noreferrer">Telegram</a>
       </div>
@@ -503,7 +531,7 @@ td.first{color:var(--text)}
   </main>
 
   <footer class="ftr">
-    <span>NON-USD STABLECOIN TRACKER · <a href="https://x.com/scipiosiberian" target="_blank" rel="noopener noreferrer">@scipiosiberian</a> · <a href="https://t.me/solosolver" target="_blank" rel="noopener noreferrer">Telegram</a></span>
+    <span>NON-USD STABLECOIN TRACKER · <a href="/methodology.html">Methodology</a> · <a href="/work.html">Work with me</a> · <a href="https://x.com/scipiosiberian" target="_blank" rel="noopener noreferrer">@scipiosiberian</a> · <a href="https://t.me/solosolver" target="_blank" rel="noopener noreferrer">Telegram</a></span>
     <span>Tracked series from <a href="https://dune.com" target="_blank" rel="noopener noreferrer">Dune Analytics</a> · Not exhaustive · Refreshed about every 2 days</span>
   </footer>
 </div>
@@ -538,6 +566,9 @@ const DUNE_QUERIES = {
   plasma:[6663259],
   bsc:[8748306],
   arc:[8924650],
+  // One shared query, split by blockchain. Not listed twice in QUERIES.
+  ethereum:[9117254],
+  base:[9117254],
 };
 const COVERAGE_SENTENCE = 'Tracked non-USD stablecoins only. Coverage is not exhaustive; more tokens and chains will be added.';
 
@@ -571,6 +602,7 @@ let mainChartInstance = null, pieInst = null;
 let lastUpdated = null;
 let executions = null;
 let shownFreshnessIso = null;
+let excludeA7A5 = false;
 
 // ── METADATA ──────────────────────────────────────────────
 const TOKEN_METADATA = {
@@ -628,6 +660,8 @@ const TOKEN_METADATA = {
   CHFAU:{cur:'CHF',c:'#F57C00',n:'Swiss Franc — CHFAU (AllUnity)'},
   // Present so a future series can be labeled. Absent from data.json until Dune returns the symbol.
   EURI:{cur:'EUR',c:'#0B3A82',n:'Euro — EURI (EURITE)'},
+  IDRX:{cur:'IDR',c:'#78909C',n:'Indonesian Rupiah — IDRX'},
+  ZARsc:{cur:'ZAR',c:'#FFCA28',n:'South African Rand — ZARsc'},
   BRMB:{cur:'CNY',c:'#C62828',n:'Chinese Yuan — BRMB'},
   DDSC:{cur:'AED',c:'#C9A227',n:'Dirham — DDSC'},
 };
@@ -726,10 +760,16 @@ function readNetFromUrl(){
   return null;
 }
 
+function readExcludeA7A5(search){
+  return new URLSearchParams(search||location.search).get('without')==='A7A5';
+}
 function syncUrl(net, mode){
   const url=new URL(location.href);
-  if(url.searchParams.get('network')===net && url.hash==='#'+net) return;
+  const wantWithout=excludeA7A5?'A7A5':null;
+  if(url.searchParams.get('network')===net && url.hash==='#'+net && (url.searchParams.get('without')||null)===wantWithout) return;
   url.searchParams.set('network', net);
+  if(excludeA7A5) url.searchParams.set('without','A7A5');
+  else url.searchParams.delete('without');
   url.hash=net;
   const next=url.pathname+url.search+url.hash;
   if(mode==='push') history.pushState({net},'',next);
@@ -755,6 +795,7 @@ async function loadDashboardData(){
     updateBrandSub();
     updateCoverageNote();
     updateHeroStats();
+    paintA7A5Toggle();
     const initial=readNetFromUrl()||'polygon';
     loadNetwork(initial,{url:'replace'});
   }catch(err){
@@ -918,8 +959,45 @@ function parse(data, cutoffDay){
   if(parsed.length>=2 && parsed[0].d>parsed[parsed.length-1].d)parsed.reverse();
   return parsed;
 }
-function rowsFor(net){
+function rawRowsFor(net){
   return parse(NETWORKS[net]?.data||'', cutoffDayFor(net));
+}
+function rowsFor(net){
+  const rows=rawRowsFor(net);
+  if(!excludeA7A5) return rows;
+  return rows.map(row=>({...row, items:row.items.filter(i=>i.t!=='A7A5')})).filter(row=>row.items.length);
+}
+function a7a5ShareNow(){
+  let total=0, volume=0;
+  const chains=[];
+  shownChainNets().forEach(net=>{
+    let hit=0;
+    rawRowsFor(net).forEach(row=>row.items.forEach(item=>{
+      total+=item.v;
+      if(item.t==='A7A5') hit+=item.v;
+    }));
+    if(hit>0){volume+=hit; chains.push(net);}
+  });
+  return {total, volume, share:total>0?volume/total:0, chains};
+}
+function paintA7A5Toggle(){
+  const btn=document.getElementById('a7a5Toggle');
+  const share=document.getElementById('a7a5Share');
+  if(btn) btn.setAttribute('aria-pressed', excludeA7A5?'true':'false');
+  if(!share) return;
+  const info=a7a5ShareNow();
+  if(!info.total){share.textContent='Share from data.json'; return;}
+  const pct=(info.share*100).toFixed(1);
+  const where=info.chains.length?info.chains.join(', '):'not in this window';
+  share.textContent=`A7A5 is ${pct}% of tracked volume · ${where}`;
+}
+function toggleA7A5(){
+  excludeA7A5=!excludeA7A5;
+  paintA7A5Toggle();
+  updateBrandSub();
+  updateCoverageNote();
+  updateHeroStats();
+  loadNetwork(curNet,{url:'replace'});
 }
 
 // ── NETWORK SWITCH ────────────────────────────────────────
@@ -1068,7 +1146,7 @@ function renderKPIs(){
     const items=summary?[
       {l:'Verified catalog',v:summary.entries,s:`${summary.tokens} tokens · not volume`,c:NET_COLOR.registry},
       {l:'In published series',v:summary.live,s:'left unchanged',c:'#34D399'},
-      {l:'Waiting on Dune',v:summary.pendingDune+summary.listedInRepoSql+summary.blockedNoFx,s:`${summary.pendingDune} in replacement SQL · ${summary.listedInRepoSql} in saved Arc SQL · ${summary.blockedNoFx} no CNY rate`,c:NET_COLOR.registry},
+      {l:'Waiting on Dune',v:summary.pendingDune+summary.listedInRepoSql+summary.blockedNoFx+(summary.candidateNotSaved||0),s:`${summary.pendingDune} in replacement SQL · ${summary.candidateNotSaved||0} candidate diffs not saved · ${summary.listedInRepoSql} in saved Arc SQL · ${summary.blockedNoFx} no CNY rate`,c:NET_COLOR.registry},
       {l:'No live chain yet',v:summary.newChainPending+summary.datasetUnconfirmed+summary.unsupported,s:`${summary.newChainPending} candidate SQL, no query id · ${summary.datasetUnconfirmed} dataset unconfirmed`,c:'#9CA3AF'},
     ]:[
       {l:'Verified catalog',v:'…',s:'not volume',c:NET_COLOR.registry},
@@ -1557,11 +1635,21 @@ if(savedTheme==='light'){
   document.getElementById('themeBtn').textContent='◐ Dark';
 }
 setNetColorVar('polygon');
+excludeA7A5=readExcludeA7A5(location.search);
+paintA7A5Toggle();
 loadDashboardData();
 
 window.addEventListener('popstate', ()=>{
+  const nextExclude=readExcludeA7A5(location.search);
   const net=readNetFromUrl()||'polygon';
-  if(net!==curNet) loadNetwork(net,{url:false});
+  const changed=nextExclude!==excludeA7A5 || net!==curNet;
+  excludeA7A5=nextExclude;
+  paintA7A5Toggle();
+  if(!changed) return;
+  updateBrandSub();
+  updateCoverageNote();
+  updateHeroStats();
+  loadNetwork(net,{url:false});
 });
 
 setInterval(()=>{
